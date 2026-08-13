@@ -1,11 +1,16 @@
 /* ==========================================================
-   MySchool — KIRISH (welcome) screen
+   MySchool — KIRISH (welcome) screen + Asosiy MENU
    Animatsiya ketma-ketligi:
      1) 🎓 fade-in
      2) "STEM SCHOOL" fade-in (pastdan)
      3) chiziq chapdan o‘ngga chiziladi
      4) pauza -> KIRISH tugmasi fade-in + scale
-     5) KIRISH bosilganda asosiy menyuga o‘tishga tayyor (hozircha placeholder)
+     5) KIRISH bosilganda: intro yashiriladi, MENU ko'rsatiladi
+   Eslatma: ekranlar almashinuvi FAQAT CSS klasslar orqali
+   ("is-leaving" / "is-visible") boshqariladi — "hidden"
+   atributiga yoki display:none/flex almashtirishga
+   tayanilmaydi, shu sabab timing/specificity muammosi
+   bo'lmaydi.
    ========================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -16,11 +21,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const enterBtn = document.getElementById("enterBtn");
   const menu = document.getElementById("menu");
 
+  // Himoya: kerakli elementlardan biri topilmasa, aniq xato chiqaramiz
+  // va qolgan kodni ishga tushirmaymiz (jim xatolarning oldini olish uchun).
+  const required = { intro, cap, brand, divider, enterBtn, menu };
+  const missing = Object.entries(required)
+    .filter(([, el]) => !el)
+    .map(([name]) => name);
+
+  if (missing.length > 0) {
+    console.error(
+      `MySchool: quyidagi elementlar HTML da topilmadi: ${missing.join(", ")}`
+    );
+    return;
+  }
+
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
-  // Har bir bosqich qancha kutib, keyin ko'rinadigan bo'lishini belgilaydi (ms)
+  /* ---------- 1-4. KIRISH ekrani animatsiyasi ---------- */
+
   const timeline = [
     { el: cap, delay: 300 },
     { el: brand, delay: 900 },
@@ -29,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   if (prefersReducedMotion) {
-    // Harakatni kamaytirish yoqilgan bo'lsa — hammasini darhol ko'rsatamiz
     timeline.forEach(({ el }) => el.classList.add("is-visible"));
   } else {
     timeline.forEach(({ el, delay }) => {
@@ -37,34 +56,29 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // KIRISH tugmasi bosilganda: welcome ekran yopiladi, asosiy menu ochiladi
+  /* ---------- 5. KIRISH -> MENU o'tishi ---------- */
+
   enterBtn.addEventListener("click", () => {
+    if (enterBtn.disabled) return; // qayta bosilishning oldini olish
     enterBtn.disabled = true;
 
     document.dispatchEvent(new CustomEvent("myschool:kirish"));
 
-    const fadeOutDuration = prefersReducedMotion ? 0 : 600;
-
-    // 1) Welcome ekranni fade-out qilamiz
+    // Welcome ekranni fade-out qilamiz
     intro.classList.add("is-leaving");
 
-    // 2) Fade-out tugagach, welcome ekranni butunlay yashiramiz
-    //    va asosiy menuni ko'rsatamiz (fade-in bilan)
-    setTimeout(() => {
-      intro.hidden = true;
+    // Menuni deyarli bir vaqtda fade-in qilamiz — ikkalasi ham
+    // "position: fixed" bo'lgani uchun bir-birining ustiga
+    // to'g'ri va uzluksiz o'tadi (hidden atributi kerak emas).
+    requestAnimationFrame(() => {
+      menu.classList.add("is-visible");
+    });
 
-      menu.hidden = false;
-      // hidden atributi olib tashlangandan keyin reflow bo'lishi uchun
-      // bir frame kutamiz, shunda CSS transition ishlaydi
-      requestAnimationFrame(() => {
-        menu.classList.add("is-visible");
-      });
-
-      document.dispatchEvent(new CustomEvent("myschool:menu-opened"));
-    }, fadeOutDuration);
+    document.dispatchEvent(new CustomEvent("myschool:menu-opened"));
   });
 
-  // Hozircha menu tugmalari faqat dizayn — funksiyalar keyinroq ulanadi
+  /* ---------- Menu tugmalari (hozircha faqat dizayn) ---------- */
+
   const menuButtons = document.querySelectorAll(".menu-btn, .ai-btn");
   menuButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
