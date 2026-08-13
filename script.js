@@ -523,4 +523,7 @@ function initSchedule() {
     !selectedClassTitleEl ||
     !dayTabsEl ||
     !scheduleListEl
-  )
+  )    {
+    console.error("MySchool: Jadval elementlaridan biri HTMLda topilmadi.");
+    return;
+  }
