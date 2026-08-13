@@ -19,349 +19,57 @@
 
 const MySchoolData = {
   schedule: {
-  "1-sinf": {
     Dushanba: [
       { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ona tili" },
-      { time: "10:10–10:50", subject: "Ingliz tili" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "O'qish" },
-      { time: "10:10–10:50", subject: "Informatika" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Ona tili" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Tabiatshunoslik" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ingliz tili" },
-      { time: "10:10–10:50", subject: "Tasviriy san'at" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "O'qish" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "2-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ona tili" },
-      { time: "10:10–10:50", subject: "Ingliz tili" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "O'qish" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Ona tili" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Tabiatshunoslik" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ingliz tili" },
-      { time: "10:10–10:50", subject: "Musiqa" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "O'qish" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "3-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ona tili" },
-      { time: "10:10–10:50", subject: "Ingliz tili" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Tabiatshunoslik" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Ona tili" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "O'qish" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ingliz tili" },
-      { time: "10:10–10:50", subject: "Tasviriy san'at" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "O'qish" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "4-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ona tili" },
-      { time: "10:10–10:50", subject: "Ingliz tili" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Tarix" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Ona tili" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Tabiatshunoslik" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ingliz tili" },
-      { time: "10:10–10:50", subject: "Musiqa" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "O'qish" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "5-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
+      { time: "09:20–10:00", subject: "Fizika" },
       { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Kimyo" },
+      { time: "13:20–14:00", subject: "Ona tili va adabiyot" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "Robototexnika" },
     ],
     Seshanba: [
       { time: "08:30–09:10", subject: "Fizika" },
       { time: "09:20–10:00", subject: "Matematika" },
       { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Chizmachilik" },
+      { time: "15:00–15:40", subject: "Loyihachilik" },
     ],
     Chorshanba: [
       { time: "08:30–09:10", subject: "Kimyo" },
       { time: "09:20–10:00", subject: "Matematika" },
       { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Fizika" },
+      { time: "13:20–14:00", subject: "Geografiya" },
+      { time: "14:10–14:50", subject: "Robototexnika" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
     ],
     Payshanba: [
       { time: "08:30–09:10", subject: "Matematika" },
       { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
+      { time: "10:10–10:50", subject: "Kimyo" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Ona tili va adabiyot" },
+      { time: "13:20–14:00", subject: "Ingliz tili" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Chizmachilik" },
     ],
     Juma: [
       { time: "08:30–09:10", subject: "Informatika" },
       { time: "09:20–10:00", subject: "Fizika" },
       { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ]
+      { time: "11:00–11:40", subject: "Robototexnika" },
+      { time: "12:30–13:10", subject: "Ingliz tili" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Loyiha himoyasi" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
+    ],
   },
-
-  "6-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Biologiya" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Tarix" },
-      { time: "11:00–11:40", subject: "Ingliz tili" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ]
-  },
-
-  "7-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" }
-    ]
-  },
-
-  "8-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" }
-    ]
-  },
-
-  "9-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" }
-    ]
-  },
-
-  "10-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" }
-    ]
-  },
-
-  "11-sinf": {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Tarix" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Geografiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" }
-    ]
-  }
-},
 
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
@@ -545,7 +253,295 @@ function initSchedule() {
     .join("");
 
   function renderClassSchedule(className) {
-  const schedule = MySchoolData.schedule[className] || {};
-  const days = Object.keys(schedule);
+    const schedule = MySchoolData.schedule[className] || {};
+    const days = Object.keys(schedule);
 
-  selectedClassTitleEl.tex
+    selectedClassTitleEl.textContent = className.toUpperCase();
+
+    dayTabsEl.innerHTML = days
+      .map(
+        (day, i) => `
+          <button
+            class="day-tab${i === 0 ? " is-active" : ""}"
+            type="button"
+            data-day="${day}"
+          >
+            ${day}
+          </button>
+        `
+      )
+      .join("");
+
+    function renderDay(day) {
+      const lessons = schedule[day] || [];
+
+      if (lessons.length === 0) {
+        scheduleListEl.innerHTML =
+          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+        return;
+      }
+
+      scheduleListEl.innerHTML = lessons
+        .map(
+          (lesson, i) => `
+            <div class="schedule-row">
+              <span class="schedule-row__index">${i + 1}</span>
+              <span class="schedule-row__time">${lesson.time}</span>
+              <span class="schedule-row__subject">${lesson.subject}</span>
+            </div>
+          `
+        )
+        .join("");
+    }
+
+    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        dayTabsEl
+          .querySelectorAll(".day-tab")
+          .forEach((t) => t.classList.remove("is-active"));
+
+        tab.classList.add("is-active");
+
+        renderDay(tab.dataset.day);
+      });
+    });
+
+    if (days.length > 0) {
+      renderDay(days[0]);
+    } else {
+      scheduleListEl.innerHTML =
+        '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
+    }
+  }
+
+  // Sinf tanlash
+  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const className = btn.dataset.class;
+
+      classSelectorEl.hidden = true;
+      scheduleSectionEl.hidden = false;
+
+      renderClassSchedule(className);
+    });
+  });
+
+  // Sinf tanlashga qaytish
+  classBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classSelectorEl.hidden = false;
+  });
+     }
+
+  /* ----------------------------------------------------------
+     5) 📖 FANLAR
+     ---------------------------------------------------------- */
+
+  function initSubjects() {
+    const el = document.getElementById("subjectList");
+    if (!el) return;
+
+    el.innerHTML = MySchoolData.subjects
+      .map(
+        (s) => `
+          <div class="subject-card">
+            <div class="subject-card__head">
+              <span class="subject-card__icon">${s.icon}</span>
+              <span class="subject-card__name">${s.name}</span>
+            </div>
+            <p class="subject-card__desc">${s.desc}</p>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  /* ----------------------------------------------------------
+     6) 🎯 CAREER — maqsadni saqlash
+     ---------------------------------------------------------- */
+
+  function initCareer() {
+    const input = document.getElementById("careerInput");
+    const saveBtn = document.getElementById("careerSaveBtn");
+    const result = document.getElementById("careerResult");
+    const resultText = document.getElementById("careerGoalText");
+    if (!input || !saveBtn || !result || !resultText) return;
+
+    const STORAGE_KEY = "myschool_career_goal";
+
+    function showGoal(text) {
+      resultText.textContent = text;
+      result.hidden = false;
+    }
+
+    // Sahifa ochilganda avval saqlangan maqsad bo'lsa ko'rsatamiz
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        input.value = saved;
+        showGoal(saved);
+      }
+    } catch (err) {
+      console.warn("MySchool: localStorage o'qib bo'lmadi.", err);
+    }
+
+    saveBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+      if (!value) {
+        input.focus();
+        return;
+      }
+
+      showGoal(value);
+
+      try {
+        localStorage.setItem(STORAGE_KEY, value);
+      } catch (err) {
+        console.warn("MySchool: localStorage ga yozib bo'lmadi.", err);
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     7) 📢 E'LON
+     ---------------------------------------------------------- */
+
+  function initAnnouncements() {
+    const el = document.getElementById("announcementList");
+    if (!el) return;
+
+    el.innerHTML = MySchoolData.announcements
+      .map(
+        (a) => `
+          <div class="announcement-card">
+            <span class="announcement-card__date">${a.date}</span>
+            <h3 class="announcement-card__title">${a.title}</h3>
+            <p class="announcement-card__text">${a.text}</p>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  /* ----------------------------------------------------------
+     8) 📚 KITOBXONA — ro'yxat + qidiruv
+     ---------------------------------------------------------- */
+
+  function initLibrary() {
+    const searchInput = document.getElementById("bookSearch");
+    const listEl = document.getElementById("bookList");
+    if (!searchInput || !listEl) return;
+
+    function renderBooks(query) {
+      const q = query.trim().toLowerCase();
+      const filtered = MySchoolData.books.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="empty-state">Hech narsa topilmadi.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered
+        .map(
+          (b) => `
+            <div class="book-item">
+              <span class="book-item__title">${b.title}</span>
+              <span class="book-item__author">${b.author}</span>
+            </div>
+          `
+        )
+        .join("");
+    }
+
+    searchInput.addEventListener("input", () => {
+      renderBooks(searchInput.value);
+    });
+
+    renderBooks("");
+  }
+
+  /* ----------------------------------------------------------
+     9) 🤖 AI YORDAMCHI — chat interfeysi (placeholder javoblar)
+     Kelajakda: bu yerdagi sendMessageToAI() funksiyasi ichiga
+     Node.js backend'ga fetch() so'rovi qo'shiladi.
+     ---------------------------------------------------------- */
+
+  function initAIChat() {
+    const messagesEl = document.getElementById("chatMessages");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("chatInput");
+    if (!messagesEl || !form || !input) return;
+
+    let greeted = false;
+
+    function addBubble(text, sender) {
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble chat-bubble--${sender}`;
+      bubble.textContent = text;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // TODO (kelajakda): haqiqiy AI API bilan almashtiriladi
+    function getPlaceholderReply() {
+      return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
+    }
+
+    function sendMessageToAI(userText) {
+      // Hozircha soxta javob, kelajakda fetch('/api/ai', {...}) shu yerga qo'shiladi
+      setTimeout(() => {
+        addBubble(getPlaceholderReply(), "bot");
+      }, 500);
+    }
+
+    function greetOnce() {
+      if (greeted) return;
+      greeted = true;
+      addBubble(
+        "Salom! 👋 Men MySchool AI yordamchiman. Sizga qanday yordam bera olaman?",
+        "bot"
+      );
+    }
+
+    document.addEventListener("myschool:panel-opened", (e) => {
+      if (e.detail === "ai") greetOnce();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addBubble(text, "user");
+      input.value = "";
+      sendMessageToAI(text);
+    });
+  }
+
+  /* ----------------------------------------------------------
+     Panel ochilganda tegishli event chiqarish (AI chatga kerak)
+     ---------------------------------------------------------- */
+
+  document.querySelectorAll("[data-panel]").forEach((btn) => {
+    if (btn.classList.contains("panel")) return;
+    btn.addEventListener("click", () => {
+      document.dispatchEvent(
+        new CustomEvent("myschool:panel-opened", { detail: btn.dataset.panel })
+      );
+    });
+  });
+
+  /* ---------- Barcha panellarni ishga tushirish ---------- */
+
+  initSchedule();
+  initSubjects();
+  initCareer();
+  initAnnouncements();
+  initLibrary();
+  initAIChat();
+});
+                          
