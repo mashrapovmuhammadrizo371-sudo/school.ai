@@ -312,12 +312,13 @@ body {
 .ai-btn {
   width: 100%;
   margin-top: 18px;
-  padding: 22px 20px;
+  padding: 26px 20px;
 
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
 
   font-family: var(--font-body);
   font-weight: 600;
@@ -335,7 +336,7 @@ body {
 }
 
 .ai-btn__icon {
-  font-size: 24px;
+  font-size: 30px;
   line-height: 1;
 }
 
