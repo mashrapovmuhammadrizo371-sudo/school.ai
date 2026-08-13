@@ -545,66 +545,134 @@ function initSchedule() {
     .join("");
 
   function renderClassSchedule(className) {
-    const schedule = MySchoolData.schedule[className] || {};
-    const days = Object.keys(schedule);
+  const schedule = MySchoolData.schedule[className] || {};
+  const days = Object.keys(schedule);
 
-    selectedClassTitleEl.textContent = className.toUpperCase();
+  selectedClassTitleEl.textContent = className.toUpperCase();
 
-    dayTabsEl.innerHTML = days
-      .map(
-        (day, i) => `
-          <button
-            class="day-tab${i === 0 ? " is-active" : ""}"
-            type="button"
-            data-day="${day}"
-          >
-            ${day}
-          </button>
-        `
-      )
-      .join("");
+  dayTabsEl.innerHTML = days
+    .map(
+      (day, i) => `
+        <button
+          class="day-tab${i === 0 ? " is-active" : ""}"
+          type="button"
+          data-day="${day}"
+        >
+          ${day}
+        </button>
+      `
+    )
+    .join("");
 
-    function renderDay(day) {
-      const lessons = schedule[day] || [];
+  // Vaqtni avtomatik hisoblash
+  function addMinutes(time, minutes) {
+    const [hours, mins] = time.split(":").map(Number);
+    const total = hours * 60 + mins + minutes;
 
-      if (lessons.length === 0) {
-        scheduleListEl.innerHTML =
-          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
-        return;
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+
+  function renderDay(day) {
+    const lessons = schedule[day] || [];
+
+    if (lessons.length === 0) {
+      scheduleListEl.innerHTML =
+        '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+      return;
+    }
+
+    const classNumber = parseInt(className, 10);
+    const isJunior = classNumber <= 4;
+
+    let currentTime = "08:30";
+    let html = "";
+
+    lessons.slice(0, 8).forEach((lesson, i) => {
+      const lessonNumber = i + 1;
+
+      // Dars
+      const start = currentTime;
+      const end = addMinutes(start, 45);
+
+      html += `
+        <div class="schedule-row">
+          <span class="schedule-row__index">${lessonNumber}</span>
+          <span class="schedule-row__time">${start}–${end}</span>
+          <span class="schedule-row__subject">${lesson.subject}</span>
+        </div>
+      `;
+
+      currentTime = end;
+
+      // Abet
+      const isAbet = isJunior
+        ? lessonNumber === 3
+        : lessonNumber === 4;
+
+      if (isAbet) {
+        const abetEnd = addMinutes(currentTime, 45);
+
+        html += `
+          <div class="schedule-row">
+            <span class="schedule-row__index">🍽️</span>
+            <span class="schedule-row__time">${currentTime}–${abetEnd}</span>
+            <span class="schedule-row__subject">ABET</span>
+          </div>
+        `;
+
+        currentTime = abetEnd;
       }
 
-      scheduleListEl.innerHTML = lessons
-        .map(
-          (lesson, i) => `
-            <div class="schedule-row">
-              <span class="schedule-row__index">${i + 1}</span>
-              <span class="schedule-row__time">${lesson.time}</span>
-              <span class="schedule-row__subject">${lesson.subject}</span>
-            </div>
-          `
-        )
-        .join("");
-    }
+      // Po‘ldnik
+      const isPoldnik = isJunior
+        ? lessonNumber === 7
+        : lessonNumber === 8;
 
-    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        dayTabsEl
-          .querySelectorAll(".day-tab")
-          .forEach((t) => t.classList.remove("is-active"));
+      if (isPoldnik) {
+        const poldnikEnd = addMinutes(currentTime, 45);
 
-        tab.classList.add("is-active");
+        html += `
+          <div class="schedule-row">
+            <span class="schedule-row__index">🍽️</span>
+            <span class="schedule-row__time">${currentTime}–${poldnikEnd}</span>
+            <span class="schedule-row__subject">PO‘LDNIK</span>
+          </div>
+        `;
 
-        renderDay(tab.dataset.day);
-      });
+        currentTime = poldnikEnd;
+      }
+
+      // Oddiy tanaffus — oxirgi darsdan keyin emas
+      if (lessonNumber < 8) {
+        currentTime = addMinutes(currentTime, 5);
+      }
     });
 
-    if (days.length > 0) {
-      renderDay(days[0]);
-    } else {
-      scheduleListEl.innerHTML =
-        '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
-    }
+    scheduleListEl.innerHTML = html;
   }
+
+  dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      dayTabsEl
+        .querySelectorAll(".day-tab")
+        .forEach((t) => t.classList.remove("is-active"));
+
+      tab.classList.add("is-active");
+
+      renderDay(tab.dataset.day);
+    });
+  });
+
+  if (days.length > 0) {
+    renderDay(days[0]);
+  } else {
+    scheduleListEl.innerHTML =
+      '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
+  }
+      }
 
   // Sinf tanlash
   classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
