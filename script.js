@@ -362,9 +362,30 @@ const MySchoolData = {
     ]
   }
 },
-},
-},
+// Har bir sinf va har bir kun uchun 8 ta darsni ta'minlash
+Object.values(MySchoolData.schedule).forEach((classSchedule) => {
+  Object.keys(classSchedule).forEach((day) => {
+    const lessons = classSchedule[day];
 
+    const extraSubjects = [
+      "Ona tili",
+      "Matematika",
+      "Ingliz tili",
+      "Informatika",
+      "Jismoniy tarbiya",
+      "Tarix",
+      "Geografiya",
+      "Robototexnika"
+    ];
+
+    while (lessons.length < 8) {
+      lessons.push({
+        time: "",
+        subject: extraSubjects[lessons.length]
+      });
+    }
+  });
+});
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
     { icon: "⚛️", name: "Fizika", desc: "Mexanika, elektr, optika va tabiat qonunlari." },
@@ -525,29 +546,4 @@ function initSchedule() {
     !selectedClassTitleEl ||
     !dayTabsEl ||
     !scheduleListEl
-  ) {
-    return;
-  }
-
-  const classes = Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`);
-
-  // 1–11-sinflarni chiqarish
-  classGridEl.innerHTML = classes
-    .map(
-      (className) => `
-        <button
-          class="class-btn"
-          type="button"
-          data-class="${className}"
-        >
-          ${className.toUpperCase()}
-        </button>
-      `
-    )
-    .join("");
-
-  function renderClassSchedule(className) {
-  const schedule = MySchoolData.schedule[className] || {};
-  const days = Object.keys(schedule);
-
-  selectedClassTitleEl.tex
+  )
