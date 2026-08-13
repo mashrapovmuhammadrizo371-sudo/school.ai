@@ -573,33 +573,14 @@ function initLibrary() {
     // TODO (kelajakda): haqiqiy AI API bilan almashtiriladi
     function getPlaceholderReply() {
       return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
-async function sendMessageToAI(userText) {
-  try {
-    const response = await fetch("https://school-ai-bpp0.onrender.com", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: userText
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Server xatosi");
     }
 
-    addBubble(data.answer, "bot");
-  } catch (error) {
-    console.error("AI error:", error);
-    addBubble(
-      "Uzr, AI bilan bog‘lanishda xatolik yuz berdi.",
-      "bot"
-    );
-  }
-}
+    function sendMessageToAI(userText) {
+      // Hozircha soxta javob, kelajakda fetch('/api/ai', {...}) shu yerga qo'shiladi
+      setTimeout(() => {
+        addBubble(getPlaceholderReply(), "bot");
+      }, 500);
+    }
 
     function greetOnce() {
       if (greeted) return;
@@ -633,18 +614,4 @@ async function sendMessageToAI(userText) {
     if (btn.classList.contains("panel")) return;
     btn.addEventListener("click", () => {
       document.dispatchEvent(
-        new CustomEvent("myschool:panel-opened", { detail: btn.dataset.panel })
-      );
-    });
-  });
-
-  /* ---------- Barcha panellarni ishga tushirish ---------- */
-
-  initSchedule();
-  initSubjects();
-  initCareer();
-  initAnnouncements();
-  initLibrary();
-  initAIChat();
-});
-                          
+        new 
