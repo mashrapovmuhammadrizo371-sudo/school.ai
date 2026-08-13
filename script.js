@@ -18,58 +18,247 @@
    ---------------------------------------------------------- */
 
 const MySchoolData = {
-  schedule: {
-    Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Ingliz tili" },
-      { time: "11:00–11:40", subject: "Informatika" },
-      { time: "12:30–13:10", subject: "Kimyo" },
-      { time: "13:20–14:00", subject: "Ona tili va adabiyot" },
-      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
-      { time: "15:00–15:40", subject: "Robototexnika" },
-    ],
-    Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Ingliz tili" },
-      { time: "12:30–13:10", subject: "Informatika" },
-      { time: "13:20–14:00", subject: "Tarix" },
-      { time: "14:10–14:50", subject: "Chizmachilik" },
-      { time: "15:00–15:40", subject: "Loyihachilik" },
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Informatika" },
-      { time: "11:00–11:40", subject: "Ingliz tili" },
-      { time: "12:30–13:10", subject: "Fizika" },
-      { time: "13:20–14:00", subject: "Geografiya" },
-      { time: "14:10–14:50", subject: "Robototexnika" },
-      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
-    ],
-    Payshanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Kimyo" },
-      { time: "11:00–11:40", subject: "Informatika" },
-      { time: "12:30–13:10", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:00", subject: "Ingliz tili" },
-      { time: "14:10–14:50", subject: "San'at" },
-      { time: "15:00–15:40", subject: "Chizmachilik" },
-    ],
-    Juma: [
-      { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" },
-      { time: "12:30–13:10", subject: "Ingliz tili" },
-      { time: "13:20–14:00", subject: "Tarix" },
-      { time: "14:10–14:50", subject: "Loyiha himoyasi" },
-      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
-    ],
-  },
+  function initSchedule() {
+  const classGridEl = document.getElementById("classGrid");
+  const classSelectorEl = document.getElementById("classSelector");
+  const scheduleSectionEl = document.getElementById("scheduleSection");
+  const classBackBtn = document.getElementById("classBackBtn");
+  const selectedClassTitleEl =
+    document.getElementById("selectedClassTitle");
+  const dayTabsEl = document.getElementById("dayTabs");
+  const scheduleListEl = document.getElementById("scheduleList");
+
+  if (
+    !classGridEl ||
+    !classSelectorEl ||
+    !scheduleSectionEl ||
+    !classBackBtn ||
+    !selectedClassTitleEl ||
+    !dayTabsEl ||
+    !scheduleListEl
+  ) {
+    console.error("MySchool: Jadval HTML elementlari topilmadi.");
+    return;
+  }
+
+  /* ==============================
+     SINFLAR
+  ============================== */
+
+  const classes = [
+    "1-sinf",
+    "2-sinf",
+    "3-sinf",
+    "4-sinf",
+    "5-sinf",
+    "6-sinf",
+    "7-sinf",
+    "8-sinf",
+    "9-sinf",
+    "10-sinf",
+    "11-sinf",
+  ];
+
+  /* ==============================
+     1–4-SINF VAQTLARI
+  ============================== */
+
+  const times14 = [
+    "08:30–09:15",
+    "09:20–10:05",
+    "10:10–10:55",
+    "11:40–12:25",
+    "12:30–13:15",
+    "13:20–14:05",
+    "14:10–14:55",
+    "15:40–16:25",
+  ];
+
+  /* ==============================
+     5–11-SINF VAQTLARI
+  ============================== */
+
+  const times511 = [
+    "08:30–09:15",
+    "09:20–10:05",
+    "10:10–10:55",
+    "11:00–11:45",
+    "12:30–13:15",
+    "13:20–14:05",
+    "14:10–14:55",
+    "15:00–15:45",
+  ];
+
+  /* ==============================
+     SINFLARNI EKRANGA CHIQARISH
+  ============================== */
+
+  classGridEl.innerHTML = classes
+    .map(
+      (className) => `
+        <button
+          class="class-btn"
+          type="button"
+          data-class="${className}"
+        >
+          ${className.toUpperCase()}
+        </button>
+      `
+    )
+    .join("");
+
+  /* ==============================
+     SINFLAR RO‘YXATINI KO‘RSATISH
+  ============================== */
+
+  classSelectorEl.hidden = false;
+  scheduleSectionEl.hidden = true;
+
+  /* ==============================
+     JADVALNI CHIZISH
+  ============================== */
+
+  function renderClassSchedule(className) {
+    const isPrimary = ["1-sinf", "2-sinf", "3-sinf", "4-sinf"].includes(
+      className
+    );
+
+    const times = isPrimary ? times14 : times511;
+
+    selectedClassTitleEl.textContent = className.toUpperCase();
+
+    const schedule = MySchoolData.schedule || {};
+    const days = Object.keys(schedule);
+
+    dayTabsEl.innerHTML = days
+      .map(
+        (day, i) => `
+          <button
+            class="day-tab${i === 0 ? " is-active" : ""}"
+            type="button"
+            data-day="${day}"
+          >
+            ${day}
+          </button>
+        `
+      )
+      .join("");
+
+    function renderDay(day) {
+      const lessons = schedule[day] || [];
+
+      if (lessons.length === 0) {
+        scheduleListEl.innerHTML =
+          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+        return;
+      }
+
+      let html = "";
+
+      lessons.slice(0, 8).forEach((lesson, i) => {
+        /* 1–4-SINF: 3-darsdan keyin ABET */
+        if (isPrimary && i === 3) {
+          html += `
+            <div class="schedule-row">
+              <span class="schedule-row__index">🍽️</span>
+              <span class="schedule-row__time">10:55–11:40</span>
+              <span class="schedule-row__subject">ABET</span>
+            </div>
+          `;
+        }
+
+        /* 5–11-SINF: 4-darsdan keyin ABET */
+        if (!isPrimary && i === 4) {
+          html += `
+            <div class="schedule-row">
+              <span class="schedule-row__index">🍽️</span>
+              <span class="schedule-row__time">11:45–12:30</span>
+              <span class="schedule-row__subject">ABET</span>
+            </div>
+          `;
+        }
+
+        /* Dars */
+        html += `
+          <div class="schedule-row">
+            <span class="schedule-row__index">${i + 1}</span>
+            <span class="schedule-row__time">${times[i]}</span>
+            <span class="schedule-row__subject">${lesson.subject}</span>
+          </div>
+        `;
+
+        /* 1–4-SINF: 7-darsdan keyin POLDNIK */
+        if (isPrimary && i === 6) {
+          html += `
+            <div class="schedule-row">
+              <span class="schedule-row__index">🍽️</span>
+              <span class="schedule-row__time">14:55–15:40</span>
+              <span class="schedule-row__subject">POLDNIK</span>
+            </div>
+          `;
+        }
+
+        /* 5–11-SINF: 8-darsdan keyin POLDNIK */
+        if (!isPrimary && i === 7) {
+          html += `
+            <div class="schedule-row">
+              <span class="schedule-row__index">🍽️</span>
+              <span class="schedule-row__time">15:45–16:30</span>
+              <span class="schedule-row__subject">POLDNIK</span>
+            </div>
+          `;
+        }
+      });
+
+      scheduleListEl.innerHTML = html;
+    }
+
+    /* Kunlarni bosish */
+
+    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        dayTabsEl
+          .querySelectorAll(".day-tab")
+          .forEach((t) => t.classList.remove("is-active"));
+
+        tab.classList.add("is-active");
+
+        renderDay(tab.dataset.day);
+      });
+    });
+
+    if (days.length > 0) {
+      renderDay(days[0]);
+    } else {
+      scheduleListEl.innerHTML =
+        '<p class="empty-state">Jadval hali kiritilmagan.</p>';
+    }
+  }
+
+  /* ==============================
+     SINF TANLASH
+  ============================== */
+
+  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const className = btn.dataset.class;
+
+      classSelectorEl.hidden = true;
+      scheduleSectionEl.hidden = false;
+
+      renderClassSchedule(className);
+    });
+  });
+
+  /* ==============================
+     ORQAGA
+  ============================== */
+
+  classBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classSelectorEl.hidden = false;
+  });
+         }
 
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
