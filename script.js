@@ -9,10 +9,12 @@
    ========================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
+  const intro = document.getElementById("intro");
   const cap = document.getElementById("cap");
   const brand = document.getElementById("brand");
   const divider = document.getElementById("divider");
   const enterBtn = document.getElementById("enterBtn");
+  const menu = document.getElementById("menu");
 
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
@@ -35,16 +37,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // KIRISH tugmasi bosilganda
+  // KIRISH tugmasi bosilganda: welcome ekran yopiladi, asosiy menu ochiladi
   enterBtn.addEventListener("click", () => {
-    // Bosilgan holatni bildiruvchi kichik feedback
     enterBtn.disabled = true;
 
-    // Kelajakda asosiy menyuga o'tish shu joyda amalga oshiriladi.
-    // Hozircha faqat hodisa (event) chiqaramiz, shu orqali keyingi
-    // bosqichda navigatsiya osongina ulanadi.
     document.dispatchEvent(new CustomEvent("myschool:kirish"));
 
-    console.log("KIRISH bosildi — asosiy menyuga o'tish shu yerda ishlanadi.");
+    const fadeOutDuration = prefersReducedMotion ? 0 : 600;
+
+    // 1) Welcome ekranni fade-out qilamiz
+    intro.classList.add("is-leaving");
+
+    // 2) Fade-out tugagach, welcome ekranni butunlay yashiramiz
+    //    va asosiy menuni ko'rsatamiz (fade-in bilan)
+    setTimeout(() => {
+      intro.hidden = true;
+
+      menu.hidden = false;
+      // hidden atributi olib tashlangandan keyin reflow bo'lishi uchun
+      // bir frame kutamiz, shunda CSS transition ishlaydi
+      requestAnimationFrame(() => {
+        menu.classList.add("is-visible");
+      });
+
+      document.dispatchEvent(new CustomEvent("myschool:menu-opened"));
+    }, fadeOutDuration);
+  });
+
+  // Hozircha menu tugmalari faqat dizayn — funksiyalar keyinroq ulanadi
+  const menuButtons = document.querySelectorAll(".menu-btn, .ai-btn");
+  menuButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const label = btn.querySelector(
+        ".menu-btn__label, .ai-btn__label"
+      )?.textContent;
+      console.log(`"${label}" bosildi — bo'lim hali ulanmagan.`);
+    });
   });
 });
