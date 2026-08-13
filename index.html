@@ -16,10 +16,7 @@
 </head>
 <body>
 
-  <!-- ==========================================================
-       1) KIRISH (welcome) ekrani — animatsiya buzilmagan
-       ========================================================== -->
-  <main class="screen intro is-active" id="intro">
+  <main class="intro" id="intro">
     <div class="intro__inner">
 
       <div class="cap" id="cap" aria-hidden="true">🎓</div>
@@ -38,10 +35,7 @@
     </div>
   </main>
 
-  <!-- ==========================================================
-       2) Asosiy MENU
-       ========================================================== -->
-  <main class="screen menu" id="menu">
+  <main class="menu" id="menu">
     <div class="menu__inner">
 
       <div class="menu__header">
@@ -50,38 +44,38 @@
       </div>
 
       <nav class="menu__grid">
-        <button class="menu-btn" type="button" data-panel="jadval">
+        <button class="menu-btn" type="button">
           <span class="menu-btn__icon">📅</span>
           <span class="menu-btn__label">JADVAL</span>
         </button>
 
-        <button class="menu-btn" type="button" data-panel="fanlar">
+        <button class="menu-btn" type="button">
           <span class="menu-btn__icon">📖</span>
           <span class="menu-btn__label">FANLAR</span>
         </button>
 
-        <button class="menu-btn" type="button" data-panel="career">
+        <button class="menu-btn" type="button">
           <span class="menu-btn__icon">🎯</span>
           <span class="menu-btn__label">CAREER</span>
         </button>
 
-        <button class="menu-btn" type="button" data-panel="elon">
+        <button class="menu-btn" type="button">
           <span class="menu-btn__icon">📢</span>
           <span class="menu-btn__label">E'LON</span>
         </button>
 
-        <button class="menu-btn" type="button" data-panel="kitobxona">
-          <span class="menu-btn__icon">📚</span>
+        <button class="menu-btn" type="button">
+          <span class="menu-btn__icon">📖</span>
           <span class="menu-btn__label">KITOBXONA</span>
         </button>
 
-        <button class="menu-btn" type="button" data-panel="info">
+        <button class="menu-btn" type="button">
           <span class="menu-btn__icon">❓</span>
           <span class="menu-btn__label">INFO</span>
         </button>
       </nav>
 
-      <button class="ai-btn" type="button" data-panel="ai">
+      <button class="ai-btn" type="button">
         <span class="ai-btn__icon">🤖</span>
         <span class="ai-btn__label">AI YORDAMCHI</span>
       </button>
@@ -89,166 +83,6 @@
     </div>
   </main>
 
-  <!-- ==========================================================
-       3) Panellar — har biri mustaqil "screen", data-panel bilan
-       menu tugmalariga bog'langan. Har birida "← ORQAGA" bor.
-       ========================================================== -->
-
-  <!-- 📅 JADVAL -->
-  <main class="screen panel" id="panel-jadval" data-panel="jadval">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">📅 JADVAL</h2>
-      </div>
-      <div class="panel__content">
-        <div class="day-tabs" id="dayTabs"></div>
-        <div class="schedule-list" id="scheduleList"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 📖 FANLAR -->
-  <main class="screen panel" id="panel-fanlar" data-panel="fanlar">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">📖 FANLAR</h2>
-      </div>
-      <div class="panel__content">
-        <div class="subject-list" id="subjectList"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 🎯 CAREER -->
-  <main class="screen panel" id="panel-career" data-panel="career">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">🎯 CAREER</h2>
-      </div>
-      <div class="panel__content">
-        <label class="career-label" for="careerInput">
-          Kelajakdagi maqsading nima?
-        </label>
-        <textarea
-          class="career-textarea"
-          id="careerInput"
-          rows="4"
-          placeholder="Masalan: Men kelajakda dasturchi bo'lishni orzu qilaman..."
-        ></textarea>
-        <button class="career-save-btn" type="button" id="careerSaveBtn">
-          Saqlash
-        </button>
-
-        <div class="career-result" id="careerResult" hidden>
-          <span class="career-result__label">Sening maqsading</span>
-          <p class="career-result__text" id="careerGoalText"></p>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 📢 E'LON -->
-  <main class="screen panel" id="panel-elon" data-panel="elon">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">📢 E'LON</h2>
-      </div>
-      <div class="panel__content">
-        <div class="announcement-list" id="announcementList"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 📚 KITOBXONA -->
-  <main class="screen panel" id="panel-kitobxona" data-panel="kitobxona">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">📚 KITOBXONA</h2>
-      </div>
-      <div class="panel__content">
-        <input
-          class="search-input"
-          id="bookSearch"
-          type="text"
-          placeholder="Kitob yoki muallif nomini qidiring..."
-          autocomplete="off"
-        />
-        <div class="book-list" id="bookList"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- ❓ INFO -->
-  <main class="screen panel" id="panel-info" data-panel="info">
-    <div class="panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">❓ INFO</h2>
-      </div>
-      <div class="panel__content">
-
-        <div class="info-section">
-          <h3 class="info-section__title">MySchool haqida</h3>
-          <p class="info-section__text">
-            MySchool — STEM SCHOOL o'quvchilari uchun yaratilgan zamonaviy
-            raqamli platforma. U orqali o'quvchilar dars jadvali, fanlar,
-            e'lonlar va maktab hayoti bilan bog'liq boshqa ma'lumotlarni
-            bir joydan kuzatib borishlari mumkin.
-          </p>
-        </div>
-
-        <div class="info-section">
-          <h3 class="info-section__title">STEM SCHOOL haqida</h3>
-          <p class="info-section__text">
-            STEM SCHOOL — matematika, texnologiya, muhandislik va tabiiy
-            fanlarga ixtisoslashgan zamonaviy ta'lim muassasasi. Maktab
-            o'quvchilarda amaliy fikrlash va ilmiy yondashuvni
-            rivojlantirishga qaratilgan.
-          </p>
-        </div>
-
-        <div class="info-section">
-          <h3 class="info-section__title">Saytdan qanday foydalanish</h3>
-          <p class="info-section__text">
-            Asosiy menyudan kerakli bo'limni tanlang: Jadval, Fanlar,
-            Career, E'lon, Kutubxona, Info yoki AI Yordamchi. Har bir
-            bo'limda "← ORQAGA" tugmasi orqali asosiy menyuga
-            qaytishingiz mumkin.
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </main>
-
-  <!-- 🤖 AI YORDAMCHI -->
-  <main class="screen panel" id="panel-ai" data-panel="ai">
-    <div class="panel__inner ai-panel__inner">
-      <div class="panel__header">
-        <button class="back-btn" type="button" data-back>← ORQAGA</button>
-        <h2 class="panel__title">🤖 AI YORDAMCHI</h2>
-      </div>
-
-      <div class="chat-messages" id="chatMessages"></div>
-
-      <form class="chat-input-row" id="chatForm">
-        <input
-          class="chat-input"
-          id="chatInput"
-          type="text"
-          placeholder="Xabar yozing..."
-          autocomplete="off"
-        />
-        <button class="chat-send-btn" type="submit">Yuborish</button>
-      </form>
-    </div>
-  </main>
-
   <script src="script.js"></script>
 </body>
-    </html>
+</html>
