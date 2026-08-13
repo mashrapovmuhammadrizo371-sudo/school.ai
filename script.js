@@ -426,43 +426,127 @@ function initSchedule() {
   /* ----------------------------------------------------------
      8) 📚 KITOBXONA — ro'yxat + qidiruv
      ---------------------------------------------------------- */
+function initLibrary() {
+  const searchInput = document.getElementById("bookSearch");
+  const listEl = document.getElementById("bookList");
 
-  function initLibrary() {
-    const searchInput = document.getElementById("bookSearch");
-    const listEl = document.getElementById("bookList");
-    if (!searchInput || !listEl) return;
+  if (!searchInput || !listEl) return;
 
-    function renderBooks(query) {
-      const q = query.trim().toLowerCase();
-      const filtered = MySchoolData.books.filter(
-        (b) =>
-          b.title.toLowerCase().includes(q) ||
-          b.author.toLowerCase().includes(q)
-      );
+  function renderBooks(query) {
+    const q = query.trim().toLowerCase();
 
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">Hech narsa topilmadi.</p>`;
-        return;
-      }
+    const filtered = MySchoolData.books.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q)
+    );
 
-      listEl.innerHTML = filtered
-        .map(
-          (b) => `
-            <div class="book-item">
-              <span class="book-item__title">${b.title}</span>
-              <span class="book-item__author">${b.author}</span>
-            </div>
-          `
-        )
-        .join("");
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        `<p class="empty-state">Hech narsa topilmadi.</p>`;
+      return;
     }
 
-    searchInput.addEventListener("input", () => {
-      renderBooks(searchInput.value);
-    });
+    listEl.innerHTML = filtered
+      .map(
+        (b, index) => `
+          <button
+            class="book-item"
+            type="button"
+            data-book-index="${MySchoolData.books.indexOf(b)}"
+          >
+            <span class="book-item__title">📖 ${b.title}</span>
+            <span class="book-item__author">${b.author}</span>
+          </button>
+        `
+      )
+      .join("");
 
-    renderBooks("");
+    // Kitob ustiga bosilganda
+    listEl.querySelectorAll(".book-item").forEach((bookEl) => {
+      bookEl.addEventListener("click", () => {
+        const index = Number(bookEl.dataset.bookIndex);
+        const book = MySchoolData.books[index];
+
+        openBookModal(book);
+      });
+    });
   }
+
+  // Kitob oynasi
+  function openBookModal(book) {
+    const oldModal = document.getElementById("bookModal");
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "bookModal";
+    modal.className = "book-modal";
+
+    modal.innerHTML = `
+      <div class="book-modal__box">
+
+        <button
+          class="book-modal__close"
+          type="button"
+          aria-label="Yopish"
+        >
+          ×
+        </button>
+
+        <div class="book-modal__icon">📖</div>
+
+        <h2>${book.title}</h2>
+
+        <p class="book-modal__author">
+          ✍️ ${book.author}
+        </p>
+
+        <p class="book-modal__description">
+          Ushbu kitob haqida batafsil ma'lumot va
+          elektron o'qish imkoniyati tez orada qo'shiladi.
+        </p>
+
+        <button
+          class="book-modal__read"
+          type="button"
+        >
+          📚 O‘qishni boshlash
+        </button>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Yopish
+    modal
+      .querySelector(".book-modal__close")
+      .addEventListener("click", () => {
+        modal.remove();
+      });
+
+    // O'qishni boshlash
+    modal
+      .querySelector(".book-modal__read")
+      .addEventListener("click", () => {
+        alert("📚 Bu kitob tez orada qo‘shiladi!");
+      });
+
+    // Tashqarisini bosganda yopish
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  // Qidiruv
+  searchInput.addEventListener("input", () => {
+    renderBooks(searchInput.value);
+  });
+
+  renderBooks("");
+}
 
   /* ----------------------------------------------------------
      9) 🤖 AI YORDAMCHI — chat interfeysi (placeholder javoblar)
