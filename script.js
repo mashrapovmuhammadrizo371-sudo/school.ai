@@ -592,4 +592,14 @@ async function sendMessageToAI(userText) {
     if (btn.classList.contains("panel")) return;
     btn.addEventListener("click", () => {
       document.dispatchEvent(
-        new 
+        new document.querySelectorAll("[data-panel]").forEach((btn) => {
+  if (btn.classList.contains("panel")) return;
+
+  btn.addEventListener("click", () => {
+    document.dispatchEvent(
+      new CustomEvent("myschool:panel-opened", {
+        detail: btn.dataset.panel
+      })
+    );
+  });
+});
