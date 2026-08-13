@@ -214,15 +214,73 @@ document.addEventListener("DOMContentLoaded", () => {
      4) 📅 JADVAL — kun tablari + dars ro'yxati
      ---------------------------------------------------------- */
 
-  function initSchedule() {
-    const dayTabsEl = document.getElementById("dayTabs");
-    const scheduleListEl = document.getElementById("scheduleList");
-    if (!dayTabsEl || !scheduleListEl) return;
+function initSchedule() {
+  const classGridEl = document.getElementById("classGrid");
+  const classSelectorEl = document.getElementById("classSelector");
+  const scheduleSectionEl = document.getElementById("scheduleSection");
+  const classBackBtn = document.getElementById("classBackBtn");
+  const selectedClassTitleEl = document.getElementById("selectedClassTitle");
+  const dayTabsEl = document.getElementById("dayTabs");
+  const scheduleListEl = document.getElementById("scheduleList");
 
-    const days = Object.keys(MySchoolData.schedule);
+  if (
+    !classGridEl ||
+    !classSelectorEl ||
+    !scheduleSectionEl ||
+    !classBackBtn ||
+    !selectedClassTitleEl ||
+    !dayTabsEl ||
+    !scheduleListEl
+  ) {
+    return;
+  }
+
+  const classes = Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`);
+
+  // 1–11-sinflarni chiqarish
+  classGridEl.innerHTML = classes
+    .map(
+      (className) => `
+        <button
+          class="class-btn"
+          type="button"
+          data-class="${className}"
+        >
+          ${className.toUpperCase()}
+        </button>
+      `
+    )
+    .join("");
+
+  function renderClassSchedule(className) {
+    const schedule = MySchoolData.schedule[className] || {};
+    const days = Object.keys(schedule);
+
+    selectedClassTitleEl.textContent = className.toUpperCase();
+
+    dayTabsEl.innerHTML = days
+      .map(
+        (day, i) => `
+          <button
+            class="day-tab${i === 0 ? " is-active" : ""}"
+            type="button"
+            data-day="${day}"
+          >
+            ${day}
+          </button>
+        `
+      )
+      .join("");
 
     function renderDay(day) {
-      const lessons = MySchoolData.schedule[day] || [];
+      const lessons = schedule[day] || [];
+
+      if (lessons.length === 0) {
+        scheduleListEl.innerHTML =
+          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+        return;
+      }
+
       scheduleListEl.innerHTML = lessons
         .map(
           (lesson, i) => `
@@ -236,28 +294,44 @@ document.addEventListener("DOMContentLoaded", () => {
         .join("");
     }
 
-    dayTabsEl.innerHTML = days
-      .map(
-        (day, i) => `
-          <button class="day-tab${i === 0 ? " is-active" : ""}" type="button" data-day="${day}">
-            ${day}
-          </button>
-        `
-      )
-      .join("");
-
     dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         dayTabsEl
           .querySelectorAll(".day-tab")
           .forEach((t) => t.classList.remove("is-active"));
+
         tab.classList.add("is-active");
+
         renderDay(tab.dataset.day);
       });
     });
 
-    renderDay(days[0]);
+    if (days.length > 0) {
+      renderDay(days[0]);
+    } else {
+      scheduleListEl.innerHTML =
+        '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
+    }
   }
+
+  // Sinf tanlash
+  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const className = btn.dataset.class;
+
+      classSelectorEl.hidden = true;
+      scheduleSectionEl.hidden = false;
+
+      renderClassSchedule(className);
+    });
+  });
+
+  // Sinf tanlashga qaytish
+  classBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classSelectorEl.hidden = false;
+  });
+     }
 
   /* ----------------------------------------------------------
      5) 📖 FANLAR
