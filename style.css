@@ -447,6 +447,120 @@ button {
 
 /* ---------- 📅 JADVAL ---------- */
 
+/* SINF TANLANG */
+
+.class-selector {
+  width: 100%;
+}
+
+.class-selector__title {
+  margin-bottom: 18px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent-2);
+  text-align: center;
+}
+
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.class-btn {
+  min-height: 58px;
+  padding: 14px 10px;
+
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text);
+
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    background 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+
+.class-btn:hover {
+  transform: translateY(-3px);
+  color: var(--accent-2);
+  border-color: rgba(201, 169, 97, 0.45);
+  background: rgba(201, 169, 97, 0.07);
+}
+
+.class-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.class-btn:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 3px;
+}
+
+
+/* Tanlangan sinf jadvali */
+
+.schedule-section[hidden],
+.class-selector[hidden] {
+  display: none;
+}
+
+.selected-class-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.class-back-btn {
+  flex-shrink: 0;
+  padding: 8px 13px;
+
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    background 0.3s var(--ease);
+}
+
+.class-back-btn:hover {
+  color: var(--accent-2);
+  border-color: rgba(201, 169, 97, 0.4);
+  background: rgba(201, 169, 97, 0.06);
+}
+
+.selected-class-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent-2);
+}
+
+
+/* Kunlar */
+
 .day-tabs {
   display: flex;
   gap: 8px;
@@ -463,24 +577,36 @@ button {
 .day-tab {
   flex-shrink: 0;
   padding: 9px 16px;
+
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
+
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
+
   cursor: pointer;
 
-  transition: color 0.3s var(--ease), background 0.3s var(--ease),
+  transition:
+    color 0.3s var(--ease),
+    background 0.3s var(--ease),
     border-color 0.3s var(--ease);
 }
 
 .day-tab.is-active {
   color: var(--bg);
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: linear-gradient(
+    135deg,
+    var(--accent-2),
+    var(--accent)
+  );
   border-color: transparent;
 }
+
+
+/* Darslar */
 
 .schedule-list {
   display: flex;
@@ -493,17 +619,20 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   padding: 14px 16px;
+
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
 }
 
 .schedule-row__index {
-  font-size: 11px;
-  color: var(--text-dim);
   width: 18px;
   flex-shrink: 0;
+
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
 .schedule-row__time {
@@ -515,13 +644,40 @@ button {
 }
 
 .schedule-row__subject {
+  flex: 1;
+  margin-left: 12px;
+
   font-size: 13.5px;
   font-weight: 500;
   text-align: right;
-  flex: 1;
-  margin-left: 12px;
 }
 
+
+/* Telefon ekranlari */
+
+@media (max-width: 420px) {
+  .class-grid {
+    gap: 10px;
+  }
+
+  .class-btn {
+    min-height: 54px;
+    font-size: 12px;
+  }
+
+  .selected-class-header {
+    gap: 8px;
+  }
+
+  .class-back-btn {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .selected-class-title {
+    font-size: 14px;
+  }
+   }
 /* ---------- 📖 FANLAR ---------- */
 
 .subject-list {
