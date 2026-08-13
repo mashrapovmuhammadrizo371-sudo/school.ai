@@ -362,30 +362,7 @@ const MySchoolData = {
     ]
   }
 },
-// Har bir sinf va har bir kun uchun 8 ta darsni ta'minlash
-Object.values(MySchoolData.schedule).forEach((classSchedule) => {
-  Object.keys(classSchedule).forEach((day) => {
-    const lessons = classSchedule[day];
 
-    const extraSubjects = [
-      "Ona tili",
-      "Matematika",
-      "Ingliz tili",
-      "Informatika",
-      "Jismoniy tarbiya",
-      "Tarix",
-      "Geografiya",
-      "Robototexnika"
-    ];
-
-    while (lessons.length < 8) {
-      lessons.push({
-        time: "",
-        subject: extraSubjects[lessons.length]
-      });
-    }
-  });
-});
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
     { icon: "⚛️", name: "Fizika", desc: "Mexanika, elektr, optika va tabiat qonunlari." },
