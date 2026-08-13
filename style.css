@@ -1,403 +1,472 @@
 /* ==========================================================
-   MySchool — KIRISH (welcome) screen
-   Palette:
-     --bg        #0A0E14  deep space navy
-     --bg-glow   #101623  radial glow accent
-     --text      #ECEEF1  soft white
-     --text-dim  #7C8494  muted slate (secondary)
-     --accent    #C9A961  premium gold
-     --accent-2  #E4C989  lighter gold (hover/glow)
-   Type:
-     Display -> "Space Grotesk" (wide tracking, technical elegance)
-     UI/body -> "Inter"
+   MySchool — STEM SCHOOL platformasi
+   Tarkib:
+     1) KIRISH ekrani animatsiyasi (o'zgarishsiz)
+     2) Umumiy ekran navigatsiyasi (.screen / .is-active)
+     3) Statik ma'lumotlar (MySchoolData) — kelajakda
+        backend/DB dan olinadigan joy shu yerda aniq belgilangan
+     4) Har bir panelni render qiluvchi funksiyalar
+     5) CAREER, KITOBXONA qidiruv va AI chat interaktivligi
    ========================================================== */
 
-:root {
-  --bg: #0a0e14;
-  --bg-glow: #121a29;
-  --text: #ecedf1;
-  --text-dim: #7c8494;
-  --accent: #c9a961;
-  --accent-2: #e6cd8f;
+/* ----------------------------------------------------------
+   1) MA'LUMOTLAR (hozircha statik)
+   TODO (kelajakda): bu obyektlar backend API / database dan
+   fetch('/api/...') orqali olinadi. Render funksiyalari shu
+   sabab alohida yozilgan — data manbai almashsa ham render
+   funksiyalarini o'zgartirish shart bo'lmaydi.
+   ---------------------------------------------------------- */
 
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Inter", sans-serif;
+const MySchoolData = {
+  schedule: {
+    Dushanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Fizika" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Kimyo" },
+      { time: "13:20–14:00", subject: "Ona tili va adabiyot" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "Robototexnika" },
+    ],
+    Seshanba: [
+      { time: "08:30–09:10", subject: "Fizika" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Biologiya" },
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Chizmachilik" },
+      { time: "15:00–15:40", subject: "Loyihachilik" },
+    ],
+    Chorshanba: [
+      { time: "08:30–09:10", subject: "Kimyo" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Informatika" },
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Fizika" },
+      { time: "13:20–14:00", subject: "Geografiya" },
+      { time: "14:10–14:50", subject: "Robototexnika" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
+    ],
+    Payshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Biologiya" },
+      { time: "10:10–10:50", subject: "Kimyo" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Ona tili va adabiyot" },
+      { time: "13:20–14:00", subject: "Ingliz tili" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Chizmachilik" },
+    ],
+    Juma: [
+      { time: "08:30–09:10", subject: "Informatika" },
+      { time: "09:20–10:00", subject: "Fizika" },
+      { time: "10:10–10:50", subject: "Matematika" },
+      { time: "11:00–11:40", subject: "Robototexnika" },
+      { time: "12:30–13:10", subject: "Ingliz tili" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Loyiha himoyasi" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
+    ],
+  },
 
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
+  subjects: [
+    { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
+    { icon: "⚛️", name: "Fizika", desc: "Mexanika, elektr, optika va tabiat qonunlari." },
+    { icon: "🧪", name: "Kimyo", desc: "Moddalar tuzilishi va kimyoviy reaksiyalar asoslari." },
+    { icon: "🧬", name: "Biologiya", desc: "Tirik organizmlar, genetika va ekologik tizimlar." },
+    { icon: "💻", name: "Informatika", desc: "Dasturlash, algoritmlar va raqamli texnologiyalar." },
+    { icon: "🤖", name: "Robototexnika", desc: "Robot konstruksiyalash va avtomatlashtirilgan tizimlar." },
+    { icon: "🌍", name: "Geografiya", desc: "Dunyo xaritasi, iqlim va tabiiy resurslar." },
+    { icon: "📜", name: "Tarix", desc: "Jahon va milliy tarix voqealari." },
+    { icon: "🗣️", name: "Ingliz tili", desc: "Xalqaro muloqot va ilmiy matnlarni tushunish." },
+    { icon: "✍️", name: "Ona tili va adabiyot", desc: "Nutq madaniyati va badiiy adabiyot asoslari." },
+  ],
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+  announcements: [
+    {
+      date: "10.08.2026",
+      title: "Yangi o'quv yili boshlanishi",
+      text: "2026–2027 o'quv yili 1-sentyabr kuni soat 9:00 da boshlanadi. Barcha o'quvchilar bayram marosimiga taklif etiladi.",
+    },
+    {
+      date: "05.08.2026",
+      title: "Robototexnika to'garagi",
+      text: "Yangi robototexnika to'garagiga ro'yxatdan o'tish boshlandi. Batafsil ma'lumot uchun sinf rahbaringizga murojaat qiling.",
+    },
+    {
+      date: "28.07.2026",
+      title: "Yozgi STEM lager",
+      text: "Yozgi ilmiy lager dasturi muvaffaqiyatli yakunlandi. Ishtirokchilarga sertifikatlar topshirildi.",
+    },
+    {
+      date: "15.07.2026",
+      title: "Kutubxona yangilanishi",
+      text: "Maktab kutubxonasiga 50 dan ortiq yangi kitob qo'shildi. Ro'yxat bilan KITOBXONA bo'limida tanishishingiz mumkin.",
+    },
+  ],
 
-html,
-body {
-  height: 100%;
-}
+  books: [
+    { title: "Qisqacha vaqt tarixi", author: "Stephen Hawking" },
+    { title: "Sapiens: Insoniyatning qisqacha tarixi", author: "Yuval Noah Harari" },
+    { title: "Alisa mo'jizalar mamlakatida", author: "Lewis Carroll" },
+    { title: "Kichik shahzoda", author: "Antoine de Saint-Exupéry" },
+    { title: "O'tkan kunlar", author: "Abdulla Qodiriy" },
+    { title: "Mehrobdan chayon", author: "Abdulla Qodiriy" },
+    { title: "Algoritmlar asoslari", author: "Thomas H. Cormen" },
+    { title: "Kosmos", author: "Carl Sagan" },
+    { title: "Fizika darslari", author: "Richard Feynman" },
+    { title: "Robototexnikaga kirish", author: "John J. Craig" },
+  ],
+};
 
-body {
-  background: radial-gradient(
-      circle at 50% 30%,
-      var(--bg-glow) 0%,
-      var(--bg) 60%
-    ),
-    var(--bg);
-  font-family: var(--font-body);
-  color: var(--text);
-  overflow: hidden;
-}
+/* ----------------------------------------------------------
+   DOMContentLoaded — barcha logika shu ichida ishga tushadi
+   ---------------------------------------------------------- */
 
-/* ---------- layout ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  /* ---------- Asosiy elementlar ---------- */
 
-/* Ikkala ekran (.intro va .menu) bir-birining ustiga fixed
-   holatda joylashadi va faqat opacity/visibility bilan
-   almashtiriladi — hech qanday "hidden" atributiga
-   yoki display:none/flex almashinishiga tayanilmaydi. */
+  const intro = document.getElementById("intro");
+  const cap = document.getElementById("cap");
+  const brand = document.getElementById("brand");
+  const divider = document.getElementById("divider");
+  const enterBtn = document.getElementById("enterBtn");
+  const menu = document.getElementById("menu");
 
-.intro,
-.menu {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  const required = { intro, cap, brand, divider, enterBtn, menu };
+  const missing = Object.entries(required)
+    .filter(([, el]) => !el)
+    .map(([name]) => name);
 
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.6s var(--ease), visibility 0s linear 0.6s;
-}
-
-.intro {
-  /* Sahifa ochilganda welcome ekran darhol faol */
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transition: opacity 0.6s var(--ease);
-}
-
-.intro.is-leaving {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.menu.is-visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transition: opacity 0.6s var(--ease);
-}
-
-.intro__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-/* ---------- graduation cap ---------- */
-
-.cap {
-  font-size: clamp(56px, 12vw, 92px);
-  line-height: 1;
-  filter: drop-shadow(0 0 24px rgba(201, 169, 97, 0.25));
-
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 1.1s var(--ease), transform 1.1s var(--ease);
-}
-
-.cap.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ---------- brand / STEM SCHOOL ---------- */
-
-.brand {
-  margin-top: clamp(14px, 2.5vw, 22px);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(22px, 5vw, 38px);
-  letter-spacing: 0.42em;
-  /* compensate the trailing letter-spacing so the block stays optically centered */
-  padding-left: 0.42em;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 1s var(--ease), transform 1s var(--ease);
-}
-
-.brand.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.brand__word:last-child {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-/* ---------- divider line ---------- */
-
-.divider {
-  margin-top: clamp(22px, 4vw, 34px);
-  width: min(220px, 42vw);
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--accent) 50%,
-    transparent 100%
-  );
-  opacity: 0.7;
-
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 1.1s var(--ease);
-}
-
-.divider.is-visible {
-  transform: scaleX(1);
-}
-
-/* ---------- KIRISH button ---------- */
-
-.enter-btn {
-  margin-top: clamp(36px, 6vw, 52px);
-  padding: 15px 52px;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.28em;
-  color: var(--bg);
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease),
-    box-shadow 0.35s var(--ease), filter 0.35s var(--ease);
-}
-
-.enter-btn.is-visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.enter-btn:hover {
-  transform: scale(1.06);
-  box-shadow: 0 8px 28px rgba(201, 169, 97, 0.35);
-  filter: brightness(1.08);
-}
-
-.enter-btn:active {
-  transform: scale(0.97);
-}
-
-.enter-btn:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 4px;
-}
-
-/* ---------- responsive tweaks ---------- */
-
-@media (max-width: 420px) {
-  .brand {
-    letter-spacing: 0.3em;
-    padding-left: 0.3em;
+  if (missing.length > 0) {
+    console.error(
+      `MySchool: quyidagi elementlar HTML da topilmadi: ${missing.join(", ")}`
+    );
+    return;
   }
 
-  .enter-btn {
-    padding: 14px 44px;
-  }
-}
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
 
-/* ==========================================================
-   Asosiy menu (main menu) — KIRISH bosilgandan keyin ochiladi
-   ========================================================== */
+  /* ----------------------------------------------------------
+     2) KIRISH ekrani animatsiyasi — o'zgarishsiz
+     ---------------------------------------------------------- */
 
-.menu__inner {
-  width: 100%;
-  max-width: 460px;
-  max-height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  const timeline = [
+    { el: cap, delay: 300 },
+    { el: brand, delay: 900 },
+    { el: divider, delay: 1500 },
+    { el: enterBtn, delay: 2400 },
+  ];
 
-/* ---------- menu header ---------- */
-
-.menu__header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: clamp(28px, 6vw, 44px);
-}
-
-.menu__cap {
-  font-size: 30px;
-  filter: drop-shadow(0 0 16px rgba(201, 169, 97, 0.25));
-}
-
-.menu__title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 17px;
-  letter-spacing: 0.32em;
-  color: var(--text);
-}
-
-/* ---------- 2-ustunli tugmalar tarmog'i ---------- */
-
-.menu__grid {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.menu-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 26px 12px;
-
-  font-family: var(--font-body);
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  cursor: pointer;
-
-  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease),
-    background 0.3s var(--ease);
-}
-
-.menu-btn__icon {
-  font-size: 26px;
-  line-height: 1;
-}
-
-.menu-btn__label {
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-}
-
-.menu-btn:hover {
-  transform: translateY(-3px);
-  border-color: rgba(201, 169, 97, 0.4);
-  background: rgba(201, 169, 97, 0.06);
-}
-
-.menu-btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.menu-btn:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 3px;
-}
-
-/* ---------- AI YORDAMCHI (alohida, kattaroq) ---------- */
-
-.ai-btn {
-  width: 100%;
-  margin-top: 18px;
-  padding: 26px 20px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.16em;
-  color: var(--bg);
-
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease),
-    filter 0.3s var(--ease);
-}
-
-.ai-btn__icon {
-  font-size: 30px;
-  line-height: 1;
-}
-
-.ai-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(201, 169, 97, 0.3);
-  filter: brightness(1.06);
-}
-
-.ai-btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.ai-btn:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 3px;
-}
-
-/* ---------- responsive ---------- */
-
-@media (max-width: 380px) {
-  .menu-btn {
-    padding: 22px 8px;
+  if (prefersReducedMotion) {
+    timeline.forEach(({ el }) => el.classList.add("is-visible"));
+  } else {
+    timeline.forEach(({ el, delay }) => {
+      setTimeout(() => el.classList.add("is-visible"), delay);
+    });
   }
 
-  .menu-btn__icon {
-    font-size: 23px;
+  /* ----------------------------------------------------------
+     3) Umumiy ekran navigatsiyasi
+     Barcha ekranlar (.screen) — intro, menu, har bir panel —
+     shu yagona funksiya orqali almashtiriladi.
+     ---------------------------------------------------------- */
+
+  const allScreens = document.querySelectorAll(".screen");
+  const panels = {};
+  document.querySelectorAll(".panel[data-panel]").forEach((panel) => {
+    panels[panel.dataset.panel] = panel;
+  });
+
+  function activateScreen(targetEl) {
+    if (!targetEl) return;
+    allScreens.forEach((s) => s.classList.remove("is-active"));
+    targetEl.classList.add("is-active");
   }
 
-  .menu-btn__label {
-    font-size: 11.5px;
-  }
-}
+  // KIRISH tugmasi -> MENU ochiladi
+  enterBtn.addEventListener("click", () => {
+    if (enterBtn.disabled) return;
+    enterBtn.disabled = true;
+    document.dispatchEvent(new CustomEvent("myschool:kirish"));
+    activateScreen(menu);
+  });
 
-@media (min-width: 640px) {
-  .menu__inner {
-    max-width: 520px;
+  // Menudagi har bir tugma -> tegishli panelni ochadi
+  document.querySelectorAll("[data-panel]").forEach((btn) => {
+    if (btn.classList.contains("panel")) return; // panelning o'zi emas, tugma
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.panel;
+      activateScreen(panels[key]);
+    });
+  });
+
+  // Har bir paneldagi "← ORQAGA" -> MENUga qaytaradi
+  document.querySelectorAll("[data-back]").forEach((btn) => {
+    btn.addEventListener("click", () => activateScreen(menu));
+  });
+
+  /* ----------------------------------------------------------
+     4) 📅 JADVAL — kun tablari + dars ro'yxati
+     ---------------------------------------------------------- */
+
+  function initSchedule() {
+    const dayTabsEl = document.getElementById("dayTabs");
+    const scheduleListEl = document.getElementById("scheduleList");
+    if (!dayTabsEl || !scheduleListEl) return;
+
+    const days = Object.keys(MySchoolData.schedule);
+
+    function renderDay(day) {
+      const lessons = MySchoolData.schedule[day] || [];
+      scheduleListEl.innerHTML = lessons
+        .map(
+          (lesson, i) => `
+            <div class="schedule-row">
+              <span class="schedule-row__index">${i + 1}</span>
+              <span class="schedule-row__time">${lesson.time}</span>
+              <span class="schedule-row__subject">${lesson.subject}</span>
+            </div>
+          `
+        )
+        .join("");
+    }
+
+    dayTabsEl.innerHTML = days
+      .map(
+        (day, i) => `
+          <button class="day-tab${i === 0 ? " is-active" : ""}" type="button" data-day="${day}">
+            ${day}
+          </button>
+        `
+      )
+      .join("");
+
+    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        dayTabsEl
+          .querySelectorAll(".day-tab")
+          .forEach((t) => t.classList.remove("is-active"));
+        tab.classList.add("is-active");
+        renderDay(tab.dataset.day);
+      });
+    });
+
+    renderDay(days[0]);
   }
 
-  .menu-btn {
-    padding: 32px 16px;
-  }
-}
+  /* ----------------------------------------------------------
+     5) 📖 FANLAR
+     ---------------------------------------------------------- */
 
-/* ---------- reduced motion ---------- */
+  function initSubjects() {
+    const el = document.getElementById("subjectList");
+    if (!el) return;
 
-@media (prefers-reduced-motion: reduce) {
-  .cap,
-  .brand,
-  .divider,
-  .enter-btn,
-  .intro,
-  .menu,
-  .menu-btn,
-  .ai-btn {
-    transition-duration: 0.01ms !important;
+    el.innerHTML = MySchoolData.subjects
+      .map(
+        (s) => `
+          <div class="subject-card">
+            <div class="subject-card__head">
+              <span class="subject-card__icon">${s.icon}</span>
+              <span class="subject-card__name">${s.name}</span>
+            </div>
+            <p class="subject-card__desc">${s.desc}</p>
+          </div>
+        `
+      )
+      .join("");
   }
-}
+
+  /* ----------------------------------------------------------
+     6) 🎯 CAREER — maqsadni saqlash
+     ---------------------------------------------------------- */
+
+  function initCareer() {
+    const input = document.getElementById("careerInput");
+    const saveBtn = document.getElementById("careerSaveBtn");
+    const result = document.getElementById("careerResult");
+    const resultText = document.getElementById("careerGoalText");
+    if (!input || !saveBtn || !result || !resultText) return;
+
+    const STORAGE_KEY = "myschool_career_goal";
+
+    function showGoal(text) {
+      resultText.textContent = text;
+      result.hidden = false;
+    }
+
+    // Sahifa ochilganda avval saqlangan maqsad bo'lsa ko'rsatamiz
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        input.value = saved;
+        showGoal(saved);
+      }
+    } catch (err) {
+      console.warn("MySchool: localStorage o'qib bo'lmadi.", err);
+    }
+
+    saveBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+      if (!value) {
+        input.focus();
+        return;
+      }
+
+      showGoal(value);
+
+      try {
+        localStorage.setItem(STORAGE_KEY, value);
+      } catch (err) {
+        console.warn("MySchool: localStorage ga yozib bo'lmadi.", err);
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     7) 📢 E'LON
+     ---------------------------------------------------------- */
+
+  function initAnnouncements() {
+    const el = document.getElementById("announcementList");
+    if (!el) return;
+
+    el.innerHTML = MySchoolData.announcements
+      .map(
+        (a) => `
+          <div class="announcement-card">
+            <span class="announcement-card__date">${a.date}</span>
+            <h3 class="announcement-card__title">${a.title}</h3>
+            <p class="announcement-card__text">${a.text}</p>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  /* ----------------------------------------------------------
+     8) 📚 KITOBXONA — ro'yxat + qidiruv
+     ---------------------------------------------------------- */
+
+  function initLibrary() {
+    const searchInput = document.getElementById("bookSearch");
+    const listEl = document.getElementById("bookList");
+    if (!searchInput || !listEl) return;
+
+    function renderBooks(query) {
+      const q = query.trim().toLowerCase();
+      const filtered = MySchoolData.books.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="empty-state">Hech narsa topilmadi.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered
+        .map(
+          (b) => `
+            <div class="book-item">
+              <span class="book-item__title">${b.title}</span>
+              <span class="book-item__author">${b.author}</span>
+            </div>
+          `
+        )
+        .join("");
+    }
+
+    searchInput.addEventListener("input", () => {
+      renderBooks(searchInput.value);
+    });
+
+    renderBooks("");
+  }
+
+  /* ----------------------------------------------------------
+     9) 🤖 AI YORDAMCHI — chat interfeysi (placeholder javoblar)
+     Kelajakda: bu yerdagi sendMessageToAI() funksiyasi ichiga
+     Node.js backend'ga fetch() so'rovi qo'shiladi.
+     ---------------------------------------------------------- */
+
+  function initAIChat() {
+    const messagesEl = document.getElementById("chatMessages");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("chatInput");
+    if (!messagesEl || !form || !input) return;
+
+    let greeted = false;
+
+    function addBubble(text, sender) {
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble chat-bubble--${sender}`;
+      bubble.textContent = text;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // TODO (kelajakda): haqiqiy AI API bilan almashtiriladi
+    function getPlaceholderReply() {
+      return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
+    }
+
+    function sendMessageToAI(userText) {
+      // Hozircha soxta javob, kelajakda fetch('/api/ai', {...}) shu yerga qo'shiladi
+      setTimeout(() => {
+        addBubble(getPlaceholderReply(), "bot");
+      }, 500);
+    }
+
+    function greetOnce() {
+      if (greeted) return;
+      greeted = true;
+      addBubble(
+        "Salom! 👋 Men MySchool AI yordamchiman. Sizga qanday yordam bera olaman?",
+        "bot"
+      );
+    }
+
+    document.addEventListener("myschool:panel-opened", (e) => {
+      if (e.detail === "ai") greetOnce();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addBubble(text, "user");
+      input.value = "";
+      sendMessageToAI(text);
+    });
+  }
+
+  /* ----------------------------------------------------------
+     Panel ochilganda tegishli event chiqarish (AI chatga kerak)
+     ---------------------------------------------------------- */
+
+  document.querySelectorAll("[data-panel]").forEach((btn) => {
+    if (btn.classList.contains("panel")) return;
+    btn.addEventListener("click", () => {
+      document.dispatchEvent(
+        new CustomEvent("myschool:panel-opened", { detail: btn.dataset.panel })
+      );
+    });
+  });
+
+  /* ---------- Barcha panellarni ishga tushirish ---------- */
+
+  initSchedule();
+  initSubjects();
+  initCareer();
+  initAnnouncements();
+  initLibrary();
+  initAIChat();
+});
