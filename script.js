@@ -362,6 +362,8 @@ const MySchoolData = {
     ]
   }
 },
+},
+},
 
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
