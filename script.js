@@ -214,15 +214,73 @@ document.addEventListener("DOMContentLoaded", () => {
      4) 📅 JADVAL — kun tablari + dars ro'yxati
      ---------------------------------------------------------- */
 
-  function initSchedule() {
-    const dayTabsEl = document.getElementById("dayTabs");
-    const scheduleListEl = document.getElementById("scheduleList");
-    if (!dayTabsEl || !scheduleListEl) return;
+function initSchedule() {
+  const classGridEl = document.getElementById("classGrid");
+  const classSelectorEl = document.getElementById("classSelector");
+  const scheduleSectionEl = document.getElementById("scheduleSection");
+  const classBackBtn = document.getElementById("classBackBtn");
+  const selectedClassTitleEl = document.getElementById("selectedClassTitle");
+  const dayTabsEl = document.getElementById("dayTabs");
+  const scheduleListEl = document.getElementById("scheduleList");
 
-    const days = Object.keys(MySchoolData.schedule);
+  if (
+    !classGridEl ||
+    !classSelectorEl ||
+    !scheduleSectionEl ||
+    !classBackBtn ||
+    !selectedClassTitleEl ||
+    !dayTabsEl ||
+    !scheduleListEl
+  ) {
+    return;
+  }
+
+  const classes = Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`);
+
+  // 1–11-sinflarni chiqarish
+  classGridEl.innerHTML = classes
+    .map(
+      (className) => `
+        <button
+          class="class-btn"
+          type="button"
+          data-class="${className}"
+        >
+          ${className.toUpperCase()}
+        </button>
+      `
+    )
+    .join("");
+
+  function renderClassSchedule(className) {
+    const schedule = MySchoolData.schedule[className] || {};
+    const days = Object.keys(schedule);
+
+    selectedClassTitleEl.textContent = className.toUpperCase();
+
+    dayTabsEl.innerHTML = days
+      .map(
+        (day, i) => `
+          <button
+            class="day-tab${i === 0 ? " is-active" : ""}"
+            type="button"
+            data-day="${day}"
+          >
+            ${day}
+          </button>
+        `
+      )
+      .join("");
 
     function renderDay(day) {
-      const lessons = MySchoolData.schedule[day] || [];
+      const lessons = schedule[day] || [];
+
+      if (lessons.length === 0) {
+        scheduleListEl.innerHTML =
+          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+        return;
+      }
+
       scheduleListEl.innerHTML = lessons
         .map(
           (lesson, i) => `
@@ -236,28 +294,44 @@ document.addEventListener("DOMContentLoaded", () => {
         .join("");
     }
 
-    dayTabsEl.innerHTML = days
-      .map(
-        (day, i) => `
-          <button class="day-tab${i === 0 ? " is-active" : ""}" type="button" data-day="${day}">
-            ${day}
-          </button>
-        `
-      )
-      .join("");
-
     dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         dayTabsEl
           .querySelectorAll(".day-tab")
           .forEach((t) => t.classList.remove("is-active"));
+
         tab.classList.add("is-active");
+
         renderDay(tab.dataset.day);
       });
     });
 
-    renderDay(days[0]);
+    if (days.length > 0) {
+      renderDay(days[0]);
+    } else {
+      scheduleListEl.innerHTML =
+        '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
+    }
   }
+
+  // Sinf tanlash
+  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const className = btn.dataset.class;
+
+      classSelectorEl.hidden = true;
+      scheduleSectionEl.hidden = false;
+
+      renderClassSchedule(className);
+    });
+  });
+
+  // Sinf tanlashga qaytish
+  classBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classSelectorEl.hidden = false;
+  });
+     }
 
   /* ----------------------------------------------------------
      5) 📖 FANLAR
@@ -352,43 +426,127 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----------------------------------------------------------
      8) 📚 KITOBXONA — ro'yxat + qidiruv
      ---------------------------------------------------------- */
+function initLibrary() {
+  const searchInput = document.getElementById("bookSearch");
+  const listEl = document.getElementById("bookList");
 
-  function initLibrary() {
-    const searchInput = document.getElementById("bookSearch");
-    const listEl = document.getElementById("bookList");
-    if (!searchInput || !listEl) return;
+  if (!searchInput || !listEl) return;
 
-    function renderBooks(query) {
-      const q = query.trim().toLowerCase();
-      const filtered = MySchoolData.books.filter(
-        (b) =>
-          b.title.toLowerCase().includes(q) ||
-          b.author.toLowerCase().includes(q)
-      );
+  function renderBooks(query) {
+    const q = query.trim().toLowerCase();
 
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">Hech narsa topilmadi.</p>`;
-        return;
-      }
+    const filtered = MySchoolData.books.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q)
+    );
 
-      listEl.innerHTML = filtered
-        .map(
-          (b) => `
-            <div class="book-item">
-              <span class="book-item__title">${b.title}</span>
-              <span class="book-item__author">${b.author}</span>
-            </div>
-          `
-        )
-        .join("");
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        `<p class="empty-state">Hech narsa topilmadi.</p>`;
+      return;
     }
 
-    searchInput.addEventListener("input", () => {
-      renderBooks(searchInput.value);
-    });
+    listEl.innerHTML = filtered
+      .map(
+        (b, index) => `
+          <button
+            class="book-item"
+            type="button"
+            data-book-index="${MySchoolData.books.indexOf(b)}"
+          >
+            <span class="book-item__title">📖 ${b.title}</span>
+            <span class="book-item__author">${b.author}</span>
+          </button>
+        `
+      )
+      .join("");
 
-    renderBooks("");
+    // Kitob ustiga bosilganda
+    listEl.querySelectorAll(".book-item").forEach((bookEl) => {
+      bookEl.addEventListener("click", () => {
+        const index = Number(bookEl.dataset.bookIndex);
+        const book = MySchoolData.books[index];
+
+        openBookModal(book);
+      });
+    });
   }
+
+  // Kitob oynasi
+  function openBookModal(book) {
+    const oldModal = document.getElementById("bookModal");
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "bookModal";
+    modal.className = "book-modal";
+
+    modal.innerHTML = `
+      <div class="book-modal__box">
+
+        <button
+          class="book-modal__close"
+          type="button"
+          aria-label="Yopish"
+        >
+          ×
+        </button>
+
+        <div class="book-modal__icon">📖</div>
+
+        <h2>${book.title}</h2>
+
+        <p class="book-modal__author">
+          ✍️ ${book.author}
+        </p>
+
+        <p class="book-modal__description">
+          Ushbu kitob haqida batafsil ma'lumot va
+          elektron o'qish imkoniyati tez orada qo'shiladi.
+        </p>
+
+        <button
+          class="book-modal__read"
+          type="button"
+        >
+          📚 O‘qishni boshlash
+        </button>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Yopish
+    modal
+      .querySelector(".book-modal__close")
+      .addEventListener("click", () => {
+        modal.remove();
+      });
+
+    // O'qishni boshlash
+    modal
+      .querySelector(".book-modal__read")
+      .addEventListener("click", () => {
+        alert("📚 Bu kitob tez orada qo‘shiladi!");
+      });
+
+    // Tashqarisini bosganda yopish
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  // Qidiruv
+  searchInput.addEventListener("input", () => {
+    renderBooks(searchInput.value);
+  });
+
+  renderBooks("");
+}
 
   /* ----------------------------------------------------------
      9) 🤖 AI YORDAMCHI — chat interfeysi (placeholder javoblar)
@@ -456,18 +614,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btn.classList.contains("panel")) return;
     btn.addEventListener("click", () => {
       document.dispatchEvent(
-        new CustomEvent("myschool:panel-opened", { detail: btn.dataset.panel })
-      );
-    });
-  });
-
-  /* ---------- Barcha panellarni ishga tushirish ---------- */
-
-  initSchedule();
-  initSubjects();
-  initCareer();
-  initAnnouncements();
-  initLibrary();
-  initAIChat();
-});
-       
+        new 
