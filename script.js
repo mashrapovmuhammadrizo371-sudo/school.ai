@@ -426,42 +426,85 @@ function initSchedule() {
   /* ----------------------------------------------------------
      8) 📚 KITOBXONA — ro'yxat + qidiruv
      ---------------------------------------------------------- */
-function initLibrary() {
-  const searchInput = document.getElementById("bookSearch");
-  const listEl = document.getElementById("bookList");
+function openBookModal(book) {
+  const oldModal = document.getElementById("bookModal");
+  if (oldModal) oldModal.remove();
 
-  if (!searchInput || !listEl) return;
+  const modal = document.createElement("div");
+  modal.id = "bookModal";
+  modal.className = "book-modal";
 
-  function renderBooks(query) {
-    const q = query.trim().toLowerCase();
+  modal.innerHTML = `
+    <div class="book-modal__box">
 
-    const filtered = MySchoolData.books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q)
-    );
+      <button
+        class="book-modal__close"
+        type="button"
+        aria-label="Yopish"
+      >
+        ×
+      </button>
 
-    if (filtered.length === 0) {
-      listEl.innerHTML =
-        `<p class="empty-state">Hech narsa topilmadi.</p>`;
-      return;
+      <div class="book-modal__icon">📖</div>
+
+      <h2>${book.title}</h2>
+
+      <p class="book-modal__author">
+        ✍️ <strong>Муаллиф:</strong> ${book.author}
+      </p>
+
+      <div class="book-modal__info">
+        <p>
+          📝 <strong>Китоб ҳақида</strong>
+        </p>
+
+        <p>
+          ${book.description || "Бу китоб ҳақида маълумот ҳозирча қўшилмаган."}
+        </p>
+      </div>
+
+      <div class="book-modal__details">
+        <span>
+          🏷️ <strong>Жанр:</strong>
+          ${book.genre || "Китоб"}
+        </span>
+
+        <span>
+          📅 <strong>Йил:</strong>
+          ${book.year || "—"}
+        </span>
+      </div>
+
+      <button
+        class="book-modal__read"
+        type="button"
+      >
+        📚 Ўқишни бошлаш
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal
+    .querySelector(".book-modal__close")
+    .addEventListener("click", () => {
+      modal.remove();
+    });
+
+  modal
+    .querySelector(".book-modal__read")
+    .addEventListener("click", () => {
+      alert("📚 Китобни ўқиш функцияси тез орада қўшилади!");
+    });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
     }
-
-    listEl.innerHTML = filtered
-      .map(
-        (b, index) => `
-          <button
-            class="book-item"
-            type="button"
-            data-book-index="${MySchoolData.books.indexOf(b)}"
-          >
-            <span class="book-item__title">📖 ${b.title}</span>
-            <span class="book-item__author">${b.author}</span>
-          </button>
-        `
-      )
-      .join("");
-
+  });
+}
     // Kitob ustiga bosilganda
     listEl.querySelectorAll(".book-item").forEach((bookEl) => {
       bookEl.addEventListener("click", () => {
