@@ -553,36 +553,58 @@ function initLibrary() {
      Kelajakda: bu yerdagi sendMessageToAI() funksiyasi ichiga
      Node.js backend'ga fetch() so'rovi qo'shiladi.
      ---------------------------------------------------------- */
-async function sendMessageToAI(userText) {
-  try {
-    const response = await fetch(
-      "https://school-ai-bpp0.onrender.com/api/ai",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: userText
-        })
-      }
-    );
 
-    const data = await response.json();
+  function initAIChat() {
+    const messagesEl = document.getElementById("chatMessages");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("chatInput");
+    if (!messagesEl || !form || !input) return;
 
-    if (!response.ok) {
-      throw new Error(data.error || "Server xatosi");
+    let greeted = false;
+
+    function addBubble(text, sender) {
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble chat-bubble--${sender}`;
+      bubble.textContent = text;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    addBubble(data.answer, "bot");
-  } catch (error) {
-    console.error("AI error:", error);
-    addBubble(
-      "Uzr, AI bilan bog‘lanishda xatolik yuz berdi.",
-      "bot"
-    );
+    // TODO (kelajakda): haqiqiy AI API bilan almashtiriladi
+    function getPlaceholderReply() {
+      return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
+    }
+
+    function sendMessageToAI(userText) {
+      // Hozircha soxta javob, kelajakda fetch('/api/ai', {...}) shu yerga qo'shiladi
+      setTimeout(() => {
+        addBubble(getPlaceholderReply(), "bot");
+      }, 500);
+    }
+
+    function greetOnce() {
+      if (greeted) return;
+      greeted = true;
+      addBubble(
+        "Salom! 👋 Men MySchool AI yordamchiman. Sizga qanday yordam bera olaman?",
+        "bot"
+      );
+    }
+
+    document.addEventListener("myschool:panel-opened", (e) => {
+      if (e.detail === "ai") greetOnce();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addBubble(text, "user");
+      input.value = "";
+      sendMessageToAI(text);
+    });
   }
-}
 
   /* ----------------------------------------------------------
      Panel ochilganda tegishli event chiqarish (AI chatga kerak)
@@ -592,14 +614,4 @@ async function sendMessageToAI(userText) {
     if (btn.classList.contains("panel")) return;
     btn.addEventListener("click", () => {
       document.dispatchEvent(
-        new document.querySelectorAll("[data-panel]").forEach((btn) => {
-  if (btn.classList.contains("panel")) return;
-
-  btn.addEventListener("click", () => {
-    document.dispatchEvent(
-      new CustomEvent("myschool:panel-opened", {
-        detail: btn.dataset.panel
-      })
-    );
-  });
-});
+        new 
