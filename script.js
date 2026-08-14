@@ -599,6 +599,7 @@
       { time: "14:10–14:50", subject: "Informatika" },
       { time: "15:00–15:40", subject: "Ona tili va adabiyot" }
     ]
+  }
   },
 
   subjects: [
