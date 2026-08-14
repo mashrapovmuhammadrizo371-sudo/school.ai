@@ -213,13 +213,13 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----------------------------------------------------------
      4) 📅 JADVAL — kun tablari + dars ro'yxati
      ---------------------------------------------------------- */
-
 function initSchedule() {
   const classGridEl = document.getElementById("classGrid");
   const classSelectorEl = document.getElementById("classSelector");
   const scheduleSectionEl = document.getElementById("scheduleSection");
   const classBackBtn = document.getElementById("classBackBtn");
-  const selectedClassTitleEl = document.getElementById("selectedClassTitle");
+  const selectedClassTitleEl =
+    document.getElementById("selectedClassTitle");
   const dayTabsEl = document.getElementById("dayTabs");
   const scheduleListEl = document.getElementById("scheduleList");
 
@@ -235,9 +235,13 @@ function initSchedule() {
     return;
   }
 
-  const classes = Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`);
+  // 1–11-sinflar
+  const classes = Array.from(
+    { length: 11 },
+    (_, i) => `${i + 1}-sinf`
+  );
 
-  // 1–11-sinflarni chiqarish
+  // Sinf tugmalarini chiqarish
   classGridEl.innerHTML = classes
     .map(
       (className) => `
@@ -252,17 +256,73 @@ function initSchedule() {
     )
     .join("");
 
+  // Vaqtni HH:MM ko‘rinishiga o'tkazish
+  function formatTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    return (
+      String(hours).padStart(2, "0") +
+      ":" +
+      String(mins).padStart(2, "0")
+    );
+  }
+
+  // Sinfga qarab dars vaqtlarini hisoblash
+  function getLessonTimes(classNumber) {
+    const times = [];
+    let current = 8 * 60 + 30;
+
+    for (let lesson = 1; lesson <= 8; lesson++) {
+      const start = current;
+      const end = current + 45;
+
+      times.push({
+        start,
+        end
+      });
+
+      current = end;
+
+      // 1–4-sinf
+      if (classNumber <= 4) {
+        if (lesson === 3 || lesson === 7) {
+          current += 45;
+        } else if (lesson < 8) {
+          current += 5;
+        }
+      }
+
+      // 5–11-sinf
+      else {
+        if (lesson === 4 || lesson === 8) {
+          current += 45;
+        } else if (lesson < 8) {
+          current += 5;
+        }
+      }
+    }
+
+    return times;
+  }
+
+  // Tanlangan sinf jadvali
   function renderClassSchedule(className) {
-    const schedule = MySchoolData.schedule[className] || {};
+    const classNumber = Number.parseInt(className, 10);
+
+    const schedule =
+      MySchoolData.schedule[className] || {};
+
     const days = Object.keys(schedule);
 
-    selectedClassTitleEl.textContent = className.toUpperCase();
+    selectedClassTitleEl.textContent =
+      className.toUpperCase();
 
     dayTabsEl.innerHTML = days
       .map(
-        (day, i) => `
+        (day, index) => `
           <button
-            class="day-tab${i === 0 ? " is-active" : ""}"
+            class="day-tab${index === 0 ? " is-active" : ""}"
             type="button"
             data-day="${day}"
           >
@@ -274,64 +334,141 @@ function initSchedule() {
 
     function renderDay(day) {
       const lessons = schedule[day] || [];
+      const times = getLessonTimes(classNumber);
 
-      if (lessons.length === 0) {
-        scheduleListEl.innerHTML =
-          '<p class="empty-state">Bu kunda dars yo‘q.</p>';
+      if (!lessons.length) {
+        scheduleListEl.innerHTML = `
+          <p class="empty-state">
+            Bu kunda dars yo‘q.
+          </p>
+        `;
         return;
       }
 
-      scheduleListEl.innerHTML = lessons
-        .map(
-          (lesson, i) => `
-            <div class="schedule-row">
-              <span class="schedule-row__index">${i + 1}</span>
-              <span class="schedule-row__time">${lesson.time}</span>
-              <span class="schedule-row__subject">${lesson.subject}</span>
+      let html = `
+        <div class="schedule-table">
+
+          <div class="schedule-table__head">
+            <span>Fan</span>
+            <span style="text-align:right;">Vaqt</span>
+          </div>
+      `;
+
+      lessons.slice(0, 8).forEach((lesson, index) => {
+        const time = times[index];
+
+        html += `
+          <div class="schedule-row">
+
+            <span class="schedule-row__subject">
+              ${lesson.subject}
+            </span>
+
+            <span class="schedule-row__time">
+              ${formatTime(time.start)}–${formatTime(time.end)}
+            </span>
+
+          </div>
+        `;
+
+        // ABET
+        if (
+          (classNumber <= 4 && index === 2) ||
+          (classNumber >= 5 && index === 3)
+        ) {
+          html += `
+            <div class="schedule-break">
+
+              <span class="schedule-break__name">
+                🍽️ ABET
+              </span>
+
+              <span class="schedule-break__time">
+                ${formatTime(time.end)}–${formatTime(time.end + 45)}
+              </span>
+
             </div>
-          `
-        )
-        .join("");
+          `;
+        }
+
+        // PO‘LDNIK
+        if (
+          (classNumber <= 4 && index === 6) ||
+          (classNumber >= 5 && index === 7)
+        ) {
+          html += `
+            <div class="schedule-break">
+
+              <span class="schedule-break__name">
+                🥪 PO‘LDNIK
+              </span>
+
+              <span class="schedule-break__time">
+                ${formatTime(time.end)}–${formatTime(time.end + 45)}
+              </span>
+
+            </div>
+          `;
+        }
+      });
+
+      html += `
+        </div>
+      `;
+
+      scheduleListEl.innerHTML = html;
     }
 
-    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        dayTabsEl
-          .querySelectorAll(".day-tab")
-          .forEach((t) => t.classList.remove("is-active"));
+    dayTabsEl
+      .querySelectorAll(".day-tab")
+      .forEach((tab) => {
+        tab.addEventListener("click", () => {
+          dayTabsEl
+            .querySelectorAll(".day-tab")
+            .forEach((item) => {
+              item.classList.remove("is-active");
+            });
 
-        tab.classList.add("is-active");
+          tab.classList.add("is-active");
 
-        renderDay(tab.dataset.day);
+          renderDay(tab.dataset.day);
+        });
       });
-    });
 
-    if (days.length > 0) {
+    if (days.length) {
       renderDay(days[0]);
     } else {
-      scheduleListEl.innerHTML =
-        '<p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>';
+      scheduleListEl.innerHTML = `
+        <p class="empty-state">
+          Bu sinf uchun jadval hali kiritilmagan.
+        </p>
+      `;
     }
   }
 
   // Sinf tanlash
-  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const className = btn.dataset.class;
+  classGridEl
+    .querySelectorAll(".class-btn")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const className = btn.dataset.class;
 
-      classSelectorEl.hidden = true;
-      scheduleSectionEl.hidden = false;
+        classSelectorEl.hidden = true;
+        scheduleSectionEl.hidden = false;
 
-      renderClassSchedule(className);
+        renderClassSchedule(className);
+      });
     });
-  });
 
-  // Sinf tanlashga qaytish
+  // Sinflar ro‘yxatiga qaytish
   classBackBtn.addEventListener("click", () => {
     scheduleSectionEl.hidden = true;
     classSelectorEl.hidden = false;
   });
-     }
+    }
+
+
+  
 
   /* ----------------------------------------------------------
      5) 📖 FANLAR
