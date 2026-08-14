@@ -551,4 +551,4 @@ function initSchedule() {
               </span>
 
               <span class="schedule-break__time">
-                ${formatTime(time.end)}–${formatTime(time.e
+                ${formatTime(time.end)}–${formatTime(time.end)}
