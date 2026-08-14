@@ -1269,6 +1269,19 @@ button {
     font-size: 14px;
   }
 }
+.schedule-break {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.schedule-break__name,
+.schedule-break__time {
+  text-align: center;
+}
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
