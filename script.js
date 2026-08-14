@@ -573,14 +573,33 @@ function initLibrary() {
     // TODO (kelajakda): haqiqiy AI API bilan almashtiriladi
     function getPlaceholderReply() {
       return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
+async function sendMessageToAI(userText) {
+  try {
+    const response = await fetch("https://school-ai-bpp0.onrender.com", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: userText
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Server xatosi");
     }
 
-    function sendMessageToAI(userText) {
-      // Hozircha soxta javob, kelajakda fetch('/api/ai', {...}) shu yerga qo'shiladi
-      setTimeout(() => {
-        addBubble(getPlaceholderReply(), "bot");
-      }, 500);
-    }
+    addBubble(data.answer, "bot");
+  } catch (error) {
+    console.error("AI error:", error);
+    addBubble(
+      "Uzr, AI bilan bog‘lanishda xatolik yuz berdi.",
+      "bot"
+    );
+  }
+}
 
     function greetOnce() {
       if (greeted) return;
@@ -606,12 +625,4 @@ function initLibrary() {
     });
   }
 
-  /* ----------------------------------------------------------
-     Panel ochilganda tegishli event chiqarish (AI chatga kerak)
-     ---------------------------------------------------------- */
-
-  document.querySelectorAll("[data-panel]").forEach((btn) => {
-    if (btn.classList.contains("panel")) return;
-    btn.addEventListener("click", () => {
-      document.dispatchEvent(
-        new 
+  /* -------------
