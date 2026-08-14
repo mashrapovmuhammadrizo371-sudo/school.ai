@@ -231,6 +231,376 @@ const MySchoolData = {
     ]
   }
 },
+   "5-sinf": {
+  Dushanba: [
+    { subject: "Matematika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Seshanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Fizika" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "San'at" }
+  ],
+  Chorshanba: [
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Biologiya" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Geografiya" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Informatika" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Ingliz tili" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Geografiya" },
+    { subject: "Jismoniy tarbiya" }
+  ]
+},
+
+"6-sinf": {
+  Dushanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Fizika" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Seshanba: [
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Ingliz tili" },
+    { subject: "Tarix" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Geografiya" },
+    { subject: "Biologiya" },
+    { subject: "San'at" }
+  ],
+  Chorshanba: [
+    { subject: "Fizika" },
+    { subject: "Matematika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Ingliz tili" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Geografiya" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Biologiya" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Tarix" },
+    { subject: "Informatika" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Jismoniy tarbiya" }
+  ]
+},
+
+"7-sinf": {
+  Dushanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Informatika" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Seshanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Fizika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "San'at" }
+  ],
+  Chorshanba: [
+    { subject: "Biologiya" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Fizika" },
+    { subject: "Tarix" },
+    { subject: "Geografiya" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Jismoniy tarbiya" }
+  ]
+},
+
+"8-sinf": {
+  Dushanba: [
+    { subject: "Fizika" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Informatika" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Seshanba: [
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Geografiya" },
+    { subject: "Kimyo" },
+    { subject: "San'at" }
+  ],
+  Chorshanba: [
+    { subject: "Biologiya" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Fizika" },
+    { subject: "Tarix" },
+    { subject: "Geografiya" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Informatika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Tarix" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Kimyo" },
+    { subject: "Ingliz tili" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Fizika" },
+    { subject: "Jismoniy tarbiya" }
+  ]
+},
+
+"9-sinf": {
+  Dushanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Informatika" },
+    { subject: "Ona tili va adabiyot" }
+  ],
+  Seshanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Chorshanba: [
+    { subject: "Biologiya" },
+    { subject: "Matematika" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Tarix" },
+    { subject: "Informatika" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Kimyo" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Biologiya" },
+    { subject: "Geografiya" },
+    { subject: "Ona tili va adabiyot" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Ingliz tili" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" }
+  ]
+},
+
+"10-sinf": {
+  Dushanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" }
+  ],
+  Seshanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Chorshanba: [
+    { subject: "Matematika" },
+    { subject: "Biologiya" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Ona tili va adabiyot" }
+  ],
+  Payshanba: [
+    { subject: "Fizika" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" }
+  ]
+},
+
+"11-sinf": {
+  Dushanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" }
+  ],
+  Seshanba: [
+    { subject: "Ingliz tili" },
+    { subject: "Matematika" },
+    { subject: "Informatika" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Geografiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Chorshanba: [
+    { subject: "Biologiya" },
+    { subject: "Matematika" },
+    { subject: "Ingliz tili" },
+    { subject: "Fizika" },
+    { subject: "Kimyo" },
+    { subject: "Informatika" },
+    { subject: "Tarix" },
+    { subject: "Ona tili va adabiyot" }
+  ],
+  Payshanba: [
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Informatika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Biologiya" },
+    { subject: "Tarix" },
+    { subject: "Jismoniy tarbiya" }
+  ],
+  Juma: [
+    { subject: "Informatika" },
+    { subject: "Matematika" },
+    { subject: "Fizika" },
+    { subject: "Ingliz tili" },
+    { subject: "Kimyo" },
+    { subject: "Tarix" },
+    { subject: "Biologiya" },
+    { subject: "Ona tili va adabiyot" }
+  ]
+},
    
   
 
@@ -283,376 +653,13 @@ const MySchoolData = {
     { title: "Robototexnikaga kirish", author: "John J. Craig" },
   ],
 };
-  "5-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Ona tili va adabiyot" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Fizika" },
-      { time: "12:30–13:15", subject: "Informatika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Informatika" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Fizika" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Ona tili va adabiyot" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Biologiya" },
-      { time: "12:30–13:15", subject: "Informatika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Geografiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Informatika" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ona tili va adabiyot" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Geografiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
+  
 
-  "6-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Biologiya" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Informatika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Fizika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Informatika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Tarix" },
-      { time: "12:30–13:15", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Fizika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ona tili va adabiyot" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Informatika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Geografiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Biologiya" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Fizika" },
-      { time: "12:30–13:15", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Geografiya" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
+  
+   
 
-  "7-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Informatika" },
-      { time: "11:00–11:45", subject: "Fizika" },
-      { time: "12:30–13:15", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Biologiya" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Fizika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Geografiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Informatika" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Ona tili va adabiyot" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ona tili va adabiyot" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Fizika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
 
-  "8-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Fizika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Informatika" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Kimyo" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ona tili va adabiyot" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Fizika" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Informatika" },
-      { time: "11:00–11:45", subject: "Kimyo" },
-      { time: "12:30–13:15", subject: "Ingliz tili" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Ona tili va adabiyot" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Biologiya" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Fizika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
 
-  "9-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Kimyo" },
-      { time: "11:00–11:45", subject: "Fizika" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Fizika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Informatika" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Kimyo" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Ingliz tili" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Biologiya" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Fizika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "10-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Informatika" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Informatika" },
-      { time: "11:00–11:45", subject: "Fizika" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Kimyo" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Kimyo" },
-      { time: "11:00–11:45", subject: "Informatika" },
-      { time: "12:30–13:15", subject: "Ingliz tili" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Fizika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
-
-  "11-sinf": {
-    Dushanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Informatika" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Seshanba: [
-      { time: "08:30–09:15", subject: "Ingliz tili" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Informatika" },
-      { time: "12:30–13:15", subject: "Biologiya" },
-      { time: "13:20–14:05", subject: "Geografiya" },
-      { time: "14:10–14:55", subject: "Tarix" },
-      { time: "15:00–15:45", subject: "San'at" }
-    ],
-    Chorshanba: [
-      { time: "08:30–09:15", subject: "Kimyo" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Fizika" },
-      { time: "11:00–11:45", subject: "Ingliz tili" },
-      { time: "12:30–13:15", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Informatika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Payshanba: [
-      { time: "08:30–09:15", subject: "Matematika" },
-      { time: "09:20–10:05", subject: "Fizika" },
-      { time: "10:10–10:55", subject: "Kimyo" },
-      { time: "11:00–11:45", subject: "Informatika" },
-      { time: "12:30–13:15", subject: "Ingliz tili" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Biologiya" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ],
-    Juma: [
-      { time: "08:30–09:15", subject: "Informatika" },
-      { time: "09:20–10:05", subject: "Matematika" },
-      { time: "10:10–10:55", subject: "Ingliz tili" },
-      { time: "11:00–11:45", subject: "Ona tili va adabiyot" },
-      { time: "12:30–13:15", subject: "Kimyo" },
-      { time: "13:20–14:05", subject: "Tarix" },
-      { time: "14:10–14:55", subject: "Fizika" },
-      { time: "15:00–15:45", subject: "Jismoniy tarbiya" }
-    ]
-  },
 /* ----------------------------------------------------------
    DOMContentLoaded — barcha logika shu ichida ishga tushadi
    ---------------------------------------------------------- */
