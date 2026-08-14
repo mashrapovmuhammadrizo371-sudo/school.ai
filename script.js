@@ -650,21 +650,31 @@ function openBookModal(book) {
   }
 
   /* ----------------------------------------------------------
-     Panel ochilganda tegishli event chiqarish (AI chatga kerak)
+     Panel ochilganda tegishli event chiqarish
      ---------------------------------------------------------- */
 
   document.querySelectorAll("[data-panel]").forEach((btn) => {
     if (btn.classList.contains("panel")) return;
-    btn.addEventListener("click", () => {
-      document.dispatchEvent(
-        new document.querySelectorAll("[data-panel]").forEach((btn) => {
-  if (btn.classList.contains("panel")) return;
 
-  btn.addEventListener("click", () => {
-    document.dispatchEvent(
-      new CustomEvent("myschool:panel-opened", {
-        detail: btn.dataset.panel
-      })
-    );
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.panel;
+
+      document.dispatchEvent(
+        new CustomEvent("myschool:panel-opened", {
+          detail: key
+        })
+      );
+    });
   });
+
+  /* ----------------------------------------------------------
+     Barcha bo‘limlarni ishga tushirish
+     ---------------------------------------------------------- */
+
+  initSchedule();
+  initSubjects();
+  initCareer();
+  initAnnouncements();
+  initLibrary();
+
 });
