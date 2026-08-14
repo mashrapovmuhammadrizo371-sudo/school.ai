@@ -17,59 +17,222 @@
    funksiyalarini o'zgartirish shart bo'lmaydi.
    ---------------------------------------------------------- */
 
-const MySchoolData = {
-  schedule: {
+const MySchoolData = 
+   schedule: {
+  "1-sinf": {
     Dushanba: [
       { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Fizika" },
+      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
       { time: "10:10–10:50", subject: "Ingliz tili" },
       { time: "11:00–11:40", subject: "Informatika" },
-      { time: "12:30–13:10", subject: "Kimyo" },
-      { time: "13:20–14:00", subject: "Ona tili va adabiyot" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
       { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
-      { time: "15:00–15:40", subject: "Robototexnika" },
+      { time: "15:00–15:40", subject: "San'at" }
     ],
     Seshanba: [
-      { time: "08:30–09:10", subject: "Fizika" },
-      { time: "09:20–10:00", subject: "Matematika" },
-      { time: "10:10–10:50", subject: "Biologiya" },
-      { time: "11:00–11:40", subject: "Ingliz tili" },
-      { time: "12:30–13:10", subject: "Informatika" },
-      { time: "13:20–14:00", subject: "Tarix" },
-      { time: "14:10–14:50", subject: "Chizmachilik" },
-      { time: "15:00–15:40", subject: "Loyihachilik" },
-    ],
-    Chorshanba: [
-      { time: "08:30–09:10", subject: "Kimyo" },
+      { time: "08:30–09:10", subject: "Ona tili va adabiyot" },
       { time: "09:20–10:00", subject: "Matematika" },
       { time: "10:10–10:50", subject: "Informatika" },
       { time: "11:00–11:40", subject: "Ingliz tili" },
-      { time: "12:30–13:10", subject: "Fizika" },
-      { time: "13:20–14:00", subject: "Geografiya" },
-      { time: "14:10–14:50", subject: "Robototexnika" },
-      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "San'at" },
+      { time: "14:10–14:50", subject: "Tarix" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Chorshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ingliz tili" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Tabiiy fan" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "San'at" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "Tarix" }
+    ],
+    Payshanba: [
+      { time: "08:30–09:10", subject: "Ingliz tili" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Juma: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Tabiiy fan" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ]
+  },
+
+  "2-sinf": {
+    Dushanba: [
+      { time: "08:30–09:10", subject: "Ona tili va adabiyot" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Informatika" },
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Jismoniy tarbiya" },
+      { time: "14:10–14:50", subject: "Tarix" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ],
+    Seshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ingliz tili" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Tabiiy fan" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "San'at" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "Tarix" }
+    ],
+    Chorshanba: [
+      { time: "08:30–09:10", subject: "Ingliz tili" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Informatika" },
+      { time: "11:00–11:40", subject: "Ona tili va adabiyot" },
+      { time: "12:30–13:10", subject: "Tarix" },
+      { time: "13:20–14:00", subject: "Tabiiy fan" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
     ],
     Payshanba: [
       { time: "08:30–09:10", subject: "Matematika" },
-      { time: "09:20–10:00", subject: "Biologiya" },
-      { time: "10:10–10:50", subject: "Kimyo" },
+      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
       { time: "11:00–11:40", subject: "Informatika" },
-      { time: "12:30–13:10", subject: "Ona tili va adabiyot" },
-      { time: "13:20–14:00", subject: "Ingliz tili" },
-      { time: "14:10–14:50", subject: "San'at" },
-      { time: "15:00–15:40", subject: "Chizmachilik" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
     ],
     Juma: [
       { time: "08:30–09:10", subject: "Informatika" },
-      { time: "09:20–10:00", subject: "Fizika" },
-      { time: "10:10–10:50", subject: "Matematika" },
-      { time: "11:00–11:40", subject: "Robototexnika" },
-      { time: "12:30–13:10", subject: "Ingliz tili" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
       { time: "13:20–14:00", subject: "Tarix" },
-      { time: "14:10–14:50", subject: "Loyiha himoyasi" },
-      { time: "15:00–15:40", subject: "Jismoniy tarbiya" },
-    ],
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ]
   },
+
+  "3-sinf": {
+    Dushanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ingliz tili" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ],
+    Seshanba: [
+      { time: "08:30–09:10", subject: "Ingliz tili" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Informatika" },
+      { time: "11:00–11:40", subject: "Ona tili va adabiyot" },
+      { time: "12:30–13:10", subject: "Tarix" },
+      { time: "13:20–14:00", subject: "Tabiiy fan" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Chorshanba: [
+      { time: "08:30–09:10", subject: "Ona tili va adabiyot" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Tabiiy fan" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ],
+    Payshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Informatika" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Ona tili va adabiyot" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Juma: [
+      { time: "08:30–09:10", subject: "Informatika" },
+      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
+      { time: "10:10–10:50", subject: "Matematika" },
+      { time: "11:00–11:40", subject: "Ingliz tili" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ]
+  },
+
+  "4-sinf": {
+    Dushanba: [
+      { time: "08:30–09:10", subject: "Ingliz tili" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Seshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Tabiiy fan" },
+      { time: "12:30–13:10", subject: "Informatika" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ],
+    Chorshanba: [
+      { time: "08:30–09:10", subject: "Ona tili va adabiyot" },
+      { time: "09:20–10:00", subject: "Ingliz tili" },
+      { time: "10:10–10:50", subject: "Matematika" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ],
+    Payshanba: [
+      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "09:20–10:00", subject: "Ingliz tili" },
+      { time: "10:10–10:50", subject: "Ona tili va adabiyot" },
+      { time: "11:00–11:40", subject: "Informatika" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "Jismoniy tarbiya" },
+      { time: "15:00–15:40", subject: "San'at" }
+    ],
+    Juma: [
+      { time: "08:30–09:10", subject: "Informatika" },
+      { time: "09:20–10:00", subject: "Matematika" },
+      { time: "10:10–10:50", subject: "Ingliz tili" },
+      { time: "11:00–11:40", subject: "Ona tili va adabiyot" },
+      { time: "12:30–13:10", subject: "Tabiiy fan" },
+      { time: "13:20–14:00", subject: "Tarix" },
+      { time: "14:10–14:50", subject: "San'at" },
+      { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
+    ]
+  }
+},
+   
+  
 
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
