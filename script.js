@@ -423,89 +423,46 @@ function initSchedule() {
       .join("");
   }
 
-  /* ----------------------------------------------------------
-     8) 📚 KITOBXONA — ro'yxat + qidiruv
-     ---------------------------------------------------------- */
-function openBookModal(book) {
-  const oldModal = document.getElementById("bookModal");
-  if (oldModal) oldModal.remove();
+/* ----------------------------------------------------------
+   8) 📚 KITOBXONA — ro'yxat + qidiruv
+   ---------------------------------------------------------- */
 
-  const modal = document.createElement("div");
-  modal.id = "bookModal";
-  modal.className = "book-modal";
+function initLibrary() {
+  const searchInput = document.getElementById("bookSearch");
+  const listEl = document.getElementById("bookList");
 
-  modal.innerHTML = `
-    <div class="book-modal__box">
+  if (!searchInput || !listEl) return;
 
-      <button
-        class="book-modal__close"
-        type="button"
-        aria-label="Yopish"
-      >
-        ×
-      </button>
+  function renderBooks(query) {
+    const q = query.trim().toLowerCase();
 
-      <div class="book-modal__icon">📖</div>
+    const filtered = MySchoolData.books.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q)
+    );
 
-      <h2>${book.title}</h2>
-
-      <p class="book-modal__author">
-        ✍️ <strong>Муаллиф:</strong> ${book.author}
-      </p>
-
-      <div class="book-modal__info">
-        <p>
-          📝 <strong>Китоб ҳақида</strong>
-        </p>
-
-        <p>
-          ${book.description || "Бу китоб ҳақида маълумот ҳозирча қўшилмаган."}
-        </p>
-      </div>
-
-      <div class="book-modal__details">
-        <span>
-          🏷️ <strong>Жанр:</strong>
-          ${book.genre || "Китоб"}
-        </span>
-
-        <span>
-          📅 <strong>Йил:</strong>
-          ${book.year || "—"}
-        </span>
-      </div>
-
-      <button
-        class="book-modal__read"
-        type="button"
-      >
-        📚 Ўқишни бошлаш
-      </button>
-
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  modal
-    .querySelector(".book-modal__close")
-    .addEventListener("click", () => {
-      modal.remove();
-    });
-
-  modal
-    .querySelector(".book-modal__read")
-    .addEventListener("click", () => {
-      alert("📚 Китобни ўқиш функцияси тез орада қўшилади!");
-    });
-
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.remove();
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        '<p class="empty-state">Hech narsa topilmadi.</p>';
+      return;
     }
-  });
-}
-    // Kitob ustiga bosilganda
+
+    listEl.innerHTML = filtered
+      .map(
+        (b) => `
+          <button
+            class="book-item"
+            type="button"
+            data-book-index="${MySchoolData.books.indexOf(b)}"
+          >
+            <span class="book-item__title">📖 ${b.title}</span>
+            <span class="book-item__author">${b.author}</span>
+          </button>
+        `
+      )
+      .join("");
+
     listEl.querySelectorAll(".book-item").forEach((bookEl) => {
       bookEl.addEventListener("click", () => {
         const index = Number(bookEl.dataset.bookIndex);
@@ -516,7 +473,6 @@ function openBookModal(book) {
     });
   }
 
-  // Kitob oynasi
   function openBookModal(book) {
     const oldModal = document.getElementById("bookModal");
     if (oldModal) oldModal.remove();
@@ -544,10 +500,27 @@ function openBookModal(book) {
           ✍️ ${book.author}
         </p>
 
-        <p class="book-modal__description">
-          Ushbu kitob haqida batafsil ma'lumot va
-          elektron o'qish imkoniyati tez orada qo'shiladi.
-        </p>
+        <div class="book-modal__info">
+          <p>
+            📝 <strong>Kitob haqida</strong>
+          </p>
+
+          <p>
+            ${book.description || "Bu kitob haqida ma'lumot hozircha qo‘shilmagan."}
+          </p>
+        </div>
+
+        <div class="book-modal__details">
+          <span>
+            🏷️ <strong>Janr:</strong>
+            ${book.genre || "Kitob"}
+          </span>
+
+          <span>
+            📅 <strong>Yil:</strong>
+            ${book.year || "—"}
+          </span>
+        </div>
 
         <button
           class="book-modal__read"
@@ -561,21 +534,18 @@ function openBookModal(book) {
 
     document.body.appendChild(modal);
 
-    // Yopish
     modal
       .querySelector(".book-modal__close")
       .addEventListener("click", () => {
         modal.remove();
       });
 
-    // O'qishni boshlash
     modal
       .querySelector(".book-modal__read")
       .addEventListener("click", () => {
-        alert("📚 Bu kitob tez orada qo‘shiladi!");
+        alert("📚 Kitobni o‘qish funksiyasi tez orada qo‘shiladi!");
       });
 
-    // Tashqarisini bosganda yopish
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         modal.remove();
@@ -583,13 +553,20 @@ function openBookModal(book) {
     });
   }
 
-  // Qidiruv
   searchInput.addEventListener("input", () => {
     renderBooks(searchInput.value);
   });
 
   renderBooks("");
 }
+
+           
+
+
+
+        
+
+
 
   /* ----------------------------------------------------------
      9) 🤖 AI YORDAMCHI — chat interfeysi (placeholder javoblar)
