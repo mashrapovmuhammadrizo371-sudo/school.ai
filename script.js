@@ -551,4 +551,432 @@ function initSchedule() {
               </span>
 
               <span class="schedule-break__time">
-                ${formatTime(time.end)}–${formatTime(time.e
+                ${formatTime(time.end)}–${formatTime(time.end)}
+                </span>
+
+          </div>
+        `;
+
+        // ABET
+        if (
+          (classNumber <= 4 && index === 2) ||
+          (classNumber >= 5 && index === 3)
+        ) {
+          html += `
+            <div class="schedule-break">
+
+              <span class="schedule-break__name">
+                🍽️ ABET
+              </span>
+
+              <span class="schedule-break__time">
+                ${formatTime(time.end)}–${formatTime(time.end + 45)}
+              </span>
+
+            </div>
+          `;
+        }
+
+        // PO‘LDNIK
+        if (
+          (classNumber <= 4 && index === 6) ||
+          (classNumber >= 5 && index === 7)
+        ) {
+          html += `
+            <div class="schedule-break">
+
+              <span class="schedule-break__name">
+                🥪 PO‘LDNIK
+              </span>
+
+              <span class="schedule-break__time">
+                ${formatTime(time.end)}–${formatTime(time.end + 45)}
+              </span>
+
+            </div>
+          `;
+        }
+      });
+
+      html += `
+        </div>
+      `;
+
+      scheduleListEl.innerHTML = html;
+    }
+
+    dayTabsEl
+      .querySelectorAll(".day-tab")
+      .forEach((tab) => {
+        tab.addEventListener("click", () => {
+          dayTabsEl
+            .querySelectorAll(".day-tab")
+            .forEach((item) => {
+              item.classList.remove("is-active");
+            });
+
+          tab.classList.add("is-active");
+
+          renderDay(tab.dataset.day);
+        });
+      });
+
+    if (days.length) {
+      renderDay(days[0]);
+    } else {
+      scheduleListEl.innerHTML = `
+        <p class="empty-state">
+          Bu sinf uchun jadval hali kiritilmagan.
+        </p>
+      `;
+    }
+  }
+
+  // Sinf tanlash
+  classGridEl
+    .querySelectorAll(".class-btn")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const className = btn.dataset.class;
+
+        classSelectorEl.hidden = true;
+        scheduleSectionEl.hidden = false;
+
+        renderClassSchedule(className);
+      });
+    });
+
+  // Sinflar ro‘yxatiga qaytish
+  classBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classSelectorEl.hidden = false;
+  });
+}
+
+
+/* ----------------------------------------------------------
+   5) 📖 FANLAR
+   ---------------------------------------------------------- */
+
+function initSubjects() {
+  const el = document.getElementById("subjectList");
+  if (!el) return;
+
+  el.innerHTML = MySchoolData.subjects
+    .map(
+      (s) => `
+        <div class="subject-card">
+          <div class="subject-card__head">
+            <span class="subject-card__icon">${s.icon}</span>
+            <span class="subject-card__name">${s.name}</span>
+          </div>
+
+          <p class="subject-card__desc">${s.desc}</p>
+        </div>
+      `
+    )
+    .join("");
+}
+
+
+/* ----------------------------------------------------------
+   6) 🎯 CAREER — maqsadni saqlash
+   ---------------------------------------------------------- */
+
+function initCareer() {
+  const input = document.getElementById("careerInput");
+  const saveBtn = document.getElementById("careerSaveBtn");
+  const result = document.getElementById("careerResult");
+  const resultText = document.getElementById("careerGoalText");
+
+  if (!input || !saveBtn || !result || !resultText) return;
+
+  const STORAGE_KEY = "myschool_career_goal";
+
+  function showGoal(text) {
+    resultText.textContent = text;
+    result.hidden = false;
+  }
+
+  // Sahifa ochilganda avval saqlangan maqsad bo'lsa ko'rsatamiz
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      input.value = saved;
+      showGoal(saved);
+    }
+  } catch (err) {
+    console.warn("MySchool: localStorage o'qib bo'lmadi.", err);
+  }
+
+  saveBtn.addEventListener("click", () => {
+    const value = input.value.trim();
+
+    if (!value) {
+      input.focus();
+      return;
+    }
+
+    showGoal(value);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, value);
+    } catch (err) {
+      console.warn("MySchool: localStorage ga yozib bo'lmadi.", err);
+    }
+  });
+}
+
+
+/* ----------------------------------------------------------
+   7) 📢 E'LON
+   ---------------------------------------------------------- */
+
+function initAnnouncements() {
+  const el = document.getElementById("announcementList");
+  if (!el) return;
+
+  el.innerHTML = MySchoolData.announcements
+    .map(
+      (a) => `
+        <div class="announcement-card">
+          <span class="announcement-card__date">${a.date}</span>
+          <h3 class="announcement-card__title">${a.title}</h3>
+          <p class="announcement-card__text">${a.text}</p>
+        </div>
+      `
+    )
+    .join("");
+}
+
+
+/* ----------------------------------------------------------
+   8) 📚 KITOBXONA — ro'yxat + qidiruv
+   ---------------------------------------------------------- */
+
+function initLibrary() {
+  const searchInput = document.getElementById("bookSearch");
+  const listEl = document.getElementById("bookList");
+
+  if (!searchInput || !listEl) return;
+
+  function renderBooks(query) {
+    const q = query.trim().toLowerCase();
+
+    const filtered = MySchoolData.books.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q)
+    );
+
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        '<p class="empty-state">Hech narsa topilmadi.</p>';
+      return;
+    }
+
+    listEl.innerHTML = filtered
+      .map(
+        (b) => `
+          <button
+            class="book-item"
+            type="button"
+            data-book-index="${MySchoolData.books.indexOf(b)}"
+          >
+            <span class="book-item__title">📖 ${b.title}</span>
+            <span class="book-item__author">${b.author}</span>
+          </button>
+        `
+      )
+      .join("");
+
+    listEl.querySelectorAll(".book-item").forEach((bookEl) => {
+      bookEl.addEventListener("click", () => {
+        const index = Number(bookEl.dataset.bookIndex);
+        const book = MySchoolData.books[index];
+
+        openBookModal(book);
+      });
+    });
+  }
+
+  function openBookModal(book) {
+    const oldModal = document.getElementById("bookModal");
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "bookModal";
+    modal.className = "book-modal";
+
+    modal.innerHTML = `
+      <div class="book-modal__box">
+
+        <button
+          class="book-modal__close"
+          type="button"
+          aria-label="Yopish"
+        >
+          ×
+        </button>
+
+        <div class="book-modal__icon">📖</div>
+
+        <h2>${book.title}</h2>
+
+        <p class="book-modal__author">
+          ✍️ ${book.author}
+        </p>
+
+        <div class="book-modal__info">
+          <p>
+            📝 <strong>Kitob haqida</strong>
+          </p>
+
+          <p>
+            ${book.description || "Bu kitob haqida ma'lumot hozircha qo‘shilmagan."}
+          </p>
+        </div>
+
+        <div class="book-modal__details">
+          <span>
+            🏷️ <strong>Janr:</strong>
+            ${book.genre || "Kitob"}
+          </span>
+
+          <span>
+            📅 <strong>Yil:</strong>
+            ${book.year || "—"}
+          </span>
+        </div>
+
+        <button
+          class="book-modal__read"
+          type="button"
+        >
+          📚 O‘qishni boshlash
+        </button>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal
+      .querySelector(".book-modal__close")
+      .addEventListener("click", () => {
+        modal.remove();
+      });
+
+    modal
+      .querySelector(".book-modal__read")
+      .addEventListener("click", () => {
+        alert("📚 Kitobni o‘qish funksiyasi tez orada qo‘shiladi!");
+      });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  searchInput.addEventListener("input", () => {
+    renderBooks(searchInput.value);
+  });
+
+  renderBooks("");
+}
+
+
+/* ----------------------------------------------------------
+   9) 🤖 AI YORDAMCHI — chat interfeysi
+   ---------------------------------------------------------- */
+
+function initAIChat() {
+  const messagesEl = document.getElementById("chatMessages");
+  const form = document.getElementById("chatForm");
+  const input = document.getElementById("chatInput");
+
+  if (!messagesEl || !form || !input) return;
+
+  let greeted = false;
+
+  function addBubble(text, sender) {
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble chat-bubble--${sender}`;
+    bubble.textContent = text;
+
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function getPlaceholderReply() {
+    return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
+  }
+
+  function sendMessageToAI(userText) {
+    setTimeout(() => {
+      addBubble(getPlaceholderReply(), "bot");
+    }, 500);
+  }
+
+  function greetOnce() {
+    if (greeted) return;
+
+    greeted = true;
+
+    addBubble(
+      "Salom! 👋 Men MySchool AI yordamchiman. Sizga qanday yordam bera olaman?",
+      "bot"
+    );
+  }
+
+  document.addEventListener("myschool:panel-opened", (e) => {
+    if (e.detail === "ai") greetOnce();
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    addBubble(text, "user");
+    input.value = "";
+
+    sendMessageToAI(text);
+  });
+}
+
+
+/* ----------------------------------------------------------
+   Panel ochilganda tegishli event chiqarish
+   ---------------------------------------------------------- */
+
+document.querySelectorAll("[data-panel]").forEach((btn) => {
+  if (btn.classList.contains("panel")) return;
+
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.panel;
+
+    document.dispatchEvent(
+      new CustomEvent("myschool:panel-opened", {
+        detail: key
+      })
+    );
+  });
+});
+
+
+/* ----------------------------------------------------------
+   Barcha bo‘limlarni ishga tushirish
+   ---------------------------------------------------------- */
+
+initSchedule();
+initSubjects();
+initCareer();
+initAnnouncements();
+initLibrary();
+
+});
