@@ -17,7 +17,7 @@
    funksiyalarini o'zgartirish shart bo'lmaydi.
    ---------------------------------------------------------- */
 
-                  const MydchoolData = {
+                  const MySchoolData = {
   schedule: {
   "1-sinf": {
     Dushanba: [
