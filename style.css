@@ -1146,6 +1146,129 @@ button {
   transform: translateY(0) scale(0.96);
 }
 
+/* ==========================================================
+   JADVAL — yangi dizayn
+   ========================================================== */
+
+.schedule-section {
+  width: 100%;
+}
+
+.schedule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.schedule-table {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.schedule-table__head,
+.schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 125px;
+  align-items: center;
+}
+
+.schedule-table__head {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.schedule-row {
+  min-height: 58px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.schedule-row__subject {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.schedule-row__time {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.schedule-break {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 125px;
+  align-items: center;
+  min-height: 50px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-weight: 700;
+}
+
+.schedule-break__name {
+  color: #f5b942;
+}
+
+.schedule-break__time {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #f5b942;
+}
+
+.day-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+}
+
+.day-tab {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.day-tab.is-active {
+  font-weight: 700;
+}
+
+/* Telefon */
+@media (max-width: 600px) {
+  .schedule-table__head,
+  .schedule-row,
+  .schedule-break {
+    grid-template-columns: minmax(0, 1fr) 112px;
+  }
+
+  .schedule-row,
+  .schedule-break {
+    padding: 9px 12px;
+  }
+
+  .schedule-row__time,
+  .schedule-break__time {
+    font-size: 12px;
+  }
+
+  .schedule-row__subject {
+    font-size: 14px;
+  }
+}
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
