@@ -229,7 +229,7 @@
       { time: "14:10–14:50", subject: "San'at" },
       { time: "15:00–15:40", subject: "Jismoniy tarbiya" }
     ]
-  }
+  },
 "5-sinf": {
   Dushanba: [
     { time: "08:30–09:15", subject: "Matematika" },
