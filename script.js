@@ -1279,7 +1279,7 @@ function initAIChat() {
 
 async function sendMessageToAI(userText) {
   try {
-    const response = await fetch("https://school-ai-bpp0.onrender.com/api/ai", {
+    const response = await fetch("https://school-ai-1cie.onrender.com/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
