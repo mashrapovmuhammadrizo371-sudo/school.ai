@@ -439,6 +439,7 @@
     { time: "14:10–14:55", subject: "Tarix" },
     { time: "15:00–15:45", subject: "Geografiya" }
   ],
+},
 "9-sinf": {
   Dushanba: [
     { time: "08:30–09:15", subject: "Matematika" },
