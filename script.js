@@ -538,25 +538,7 @@ function initSchedule() {
           </div>
         `;
 
-        // ABET
-        if (
-          (classNumber <= 4 && index === 2) ||
-          (classNumber >= 5 && index === 3)
-        ) {
-          html += `
-            <div class="schedule-break">
-
-              <span class="schedule-break__name">
-                🍽️ ABET
-              </span>
-
-              <span class="schedule-break__time">
-                ${formatTime(time.end)}–${formatTime(time.end)}
-                </span>
-
-          </div>
-        `;
-
+        
         // ABET
         if (
           (classNumber <= 4 && index === 2) ||
@@ -978,5 +960,5 @@ initSubjects();
 initCareer();
 initAnnouncements();
 initLibrary();
-
+initAIChat();
 });
