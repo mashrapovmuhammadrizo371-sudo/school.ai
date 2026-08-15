@@ -1277,11 +1277,41 @@ function initAIChat() {
     return "Hozircha men demo rejimidaman — haqiqiy AI hali ulanmagan. Tez orada Node.js backend orqali to'liq javob bera boshlayman! 🤖";
   }
 
-  function sendMessageToAI(userText) {
-    setTimeout(() => {
-      addBubble(getPlaceholderReply(), "bot");
-    }, 500);
+async function sendMessageToAI(userText) {
+  try {
+    const response = await fetch("https://school-ai-bpp0.onrender.com/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: userText
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Server xatosi");
+    }
+
+    const reply =
+      data.reply ||
+      data.message ||
+      "AI javob qaytarmadi.";
+
+    addBubble(reply, "bot");
+
+  } catch (error) {
+    console.error("MySchool AI xatosi:", error);
+
+    addBubble(
+      "❌ AI serveriga ulanib bo‘lmadi. Backend ishlayotganini tekshiring.",
+      "bot"
+    );
   }
+}
+
 
   function greetOnce() {
     if (greeted) return;
