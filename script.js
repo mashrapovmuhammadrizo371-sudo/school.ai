@@ -334,9 +334,113 @@
     { time: "14:10–14:55", subject: "Tarix" },
     { time: "15:00–15:45", subject: "Geografiya" }
   ]
-}
+},
+"7-sinf": {
+  Dushanba: [
+    { time: "08:30–09:15", subject: "Matematika" },
+    { time: "09:20–10:05", subject: "Fizika" },
+    { time: "10:10–10:55", subject: "Ingliz tili" },
+    { time: "11:00–11:45", subject: "Informatika" },
+    { time: "12:30–13:15", subject: "Kimyo" },
+    { time: "13:20–14:05", subject: "Tarix" },
+    { time: "14:10–14:55", subject: "Biologiya" },
+    { time: "15:00–15:45", subject: "Ona tili va adabiyot" }
+  ],
+  Seshanba: [
+    { time: "08:30–09:15", subject: "Fizika" },
+    { time: "09:20–10:05", subject: "Matematika" },
+    { time: "10:10–10:55", subject: "Kimyo" },
+    { time: "11:00–11:45", subject: "Ingliz tili" },
+    { time: "12:30–13:15", subject: "Informatika" },
+    { time: "13:20–14:05", subject: "Geografiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Biologiya" }
+  ],
+  Chorshanba: [
+    { time: "08:30–09:15", subject: "Ingliz tili" },
+    { time: "09:20–10:05", subject: "Matematika" },
+    { time: "10:10–10:55", subject: "Fizika" },
+    { time: "11:00–11:45", subject: "Kimyo" },
+    { time: "12:30–13:15", subject: "Informatika" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Geografiya" }
+  ],
+  Payshanba: [
+    { time: "08:30–09:15", subject: "Matematika" },
+    { time: "09:20–10:05", subject: "Informatika" },
+    { time: "10:10–10:55", subject: "Kimyo" },
+    { time: "11:00–11:45", subject: "Fizika" },
+    { time: "12:30–13:15", subject: "Ingliz tili" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Ona tili va adabiyot" }
+  ],
+  Juma: [
+    { time: "08:30–09:15", subject: "Informatika" },
+    { time: "09:20–10:05", subject: "Matematika" },
+    { time: "10:10–10:55", subject: "Ingliz tili" },
+    { time: "11:00–11:45", subject: "Fizika" },
+    { time: "12:30–13:15", subject: "Kimyo" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Geografiya" },
+    { time: "15:00–15:45", subject: "Tarix" }
+  ]
 },
 
+"8-sinf": {
+  Dushanba: [
+    { time: "08:30–09:15", subject: "Fizika" },
+    { time: "09:20–10:05", subject: "Matematika" },
+    { time: "10:10–10:55", subject: "Kimyo" },
+    { time: "11:00–11:45", subject: "Ingliz tili" },
+    { time: "12:30–13:15", subject: "Informatika" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Geografiya" }
+  ],
+  Seshanba: [
+    { time: "08:30–09:15", subject: "Matematika" },
+    { time: "09:20–10:05", subject: "Fizika" },
+    { time: "10:10–10:55", subject: "Informatika" },
+    { time: "11:00–11:45", subject: "Kimyo" },
+    { time: "12:30–13:15", subject: "Ingliz tili" },
+    { time: "13:20–14:05", subject: "Tarix" },
+    { time: "14:10–14:55", subject: "Biologiya" },
+    { time: "15:00–15:45", subject: "Ona tili va adabiyot" }
+  ],
+  Chorshanba: [
+    { time: "08:30–09:15", subject: "Ingliz tili" },
+    { time: "09:20–10:05", subject: "Matematika" },
+    { time: "10:10–10:55", subject: "Fizika" },
+    { time: "11:00–11:45", subject: "Informatika" },
+    { time: "12:30–13:15", subject: "Kimyo" },
+    { time: "13:20–14:05", subject: "Geografiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Biologiya" }
+  ],
+  Payshanba: [
+    { time: "08:30–09:15", subject: "Fizika" },
+    { time: "09:20–10:05", subject: "Informatika" },
+    { time: "10:10–10:55", subject: "Matematika" },
+    { time: "11:00–11:45", subject: "Kimyo" },
+    { time: "12:30–13:15", subject: "Ingliz tili" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Geografiya" },
+    { time: "15:00–15:45", subject: "Tarix" }
+  ],
+  Juma: [
+    { time: "08:30–09:15", subject: "Matematika" },
+    { time: "09:20–10:05", subject: "Ingliz tili"},
+{ time: "10:10–10:55", subject: "Fizika" },
+    { time: "11:00–11:45", subject: "Informatika" },
+    { time: "12:30–13:15", subject: "Kimyo" },
+    { time: "13:20–14:05", subject: "Biologiya" },
+    { time: "14:10–14:55", subject: "Tarix" },
+    { time: "15:00–15:45", subject: "Geografiya" }
+  ]
+
+},
   subjects: [
     { icon: "📐", name: "Matematika", desc: "Algebra, geometriya va mantiqiy fikrlashni rivojlantirish." },
     { icon: "⚛️", name: "Fizika", desc: "Mexanika, elektr, optika va tabiat qonunlari." },
