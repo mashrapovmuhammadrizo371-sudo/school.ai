@@ -334,6 +334,7 @@
     { time: "14:10–14:55", subject: "Tarix" },
     { time: "15:00–15:45", subject: "Geografiya" }
   ]
+}
 },
 
   subjects: [
