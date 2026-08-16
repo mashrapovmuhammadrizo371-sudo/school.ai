@@ -646,6 +646,12 @@
       title: "Kutubxona yangilanishi",
       text: "Maktab kutubxonasiga 50 dan ortiq yangi kitob qo'shildi. Ro'yxat bilan KITOBXONA bo'limida tanishishingiz mumkin.",
     },
+     {
+      date: "16.08.2026",
+      title: "Bizni ijtimoiy tarmoqlar",
+      text: "https://t.me/mashrapov_vip",
+        text: "https://www.instagram.com/abdullayvc.7?igsh=d29sM205aGtzMjN5",
+    },
   ],
 
   books: [
