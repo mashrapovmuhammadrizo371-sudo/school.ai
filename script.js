@@ -1106,7 +1106,18 @@ function initAnnouncements() {
           <span class="announcement-card__date">${a.date}</span>
           <h3 class="announcement-card__title">${a.title}</h3>
           <p class="announcement-card__text">${a.text}</p>
-        </div>
+          (/div)
+        <h4>Bizning ijtimoiy tarmoqlarimiz</h4>
+
+<div class="announcement-socials">
+  <a href="https://t.me/mashrapov_vip" target="_blank" rel="noopener">
+    📱 Telegram
+  </a>
+
+  <a href="https://www.instagram.com/abdullayvc.7?igsh=d29sM205aGtzMjN5" target="_blank" rel="noopener">
+    📸 Instagram
+  </a>
+</div>
       `
     )
     .join("");
