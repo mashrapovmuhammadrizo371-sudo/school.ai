@@ -1307,9 +1307,9 @@ async function sendMessageToAI(userText) {
     console.error("MySchool AI xatosi:", error);
 
     addBubble(
-      "❌ AI serveriga ulanib bo‘lmadi. Backend ishlayotganini tekshiring.",
-      "bot"
-    );
+  "❌ Xato: " + error.message,
+  "bot"
+);
   }
 }
 
