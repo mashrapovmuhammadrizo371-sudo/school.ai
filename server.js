@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/ai", async (req, res) => {
+console.log("AI REQUEST KELDI:", req.body);
   try {
     const { message } = req.body;
 
