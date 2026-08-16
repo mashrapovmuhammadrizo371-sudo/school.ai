@@ -1296,9 +1296,10 @@ async function sendMessageToAI(userText) {
     }
 
     const reply =
-      data.reply ||
-      data.message ||
-      "AI javob qaytarmadi.";
+  data.answer ||
+  data.reply ||
+  data.message ||
+  "AI javob qaytarmadi.";
 
     addBubble(reply, "bot");
 
