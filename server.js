@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 });
 
 // ================================
-// 🤖 MY SCHOOL AI API
+// 🤖 SAYT AI API
 // ================================
 
 app.post("/api/ai", async (req, res) => {
@@ -79,12 +79,41 @@ async function telegram(method, data = {}) {
   return response.json();
 }
 
-async function sendTelegramMessage(chatId, text) {
+// ================================
+// 📋 TELEGRAM MENYU
+// ================================
+
+async function sendMainMenu(chatId) {
   return telegram("sendMessage", {
     chat_id: chatId,
-    text: text,
+
+    text:
+      "🎓 MySchool\n\n" +
+      "Kerakli bo‘limni tanlang:",
+
+    reply_markup: {
+      keyboard: [
+        [
+          { text: "📅 JADVAL" },
+          { text: "📚 FANLAR" }
+        ],
+        [
+          { text: "📖 KITOBXONA" },
+          { text: "📢 E'LONLAR" }
+        ],
+        [
+          { text: "🎯 CAREER" }
+        ]
+      ],
+
+      resize_keyboard: true
+    }
   });
 }
+
+// ================================
+// 📩 TELEGRAM MESSAGE
+// ================================
 
 let telegramOffset = 0;
 
@@ -97,7 +126,7 @@ async function checkTelegram() {
   try {
     const result = await telegram("getUpdates", {
       offset: telegramOffset,
-      timeout: 20,
+      timeout: 20
     });
 
     if (!result.ok) {
@@ -117,42 +146,113 @@ async function checkTelegram() {
 
       console.log("TELEGRAM:", message);
 
+      // ==========================
       // /start
+      // ==========================
+
       if (message === "/start") {
+        await sendMainMenu(chatId);
+        continue;
+      }
+
+      // ==========================
+      // 📅 JADVAL
+      // ==========================
+
+      if (message === "📅 JADVAL") {
         await sendTelegramMessage(
           chatId,
-          "🎓 Assalomu alaykum!\n\n" +
-            "MySchool AI botiga xush kelibsiz! 🤖\n\n" +
-            "Menga savolingizni yozing — AI yordam beradi."
+          "📅 JADVAL\n\nSinfingizni tanlang:"
         );
 
         continue;
       }
 
-      // AI
-      try {
-        await sendTelegramMessage(chatId, "⏳ Javob tayyorlanmoqda...");
+      // ==========================
+      // 📚 FANLAR
+      // ==========================
 
-        const response = await client.responses.create({
-          model: "gpt-5-mini",
-          input: message,
-        });
-
-        const answer = response.output_text;
-
-        await sendTelegramMessage(chatId, answer);
-      } catch (error) {
-        console.error("Telegram AI error:", error);
-
+      if (message === "📚 FANLAR") {
         await sendTelegramMessage(
           chatId,
-          "❌ Hozircha AI bilan bog‘lanishda xatolik yuz berdi."
+          "📚 FANLAR\n\n" +
+          "• Matematika\n" +
+          "• Fizika\n" +
+          "• Kimyo\n" +
+          "• Biologiya\n" +
+          "• Informatika\n" +
+          "• Ingliz tili"
         );
+
+        continue;
       }
+
+      // ==========================
+      // 📖 KITOBXONA
+      // ==========================
+
+      if (message === "📖 KITOBXONA") {
+        await sendTelegramMessage(
+          chatId,
+          "📖 KITOBXONA\n\n" +
+          "Kitoblar bo‘limi tez orada qo‘shiladi."
+        );
+
+        continue;
+      }
+
+      // ==========================
+      // 📢 E'LONLAR
+      // ==========================
+
+      if (message === "📢 E'LONLAR") {
+        await sendTelegramMessage(
+          chatId,
+          "📢 E'LONLAR\n\n" +
+          "Hozircha yangi e'lonlar yo‘q."
+        );
+
+        continue;
+      }
+
+      // ==========================
+      // 🎯 CAREER
+      // ==========================
+
+      if (message === "🎯 CAREER") {
+        await sendTelegramMessage(
+          chatId,
+          "🎯 CAREER\n\n" +
+          "Maqsadlaringizni shu bo‘limda boshqarishingiz mumkin."
+        );
+
+        continue;
+      }
+
+      // ==========================
+      // ❓ BOSHQA XABAR
+      // ==========================
+
+      await sendTelegramMessage(
+        chatId,
+        "Iltimos, menyudagi tugmalardan birini tanlang 👇"
+      );
     }
+
   } catch (error) {
     console.error("Telegram polling error:", error);
   }
+}
+
+// ================================
+// 📤 XABAR YUBORISH
+// ================================
+
+async function sendTelegramMessage(chatId, text) {
+  return telegram("sendMessage", {
+    chat_id: chatId,
+    text: text
+  });
 }
 
 // ================================
@@ -162,14 +262,19 @@ async function checkTelegram() {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`MySchool AI backend ${PORT}-portda ishlayapti`);
+  console.log(
+    `MySchool AI backend ${PORT}-portda ishlayapti`
+  );
 
   if (TELEGRAM_BOT_TOKEN) {
     console.log("🤖 Telegram bot ishga tushdi!");
+
     checkTelegram();
 
     setInterval(checkTelegram, 1000);
   } else {
-    console.log("⚠️ TELEGRAM_BOT_TOKEN mavjud emas.");
+    console.log(
+      "⚠️ TELEGRAM_BOT_TOKEN mavjud emas."
+    );
   }
 });
