@@ -21,7 +21,7 @@
   schedule: {
   "1-sinf": {
     Dushanba: [
-      { time: "08:30–09:10", subject: "Matematika" },
+      { time: "08:30–09:10", subject: "Ali fani" },
       { time: "09:20–10:00", subject: "Ona tili va adabiyot" },
       { time: "10:10–10:50", subject: "Ingliz tili" },
       { time: "11:00–11:40", subject: "Informatika" },
