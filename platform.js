@@ -117,7 +117,14 @@
 
   function protectEntry(){
     const enter=$("#enterBtn"); if(!enter)return;
-    enter.addEventListener("click",()=>{setTimeout(()=>{if(!student) openAuth("register");},0)});
+    // script.js ham KIRISH tugmasiga listener qo'shadi. Capture orqali
+    // autentifikatsiyasiz foydalanuvchini eski MENU ga o'tib ketishidan to'samiz.
+    enter.addEventListener("click",(e)=>{
+      if(student) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAuth(pendingApplication ? "pending" : "welcome");
+    },true);
   }
 
   async function openAdmin(section){
