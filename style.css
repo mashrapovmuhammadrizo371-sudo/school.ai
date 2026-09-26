@@ -1533,3 +1533,153 @@ body::after {
   .menu__inner { padding: 20px 16px; border-radius: 24px; }
   .menu-btn { min-height: 112px; border-radius: 18px; }
 }
+
+
+/* ==========================================================
+   SCHOOL AI — natural, restrained school UI
+   Visual-only overrides; existing layout and behavior preserved.
+   ========================================================== */
+:root {
+  --bg: #0d1728;
+  --bg-glow: #0d1728;
+  --text: #edf2fa;
+  --text-dim: #a0aec2;
+  --accent: #6f9fe8;
+  --accent-2: #8bb5f3;
+}
+body {
+  background: #0d1728;
+}
+body::before,
+body::after {
+  display: none;
+}
+.screen {
+  padding: 20px;
+}
+.intro__inner {
+  border: 1px solid #293951;
+  border-radius: 20px;
+  background: #142238;
+  box-shadow: 0 16px 42px rgba(0,0,0,.2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.intro__inner::before {
+  display: none;
+}
+.cap,
+.menu__cap {
+  filter: none;
+}
+.brand {
+  text-shadow: none;
+}
+.brand__word:last-child {
+  background: none;
+  color: #8bb5f3;
+  -webkit-text-fill-color: currentColor;
+}
+.divider {
+  height: 1px;
+  background: #3b506e;
+  box-shadow: none;
+}
+.enter-btn,
+.ai-btn,
+.career-save-btn,
+.chat-send-btn,
+.day-tab.is-active {
+  color: #fff;
+  background: #376fc0;
+  border: 1px solid #4a80cd;
+  box-shadow: none;
+}
+.enter-btn {
+  border-radius: 12px;
+  letter-spacing: .12em;
+}
+.enter-btn:hover,
+.ai-btn:hover,
+.career-save-btn:hover {
+  box-shadow: none;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.menu__inner {
+  border: 1px solid #293951;
+  border-radius: 22px;
+  background: #111f34;
+  box-shadow: 0 16px 42px rgba(0,0,0,.18);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.menu__title {
+  letter-spacing: .12em;
+}
+.menu-btn,
+.subject-card,
+.announcement-card,
+.book-item,
+.schedule-row {
+  background: #172840;
+  border: 1px solid #2a3d57;
+  box-shadow: none;
+}
+.menu-btn {
+  min-height: 112px;
+  border-radius: 14px;
+  transition: background .18s ease, border-color .18s ease;
+}
+.menu-btn:hover {
+  transform: none;
+  border-color: #527eb7;
+  background: #1c3150;
+  box-shadow: none;
+}
+.ai-btn {
+  border-radius: 14px;
+  letter-spacing: .08em;
+}
+.panel__header {
+  background: #111f34;
+  border-bottom-color: #293951;
+  backdrop-filter: none;
+}
+.back-btn,
+.day-tab,
+.class-btn,
+.class-letter-btn,
+.search-input,
+.career-textarea,
+.chat-input {
+  background: #172840;
+  border-color: #2a3d57;
+}
+.class-btn:hover,
+.class-letter-btn:hover,
+.back-btn:hover {
+  border-color: #527eb7;
+  background: #1c3150;
+}
+.chat-bubble--bot {
+  background: #172840;
+  border: 1px solid #2a3d57;
+}
+.chat-bubble--user {
+  background: #315f9f;
+  color: #fff;
+  font-weight: 400;
+}
+.chat-input-row {
+  background: #111f34;
+  border-top-color: #293951;
+}
+.chat-send-btn {
+  border-radius: 12px;
+}
+@media (max-width: 600px) {
+  .intro__inner { border-radius: 18px; }
+  .menu__inner { border-radius: 18px; }
+  .menu-btn { min-height: 100px; border-radius: 12px; }
+}
