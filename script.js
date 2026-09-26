@@ -769,18 +769,21 @@ document.addEventListener("DOMContentLoaded", () => {
 function initSchedule() {
   const classGridEl = document.getElementById("classGrid");
   const classSelectorEl = document.getElementById("classSelector");
+  const classLetterSelectorEl = document.getElementById("classLetterSelector");
   const scheduleSectionEl = document.getElementById("scheduleSection");
   const classBackBtn = document.getElementById("classBackBtn");
-  const selectedClassTitleEl =
-    document.getElementById("selectedClassTitle");
+  const letterBackBtn = document.getElementById("letterBackBtn");
+  const selectedClassTitleEl = document.getElementById("selectedClassTitle");
   const dayTabsEl = document.getElementById("dayTabs");
   const scheduleListEl = document.getElementById("scheduleList");
 
   if (
     !classGridEl ||
     !classSelectorEl ||
+    !classLetterSelectorEl ||
     !scheduleSectionEl ||
     !classBackBtn ||
+    !letterBackBtn ||
     !selectedClassTitleEl ||
     !dayTabsEl ||
     !scheduleListEl
@@ -788,88 +791,66 @@ function initSchedule() {
     return;
   }
 
-  // 1–11-sinflar
-  const classes = Array.from(
-    { length: 11 },
-    (_, i) => `${i + 1}-sinf`
-  );
+  // 1–11-sinflar. Har bir sinf uchun A, B, G guruhlari mavjud.
+  const classes = Array.from({ length: 11 }, (_, i) => `${i + 1}-sinf`);
+  const letters = ["A", "B", "G"];
 
-  // Sinf tugmalarini chiqarish
   classGridEl.innerHTML = classes
     .map(
       (className) => `
-        <button
-          class="class-btn"
-          type="button"
-          data-class="${className}"
-        >
+        <button class="class-btn" type="button" data-class="${className}">
           ${className.toUpperCase()}
         </button>
       `
     )
     .join("");
 
-  // Vaqtni HH:MM ko‘rinishiga o'tkazish
-  function formatTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+  classGridEl.querySelectorAll(".class-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const className = btn.dataset.class;
 
-    return (
-      String(hours).padStart(2, "0") +
-      ":" +
-      String(mins).padStart(2, "0")
-    );
-  }
+      classSelectorEl.hidden = true;
+      classLetterSelectorEl.hidden = false;
 
-  // Sinfga qarab dars vaqtlarini hisoblash
-  function getLessonTimes(classNumber) {
-    const times = [];
-    let current = 8 * 60 + 30;
+      classLetterSelectorEl.querySelector(".class-letter-title").textContent =
+        `${className.toUpperCase()} — HARFNI TANLANG`;
 
-    for (let lesson = 1; lesson <= 8; lesson++) {
-      const start = current;
-      const end = current + 45;
+      classLetterSelectorEl.querySelector(".class-letter-grid").innerHTML =
+        letters
+          .map(
+            (letter) => `
+              <button
+                class="class-letter-btn"
+                type="button"
+                data-letter="${letter}"
+              >
+                ${letter}
+              </button>
+            `
+          )
+          .join("");
 
-      times.push({
-        start,
-        end
+      classLetterSelectorEl.querySelectorAll(".class-letter-btn").forEach((letterBtn) => {
+        letterBtn.addEventListener("click", () => {
+          const letter = letterBtn.dataset.letter;
+
+          classLetterSelectorEl.hidden = true;
+          scheduleSectionEl.hidden = false;
+
+          renderClassSchedule(className, letter);
+        });
       });
+    });
+  });
 
-      current = end;
-
-      // 1–4-sinf
-      if (classNumber <= 4) {
-        if (lesson === 3 || lesson === 7) {
-          current += 45;
-        } else if (lesson < 8) {
-          current += 5;
-        }
-      }
-
-      // 5–11-sinf
-      else {
-        if (lesson === 4 || lesson === 8) {
-          current += 45;
-        } else if (lesson < 8) {
-          current += 5;
-        }
-      }
-    }
-
-    return times;
-  }
-
-  // Tanlangan sinf jadvali
-  function renderClassSchedule(className) {
+  // Har bir sinfning A/B/G jadvali bir xil.
+  function renderClassSchedule(className, letter) {
     const classNumber = Number.parseInt(className, 10);
-
-    const schedule =
-      MySchoolData.schedule[className] || {};
-
+    const schedule = MySchoolData.schedule[className] || {};
     const days = Object.keys(schedule);
 
     selectedClassTitleEl.textContent =
-      className.toUpperCase();
+      `${className.toUpperCase()} — ${letter}`;
 
     dayTabsEl.innerHTML = days
       .map(
@@ -885,22 +866,54 @@ function initSchedule() {
       )
       .join("");
 
+    function formatTime(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return String(hours).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
+    }
+
+    function getLessonTimes(classNumber) {
+      const times = [];
+      let current = 8 * 60 + 30;
+
+      for (let lesson = 1; lesson <= 8; lesson++) {
+        const start = current;
+        const end = current + 45;
+
+        times.push({ start, end });
+        current = end;
+
+        if (classNumber <= 4) {
+          if (lesson === 3 || lesson === 7) {
+            current += 45;
+          } else if (lesson < 8) {
+            current += 5;
+          }
+        } else {
+          if (lesson === 4 || lesson === 8) {
+            current += 45;
+          } else if (lesson < 8) {
+            current += 5;
+          }
+        }
+      }
+
+      return times;
+    }
+
     function renderDay(day) {
       const lessons = schedule[day] || [];
       const times = getLessonTimes(classNumber);
 
       if (!lessons.length) {
         scheduleListEl.innerHTML = `
-          <p class="empty-state">
-            Bu kunda dars yo‘q.
-          </p>
+          <p class="empty-state">Bu kunda dars yo‘q.</p>
         `;
         return;
       }
 
       let html = `
         <div class="schedule-table">
-
           <div class="schedule-table__head">
             <span>Fan</span>
             <span style="text-align:right;">Vaqt</span>
@@ -912,115 +925,79 @@ function initSchedule() {
 
         html += `
           <div class="schedule-row">
-
-            <span class="schedule-row__subject">
-              ${lesson.subject}
-            </span>
-
+            <span class="schedule-row__subject">${lesson.subject}</span>
             <span class="schedule-row__time">
               ${formatTime(time.start)}–${formatTime(time.end)}
             </span>
-
           </div>
         `;
 
-        
-        // ABET
         if (
           (classNumber <= 4 && index === 2) ||
           (classNumber >= 5 && index === 3)
         ) {
           html += `
             <div class="schedule-break">
-
-              <span class="schedule-break__name">
-                🍽️ ABET
-              </span>
-
+              <span class="schedule-break__name">🍽️ ABET</span>
               <span class="schedule-break__time">
                 ${formatTime(time.end)}–${formatTime(time.end + 45)}
               </span>
-
             </div>
           `;
         }
 
-        // PO‘LDNIK
         if (
           (classNumber <= 4 && index === 6) ||
           (classNumber >= 5 && index === 7)
         ) {
           html += `
             <div class="schedule-break">
-
-              <span class="schedule-break__name">
-                🥪 PO‘LDNIK
-              </span>
-
+              <span class="schedule-break__name">🥪 PO‘LDNIK</span>
               <span class="schedule-break__time">
                 ${formatTime(time.end)}–${formatTime(time.end + 45)}
               </span>
-
             </div>
           `;
         }
       });
 
-      html += `
-        </div>
-      `;
-
+      html += "</div>";
       scheduleListEl.innerHTML = html;
     }
 
-    dayTabsEl
-      .querySelectorAll(".day-tab")
-      .forEach((tab) => {
-        tab.addEventListener("click", () => {
-          dayTabsEl
-            .querySelectorAll(".day-tab")
-            .forEach((item) => {
-              item.classList.remove("is-active");
-            });
-
-          tab.classList.add("is-active");
-
-          renderDay(tab.dataset.day);
+    dayTabsEl.querySelectorAll(".day-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        dayTabsEl.querySelectorAll(".day-tab").forEach((item) => {
+          item.classList.remove("is-active");
         });
+
+        tab.classList.add("is-active");
+        renderDay(tab.dataset.day);
       });
+    });
 
     if (days.length) {
       renderDay(days[0]);
     } else {
       scheduleListEl.innerHTML = `
-        <p class="empty-state">
-          Bu sinf uchun jadval hali kiritilmagan.
-        </p>
+        <p class="empty-state">Bu sinf uchun jadval hali kiritilmagan.</p>
       `;
     }
   }
 
-  // Sinf tanlash
-  classGridEl
-    .querySelectorAll(".class-btn")
-    .forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const className = btn.dataset.class;
+  // Jadvaldan harflar tanlash ekraniga qaytish.
+  letterBackBtn.addEventListener("click", () => {
+    scheduleSectionEl.hidden = true;
+    classLetterSelectorEl.hidden = false;
+  });
 
-        classSelectorEl.hidden = true;
-        scheduleSectionEl.hidden = false;
-
-        renderClassSchedule(className);
-      });
-    });
-
-  // Sinflar ro‘yxatiga qaytish
+  // Jadvaldan sinflar ro‘yxatiga qaytish.
   classBackBtn.addEventListener("click", () => {
     scheduleSectionEl.hidden = true;
+    classLetterSelectorEl.hidden = true;
     classSelectorEl.hidden = false;
   });
 }
-
 
 /* ----------------------------------------------------------
    5) 📖 FANLAR
