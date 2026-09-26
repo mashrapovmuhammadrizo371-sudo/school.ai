@@ -120,6 +120,12 @@ app.post("/api/students/register", (req,res)=>{
   res.status(201).json({success:true,student:application,message:"Arizangiz qabul qilindi. Tekshirilmoqda."});
 });
 
+app.get("/api/students/status/:id",(req,res)=>{
+  const student=db.students.find(s=>s.id===req.params.id);
+  if(!student) return res.status(404).json({error:"Ariza topilmadi."});
+  res.json({success:true,student});
+});
+
 app.post("/api/students/login", (req,res)=>{
   const studentIdValue=String(req.body.studentId||"").trim().toUpperCase();
   const lastName=String(req.body.lastName||"").trim().toLowerCase();
