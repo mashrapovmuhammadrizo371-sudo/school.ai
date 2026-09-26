@@ -4,6 +4,7 @@
   const $ = (s,r=document) => r.querySelector(s);
   const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let student = JSON.parse(localStorage.getItem("myschool_student")||"null");
+  let pendingApplication = JSON.parse(localStorage.getItem("myschool_pending_application")||"null");
   let adminToken = localStorage.getItem("myschool_admin_token")||"";
 
   function inject() {
@@ -11,7 +12,7 @@
       <div class="platform-auth" id="platformAuth">
         <div class="platform-card">
           <h2 id="authTitle">🎓 MySchool</h2>
-          <p class="platform-muted" id="authText">Tizimdan foydalanish uchun ro'yxatdan o'ting yoki tasdiqlangan o'quvchi ID orqali kiring.</p>
+          <p class="platform-muted" id="authText">Maktab tizimiga xush kelibsiz!</p>
           <div id="authBody"></div>
           <div class="platform-links">
             <button class="platform-link" id="studentRegLink">Ro'yxatdan o'tish</button>
@@ -33,15 +34,39 @@
     `);
   }
 
-  function openAuth(mode="register") {
+  function openAuth(mode="welcome") {
     $("#platformAuth").classList.add("is-open");
     renderAuth(mode);
   }
   function closeAuth(){ $("#platformAuth").classList.remove("is-open"); }
+
   function renderAuth(mode) {
-    const title=$("#authTitle"), body=$("#authBody");
+    const title=$("#authTitle"), body=$("#authBody"), text=$("#authText"), links=document.querySelector(".platform-links");
+    if(links) links.style.display = mode==="welcome" ? "none" : "flex";
+
+    if(mode==="welcome"){
+      title.textContent="🏫 Xush kelibsiz";
+      text.textContent="Maktab tizimiga xush kelibsiz!";
+      body.innerHTML=`<div style="text-align:center;margin:18px 0"><div style="font-size:64px">🏫</div><p class="platform-muted">MySchool — o'quvchilar uchun yagona ta'lim tizimi</p><div style="display:grid;gap:10px;margin-top:18px"><button class="platform-primary" id="welcomeLogin">Kirish</button><button class="platform-secondary" id="welcomeRegister">Ro'yxatdan o'tish</button></div></div>`;
+      $("#welcomeLogin").onclick=()=>renderAuth("login");
+      $("#welcomeRegister").onclick=()=>renderAuth("register");
+      return;
+    }
+
+    if(mode==="pending"){
+      title.textContent="⏳ Arizangiz qabul qilindi";
+      text.textContent="Ma'lumotlaringiz katta administrator tomonidan tekshirilmoqda.";
+      body.innerHTML=`<div class="platform-status" id="pendingStatus">Arizangiz tekshirilmoqda...</div><div style="display:grid;gap:10px;margin-top:14px"><button class="platform-secondary" id="checkApplication">🔄 Holatni tekshirish</button><button class="platform-link" id="backWelcome">← Bosh sahifa</button></div>`;
+      $("#checkApplication").onclick=checkPendingStatus;
+      $("#backWelcome").onclick=()=>renderAuth("welcome");
+      checkPendingStatus();
+      return;
+    }
+
+    title.textContent = mode==="register" ? "📝 O'quvchi ro'yxatdan o'tishi" : mode==="login" ? "🔐 O'quvchi kirishi" : "👑 Katta Admin";
+    text.textContent = mode==="register" ? "Ma'lumotlaringizni to'g'ri kiriting. Tasdiqlangandan so'ng Student ID beriladi." : "Tasdiqlangan Student ID yoki admin ma'lumotlari bilan kiring.";
+
     if(mode==="register"){
-      title.textContent="📝 O'quvchi ro'yxatdan o'tishi";
       body.innerHTML=`<form class="platform-form" id="registerForm">
         <input name="firstName" placeholder="Ism" required><input name="lastName" placeholder="Familiya" required>
         <select name="className" required><option value="">Sinfni tanlang</option>${Array.from({length:11},(_,i)=>`<option>${i+1}-sinf</option>`).join("")}</select>
@@ -49,16 +74,38 @@
         <input name="phone" placeholder="+998 XX XXX XX XX">
         <button class="platform-primary" type="submit">Arizani yuborish</button>
       </form><div class="platform-status" id="authStatus">Tasdiqlangandan keyin sizga tasodifiy Student ID beriladi.</div>`;
-      $("#registerForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const data=Object.fromEntries(f.entries());try{const r=await fetch(API+"/api/students/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error);$("#authStatus").innerHTML="⏳ <b>Tekshirilmoqda</b><br>Arizangiz Kattta Admin'ga yuborildi.";e.currentTarget.reset()}catch(err){$("#authStatus").textContent="❌ "+err.message}};
+      $("#registerForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const data=Object.fromEntries(f.entries());try{const r=await fetch(API+"/api/students/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error);pendingApplication={id:j.application?.id||j.id||j.applicationId||j.student?.id};if(!pendingApplication.id)throw Error("Ariza ID qaytmadi");localStorage.setItem("myschool_pending_application",JSON.stringify(pendingApplication));renderAuth("pending")}catch(err){$("#authStatus").textContent="❌ "+err.message}};
     } else if(mode==="login"){
-      title.textContent="🔐 O'quvchi kirishi";
       body.innerHTML=`<form class="platform-form" id="studentLoginForm"><input name="studentId" placeholder="Student ID — ST-123456" required><input name="lastName" placeholder="Familiya" required><button class="platform-primary">Kirish</button></form><div class="platform-status" id="authStatus"></div>`;
-      $("#studentLoginForm").onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch(API+"/api/students/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error);student=j.student;localStorage.setItem("myschool_student",JSON.stringify(student));closeAuth();activateMenu()}catch(err){$("#authStatus").textContent="❌ "+err.message}};
+      $("#studentLoginForm").onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch(API+"/api/students/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error);student=j.student;localStorage.setItem("myschool_student",JSON.stringify(student));localStorage.removeItem("myschool_pending_application");pendingApplication=null;closeAuth();activateMenu()}catch(err){$("#authStatus").textContent="❌ "+err.message}};
     } else {
-      title.textContent="👑 Kattta Admin";
       body.innerHTML=`<form class="platform-form" id="adminLoginForm"><input name="username" placeholder="Admin login" required><input name="password" type="password" placeholder="Parol" required><button class="platform-primary">Admin panelga kirish</button></form><div class="platform-status" id="authStatus">Admin login/paroli faqat Render Environment Variables orqali beriladi.</div>`;
       $("#adminLoginForm").onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());try{const r=await fetch(API+"/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error);adminToken=j.token;localStorage.setItem("myschool_admin_token",adminToken);closeAuth();openAdmin("dashboard")}catch(err){$("#authStatus").textContent="❌ "+err.message}};
     }
+  }
+
+  async function checkPendingStatus(){
+    if(!pendingApplication?.id) return renderAuth("welcome");
+    const box=$("#pendingStatus"); if(box) box.innerHTML="🔄 Ariza holati tekshirilmoqda...";
+    try{
+      const r=await fetch(API+"/api/students/status/"+encodeURIComponent(pendingApplication.id));
+      const j=await r.json(); if(!r.ok) throw Error(j.error||"Holatni tekshirib bo'lmadi");
+      const s=j.student||j.application||j;
+      if(s.status==="approved"){
+        const assigned=s.studentId||j.studentId;
+        localStorage.removeItem("myschool_pending_application"); pendingApplication=null;
+        if(assigned){
+          if(box) box.innerHTML="✅ <b>Arizangiz tasdiqlandi!</b><br>Student ID: <b>"+esc(assigned)+"</b><br><br>Endi shu ID orqali kirishingiz mumkin.";
+          setTimeout(()=>renderAuth("login"),900);
+        }
+      }else if(s.status==="rejected"){
+        localStorage.removeItem("myschool_pending_application"); pendingApplication=null;
+        if(box) box.innerHTML="❌ Arizangiz rad etildi.<br>"+esc(s.rejectionReason||s.reason||"Katta admin bilan bog'laning.");
+        setTimeout(()=>renderAuth("register"),1200);
+      }else{
+        if(box) box.innerHTML="⏳ <b>Arizangiz qabul qilindi.</b><br>Ma'lumotlaringiz katta administrator tomonidan tekshirilmoqda.";
+      }
+    }catch(e){if(box) box.innerHTML="⚠️ "+esc(e.message)+"<br><small>Internetni tekshirib, qayta urinib ko'ring.</small>"}
   }
 
   function activateMenu(){
@@ -159,6 +206,8 @@
       card.addEventListener("click",()=>{const name=$(".subject-card__name",card)?.textContent.trim();const icon=$(".subject-card__icon",card)?.textContent.trim();openSubject({name,icon,id:name.toLowerCase().replace(/\\s+/g,"-")})});
     });
     if(student) activateMenu();
+    else if(pendingApplication) openAuth("pending");
+    else openAuth("welcome");
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",bind); else bind();
 })();
