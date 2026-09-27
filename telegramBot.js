@@ -14,7 +14,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function student(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved'}).lean();}
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
 
-  bot.onText(/^\/start$/,async msg=>{sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring.\nIshchi bo‘lsangiz /staff buyrug‘idan foydalaning.',menu);});
+  bot.onText(/^\/start$/,async msg=>{sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring.',menu);});
   bot.onText(/^\/staff$/,async msg=>{staffSessions.set(msg.chat.id,{step:'username'});await bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti\n\nLoginni yuboring:');});
   bot.onText(/^\/admin$/,async msg=>{if(!adminSessions.get(msg.chat.id)?.active)return bot.sendMessage(msg.chat.id,'Avval /staff orqali Katta Admin sifatida kiring.');return bot.sendMessage(msg.chat.id,'🛡 KATTA ADMIN PANELI',adminMenu);});
   bot.on('callback_query',async q=>{
