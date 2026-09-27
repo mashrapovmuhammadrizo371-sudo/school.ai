@@ -66,7 +66,44 @@ function auth(req,res,next){try{const h=req.headers.authorization||'';const t=h.
 function staffAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='staff')throw new Error();req.staff=p;next()}catch(e){res.status(401).json({error:'Staff authentication required'})}}
 async function newId(){let id;do{id=String(Math.floor(100000+Math.random()*900000))}while(await Application.exists({studentId:id}));return id}
 app.get('/api/health',(q,r)=>r.json({ok:true,service:'myschool'}));
-app.post('/api/students/register',async(req,res)=>{try{const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),className=String(req.body.className||'').trim().toUpperCase(),schoolCode=String(req.body.schoolCode||'').trim();if(!firstName||!lastName||!className)return res.status(400).json({error:'Ism, familiya va sinf majburiy.'});const a=await Application.create({firstName,lastName,className,schoolCode});res.status(201).json({ok:true,applicationId:String(a._id),status:a.status})}catch(e){console.error(e);res.status(500).json({error:'Arizani yuborishda xatolik.'})}});
+function verifyTelegramWebAppInitData(initData){
+  const raw=String(initData||'');
+  if(!raw||!process.env.TELEGRAM_BOT_TOKEN)return null;
+  try{
+    const params=new URLSearchParams(raw);
+    const hash=params.get('hash');
+    if(!hash)return null;
+    params.delete('hash');
+    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\\n');
+    const secret=crypto.createHmac('sha256','WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
+    const expected=crypto.createHmac('sha256',secret).update(dataCheckString).digest('hex');
+    if(!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(hash,'hex')))return null;
+    const authDate=Number(params.get('auth_date')||0);
+    if(!authDate||Math.abs(Math.floor(Date.now()/1000)-authDate)>86400)return null;
+    const user=JSON.parse(params.get('user')||'null');
+    if(!user||!user.id)return null;
+    return user;
+  }catch(e){return null}
+}
+
+app.post('/api/telegram/webapp-auth',async(req,res)=>{
+  try{
+    const user=verifyTelegramWebAppInitData(req.body?.initData);
+    if(!user)return res.status(401).json({error:'Telegram Mini App sessiyasi yaroqsiz.'});
+    const chatId=String(user.id);
+    const a=await Application.findOne({telegramChatId:chatId}).sort({createdAt:-1}).lean();
+    if(!a)return res.json({ok:true,status:'not_registered',telegramUser:{id:user.id,firstName:user.first_name||'',lastName:user.last_name||'',username:user.username||''}});
+    if(a.isBlocked)return res.json({ok:true,status:'blocked',telegramUser:{id:user.id,firstName:user.first_name||'',lastName:user.last_name||'',username:user.username||''}});
+    if(a.status==='approved'){
+      const token=jwt.sign({role:'student',studentId:a.studentId},JWT_SECRET,{expiresIn:'30d'});
+      return res.json({ok:true,status:'approved',token,student:{studentId:a.studentId,firstName:a.firstName,lastName:a.lastName,className:a.className}});
+    }
+    if(a.status==='pending')return res.json({ok:true,status:'pending',applicationId:String(a._id),firstName:a.firstName,lastName:a.lastName,className:a.className});
+    return res.json({ok:true,status:'rejected',rejectionReason:a.rejectionReason||'Ariza rad etilgan.'});
+  }catch(e){console.error('[telegram] webapp auth failed',e);res.status(500).json({error:'Telegram Mini App ulanishida xatolik.'})}
+});
+
+app.post('/api/students/register',async(req,res)=>{try{const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),className=String(req.body.className||'').trim().toUpperCase(),schoolCode=String(req.body.schoolCode||'').trim();if(!firstName||!lastName||!className)return res.status(400).json({error:'Ism, familiya va sinf majburiy.'});const tgUser=verifyTelegramWebAppInitData(req.body.telegramInitData);const telegramChatId=tgUser?String(tgUser.id):'';if(telegramChatId){const existing=await Application.findOne({telegramChatId}).sort({createdAt:-1});if(existing){if(existing.status==='approved'&&!existing.isBlocked){const token=jwt.sign({role:'student',studentId:existing.studentId},JWT_SECRET,{expiresIn:'30d'});return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status,token,student:{studentId:existing.studentId,firstName:existing.firstName,lastName:existing.lastName,className:existing.className}})}if(existing.status==='pending')return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status});}}const a=await Application.create({firstName,lastName,className,schoolCode,telegramChatId});res.status(201).json({ok:true,applicationId:String(a._id),status:a.status})}catch(e){console.error(e);res.status(500).json({error:'Arizani yuborishda xatolik.'})}});
 app.get('/api/students/status/:id',async(req,res)=>{try{const a=await Application.findById(req.params.id).lean();if(!a)return res.status(404).json({error:'Ariza topilmadi.'});res.json({status:a.status,studentId:a.studentId||'',rejectionReason:a.rejectionReason||'',firstName:a.firstName,lastName:a.lastName,className:a.className})}catch(e){res.status(400).json({error:'Noto‘g‘ri ariza ID.'})}});
 app.post('/api/students/login',async(req,res)=>{try{const studentId=String(req.body.studentId||'').trim();if(!/^\d{6}$/.test(studentId))return res.status(400).json({error:'Student ID 6 xonali raqam bo‘lishi kerak.'});const a=await Application.findOne({studentId,status:'approved'}).lean();if(!a)return res.status(401).json({error:'Student ID topilmadi yoki hali tasdiqlanmagan.'});if(a.isBlocked)return res.status(403).json({error:'Hisobingiz administrator tomonidan bloklangan.'});const token=jwt.sign({role:'student',studentId:a.studentId},JWT_SECRET,{expiresIn:'30d'});res.json({ok:true,token,student:{studentId:a.studentId,firstName:a.firstName,lastName:a.lastName,className:a.className}})}catch(e){console.error(e);res.status(500).json({error:'Kirishda xatolik.'})}});
 app.post('/api/admin/login',(req,res)=>{if(String(req.body.username||'')!==ADMIN_USERNAME||String(req.body.password||'')!==ADMIN_PASSWORD)return res.status(401).json({error:'Login yoki parol noto‘g‘ri.'});res.json({ok:true,token:jwt.sign({role:'big-admin',username:ADMIN_USERNAME},JWT_SECRET,{expiresIn:'12h'})})});
