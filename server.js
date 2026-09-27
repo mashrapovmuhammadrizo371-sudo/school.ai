@@ -9,6 +9,31 @@ const JWT_SECRET=process.env.JWT_SECRET||process.env.ADMIN_SECRET||'change-this-
 const ADMIN_USERNAME=process.env.ADMIN_USERNAME||'admin';
 const ADMIN_PASSWORD=process.env.ADMIN_PASSWORD||'change-this-password';
 const adminTelegramSessions=new Map();
+
+app.get('/api/admin/telegram/status',auth,async(req,res)=>{
+  try{
+    const tg=require('./telegramBot');
+    const students=await Application.countDocuments({status:'approved',telegramChatId:{$ne:''}});
+    const staff=await Staff.countDocuments({telegramChatId:{$ne:''},isBlocked:false});
+    const status=tg.getTelegramStatus?tg.getTelegramStatus():{running:false};
+    res.json({ok:true,configured:Boolean(process.env.TELEGRAM_BOT_TOKEN),running:Boolean(status.running),students,staff});
+  }catch(e){res.status(500).json({error:'Telegram holatini olishda xatolik.'})}
+});
+app.post('/api/admin/telegram/broadcast',auth,async(req,res)=>{
+  try{
+    const message=String(req.body.message||'').trim();
+    const audience=String(req.body.audience||'all');
+    if(!message)return res.status(400).json({error:'Xabar matni bo‘sh bo‘lmasin.'});
+    if(!['all','students','staff'].includes(audience))return res.status(400).json({error:'Noto‘g‘ri auditoriya.'});
+    const tg=require('./telegramBot');
+    if(!tg.broadcastTelegram)return res.status(503).json({error:'Telegram bot hali ishga tushmagan.'});
+    const ids=new Set();
+    if(audience==='all'||audience==='students'){(await Application.find({status:'approved',telegramChatId:{$ne:''}}).select('telegramChatId').lean()).forEach(x=>ids.add(String(x.telegramChatId)))}
+    if(audience==='all'||audience==='staff'){(await Staff.find({telegramChatId:{$ne:'',isBlocked:false}}).select('telegramChatId').lean()).forEach(x=>ids.add(String(x.telegramChatId)))}
+    const result=await tg.broadcastTelegram([...ids],message);
+    res.json({ok:true,total:ids.size,sent:result.sent,failed:result.failed});
+  }catch(e){console.error('[telegram] broadcast failed',e);res.status(500).json({error:'Telegram xabarini yuborishda xatolik.'})}
+});
 const schema=new mongoose.Schema({firstName:{type:String,required:true,trim:true},lastName:{type:String,required:true,trim:true},className:{type:String,required:true,trim:true},schoolCode:{type:String,default:'',trim:true},status:{type:String,enum:['pending','approved','rejected'],default:'pending'},rejectionReason:{type:String,default:''},studentId:{type:String,default:''},isBlocked:{type:Boolean,default:false},telegramChatId:{type:String,default:'',index:true},createdAt:{type:Date,default:Date.now},reviewedAt:{type:Date,default:null}});
 const Application=mongoose.model('Application',schema);
 const contentSchema=new mongoose.Schema({kind:{type:String,enum:['announcements','library','social'],required:true},title:{type:String,required:true,trim:true,maxlength:140},body:{type:String,default:'',maxlength:4000},url:{type:String,default:''},createdAt:{type:Date,default:Date.now}});
