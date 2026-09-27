@@ -8,43 +8,44 @@ const classLetters=['A','B','G','V']; const classes=Array.from({length:11},(_,i)
 function getTelegramInitData(){try{return window.Telegram?.WebApp?.initData||''}catch(e){return ''}}
 async function syncTelegramAccount(){
   const initData=getTelegramInitData();
-  if(!initData)return false;
+  if(!initData)return {ok:false,telegram:false};
   try{
-    const r=await fetch(API+'/api/telegram/webapp-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData})});
+    const r=await fetch(API+'/api/telegram/webapp-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData}),cache:'no-store'});
     const d=await r.json();
-    if(!r.ok)return false;
+    if(!r.ok)throw new Error(d.error||'Telegram akkauntini tekshirib bo\'lmadi.');
     if(d.status==='approved'&&d.student){
       save('myschool_student',d.student);
       if(d.token)save('myschool_student_token',d.token);
       localStorage.removeItem('myschool_pending_application');
-      return true;
+      return {ok:true,telegram:true,status:'approved'};
     }
     if(d.status==='pending'&&d.applicationId){
+      localStorage.removeItem('myschool_student');
+      localStorage.removeItem('myschool_student_token');
       save('myschool_pending_application',d.applicationId);
-      localStorage.removeItem('myschool_student');
-      return true;
+      return {ok:true,telegram:true,status:'pending'};
     }
-    if(d.status==='not_registered'){
+    if(d.status==='not_registered'||d.status==='rejected'){
       localStorage.removeItem('myschool_student');
       localStorage.removeItem('myschool_student_token');
       localStorage.removeItem('myschool_pending_application');
-      return false;
-    }
-    if(d.status==='rejected'){
-      localStorage.removeItem('myschool_student');
-      localStorage.removeItem('myschool_student_token');
-      localStorage.removeItem('myschool_pending_application');
-      return false;
+      return {ok:true,telegram:true,status:d.status};
     }
     if(d.status==='blocked'){
       localStorage.removeItem('myschool_student');
       localStorage.removeItem('myschool_student_token');
       localStorage.removeItem('myschool_pending_application');
       app.innerHTML='<div class="wrap"><section class="card center"><h1 class="title">🚫 Hisob bloklangan</h1><p class="muted">Katta administrator bilan bog‘laning.</p></section></div>';
-      return true;
+      return {ok:true,telegram:true,status:'blocked'};
     }
-  }catch(e){}
-  return false;
+    throw new Error('Telegram akkaunt holati aniqlanmadi.');
+  }catch(e){
+    localStorage.removeItem('myschool_student');
+    localStorage.removeItem('myschool_student_token');
+    localStorage.removeItem('myschool_pending_application');
+    app.innerHTML='<div class="wrap"><section class="card center"><h1 class="title">⚠️ Ulanishda xatolik</h1><p class="muted">Telegram akkauntingizni tekshirib bo‘lmadi. Internetni tekshirib, Mini Appni qayta oching.</p><button class="btn" onclick="location.reload()">Qayta urinish</button></section></div>';
+    return {ok:false,telegram:true,error:e.message};
+  }
 }
 function welcome(){app.innerHTML='<section class="screen"><div class="panel center"><div class="cap">🎓</div><div class="brand">STEM SCHOOL</div><div class="divider"></div><div class="welcome-sub">Maktab tizimi</div><button class="primary" onclick="register()">KIRISH</button></div></section>'}
 function register(){app.innerHTML='<div class="wrap"><section class="card"><button class="back" onclick="welcome()">← Orqaga</button><h1 class="title">Ro\'yxatdan o\'tish</h1><p class="muted">Ma\'lumotlaringiz katta administrator tomonidan tekshiriladi.</p><form id="reg"><div class="field"><label>Ism</label><input id="firstName" required maxlength="60"></div><div class="field"><label>Familiya</label><input id="lastName" required maxlength="60"></div><div class="field"><label>Sinf</label><select id="className" required><option value="">Sinfni tanlang</option>'+classes.map(x=>'<option>'+x+'</option>').join('')+'</select></div><div class="field"><label>Maktab kodi (agar berilgan bo\'lsa)</label><input id="schoolCode" maxlength="40"></div><button class="btn">Ariza yuborish</button><div id="formMsg"></div></form></section></div>';document.getElementById('reg').onsubmit=submitRegistration}
@@ -186,11 +187,12 @@ if(location.pathname==='/admin'||location.pathname==='/admin/'){
 }else{
   (async()=>{
     const synced=await syncTelegramAccount();
-    if(synced){
-      if(get('myschool_student'))home();
-      else if(get('myschool_pending_application'))pending();
-    }else if(get('myschool_student'))home();
-    else if(get('myschool_pending_application'))pending();
-    else welcome();
+    if(synced.telegram){
+      if(synced.status==='approved')home();
+      else if(synced.status==='pending')pending();
+      else if(synced.status==='not_registered'||synced.status==='rejected')welcome();
+    }else if(synced.ok===false){
+      // Telegram Mini Appda server tasdig'isiz eski local akkaunt ochilmaydi.
+    }else welcome();
   })();
 }
