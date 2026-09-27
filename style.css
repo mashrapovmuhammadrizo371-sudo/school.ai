@@ -73,3 +73,29 @@
   .app-item .row{margin-top:8px}
   .app-item .btn{padding:7px 9px}
 }
+
+/* Student list: compact row with three-dot actions */
+.student-admin-item{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:11px 12px!important;margin-top:7px!important;min-height:52px!important}
+.student-admin-main{min-width:0;flex:1}
+.student-admin-main h3{margin:0 0 3px!important;font-size:14px!important;line-height:1.25!important}
+.student-admin-main p{margin:0!important;font-size:11px!important;line-height:1.35!important}
+.student-more{width:34px;height:34px;flex:0 0 34px;border:0;border-radius:9px;background:#ffffff0a;color:inherit;font-size:22px;line-height:28px;cursor:pointer}
+.student-more:hover{background:#ffffff15}
+.student-detail-overlay{position:fixed;inset:0;z-index:9999;background:#00000080;display:flex;align-items:center;justify-content:center;padding:18px}
+.student-detail-modal{position:relative;width:min(480px,100%);background:#111820;border:1px solid #ffffff12;border-radius:18px;padding:20px;box-shadow:0 20px 60px #00000055}
+.student-detail-close{position:absolute;right:12px;top:10px;width:34px;height:34px;border:0;border-radius:9px;background:#ffffff0a;color:inherit;font-size:24px;cursor:pointer}
+.student-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-right:38px}
+.student-detail-head small,.student-detail-grid small{display:block;color:#8f9aaa;font-size:11px;margin-bottom:4px}
+.student-detail-head h2{margin:0;font-size:20px}
+.student-status{font-size:11px;padding:6px 8px;border-radius:8px;background:#ffffff0a;white-space:nowrap}
+.student-status.is-blocked{background:#ffffff12}
+.student-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.student-detail-grid>div{padding:11px;border:1px solid #ffffff0b;border-radius:10px;background:#ffffff03}
+.student-detail-grid b{font-size:13px}
+.student-detail-actions{display:flex;gap:7px;flex-wrap:wrap}
+.student-detail-actions .btn{padding:8px 10px;font-size:12px;border-radius:8px}
+@media(max-width:520px){
+  .student-detail-modal{padding:16px}
+  .student-detail-grid{grid-template-columns:1fr 1fr}
+  .student-detail-actions .btn{flex:1 1 100%}
+}
