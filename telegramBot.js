@@ -1,7 +1,11 @@
+let activeBot=null;
+let telegramStartedAt=null;
 const TelegramBot=require('node-telegram-bot-api');
 
 function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession}){
   const bot=new TelegramBot(token,{polling:true});
+  activeBot=bot;
+  telegramStartedAt=new Date().toISOString();
   const sessions=new Map();
   const staffSessions=new Map();
   const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}};
@@ -62,4 +66,6 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   console.log('[telegram] bot polling started');
   return bot;
 }
-module.exports={startTelegramBot};
+function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
+async function broadcastTelegram(chatIds,message){if(!activeBot)throw new Error('Telegram bot is not running');let sent=0,failed=0;for(const chatId of chatIds){try{await activeBot.sendMessage(String(chatId),message);sent++}catch(e){failed++;console.error('[telegram] send failed',chatId,e.message)}}return {sent,failed};}
+module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram};
