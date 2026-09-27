@@ -170,5 +170,18 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   return bot;
 }
 function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
+async function notifyStudentApproved(chatId,student){
+  if(!activeBot||!chatId)return false;
+  try{
+    await activeBot.sendMessage(String(chatId),
+      '🎉 Tabriklaymiz, '+String(student.firstName||'o‘quvchi')+'!\n\nSiz MySchool tizimida ro‘yxatdan muvaffaqiyatli o‘tdingiz. ✅\n\n🆔 Sizning Student ID: '+String(student.studentId)+'\n🏫 Sinf: '+String(student.className||'')+'\n\nEndi Mini App va Telegram bot orqali akkauntingizdan foydalanishingiz mumkin.',
+      {reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}}
+    );
+    return true;
+  }catch(e){
+    console.error('[telegram] approval notification failed',chatId,e.message);
+    return false;
+  }
+}
 async function broadcastTelegram(chatIds,message){if(!activeBot)throw new Error('Telegram bot is not running');let sent=0,failed=0;for(const chatId of chatIds){try{await activeBot.sendMessage(String(chatId),message);sent++}catch(e){failed++;console.error('[telegram] send failed',chatId,e.message)}}return {sent,failed};}
-module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram};
+module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram,notifyStudentApproved};
