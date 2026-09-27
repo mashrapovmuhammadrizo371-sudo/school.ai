@@ -3,7 +3,7 @@ let telegramStartedAt=null;
 const TelegramBot=require('node-telegram-bot-api');
 
 function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession}){
-  const bot=new TelegramBot(token,{polling:true});
+  const bot=new TelegramBot(token,{polling:true,badRejection:true});
   activeBot=bot;
   telegramStartedAt=new Date().toISOString();
   const sessions=new Map();
