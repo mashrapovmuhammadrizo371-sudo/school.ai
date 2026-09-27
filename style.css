@@ -128,3 +128,33 @@
 .admin-empty,.admin-error{padding:22px;border:1px dashed #dfe0e3;border-radius:12px;color:#899099;text-align:center;background:#fafafa}
 @media(max-width:850px){.admin-sidebar{transform:translateX(-100%)!important;transition:.25s}.admin-menu{display:block;border:0;background:transparent;color:#343239;font-size:23px;padding:5px;position:relative;z-index:50;min-width:42px}.admin-menu-open .admin-sidebar{transform:translateX(0)!important;box-shadow:18px 0 45px rgba(25,25,30,.16)!important}.admin-main{margin-left:0!important;width:100%!important}.admin-topbar{padding:0 17px}.admin-content{padding:20px 15px}.admin-welcome h1{font-size:25px}.admin-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.admin-profile div:last-child{display:none}.admin-stats{grid-template-columns:1fr 1fr;gap:9px}.admin-stat{padding:13px;gap:9px}.admin-stat>span{width:36px;height:36px;font-size:17px}.admin-stat strong{font-size:19px}.admin-welcome{align-items:flex-start}.admin-refresh{padding:9px}.admin-application{grid-template-columns:auto 1fr}.admin-app-actions{grid-column:2}.admin-approve,.admin-reject{flex:1}.admin-card{padding:16px}.admin-page-title{font-size:16px}}
+
+
+/* Restaurant Big Admin color match — visual only */
+.admin-shell{
+  --admin-brand:#d71920;
+  --admin-brand-dark:#b51218;
+  --admin-gradient:linear-gradient(135deg,#c99a52 0%,#d71920 55%,#9a6d2e 100%);
+  --admin-bg:#fffaf7;
+  --admin-text:#201d19;
+  --admin-muted:#777169;
+  --admin-border:#eee1dc;
+}
+.admin-logo>span,
+.admin-avatar,
+.admin-approve{
+  background:var(--admin-gradient)!important;
+  color:#fff!important;
+}
+.admin-nav-item.active{
+  background:linear-gradient(90deg,#fde8e8,#fff5f5)!important;
+  color:var(--admin-brand-dark)!important;
+  box-shadow:inset 3px 0 var(--admin-brand)!important;
+}
+.admin-nav-item.active span{background:#fff!important;color:var(--admin-brand)!important}
+.admin-nav-item:hover{background:#fff2f2!important;color:var(--admin-brand-dark)!important}
+.admin-eyebrow{color:var(--admin-brand)!important}
+.admin-refresh:hover{background:#fff0f0!important;color:var(--admin-brand-dark)!important}
+.admin-stat>span,.admin-app-icon{background:#fff0f0!important}
+.admin-reject{background:#fae5e5!important;color:#984040!important}
+.admin-live{color:#3f8b5b!important;background:#e3f4e8!important}
