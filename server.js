@@ -146,7 +146,7 @@ async function start(){
     // Telegram polling must run on only the primary MySchool backend.
     // Multiple Render services using the same bot token cause Telegram 409 polling conflicts.
     const telegramEnabled=Boolean(process.env.TELEGRAM_BOT_TOKEN) &&
-      (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://school-ai-1cie.onrender.com');
+      (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://myschool-ai.onrender.com');
 
     if(telegramEnabled){
       try{
