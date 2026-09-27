@@ -12,9 +12,26 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   const adminMenu={reply_markup:{inline_keyboard:[[{text:'📢 Xabar yuborish',callback_data:'admin:broadcast'}],[{text:'📊 Bot holati',callback_data:'admin:status'},{text:'👥 Ulanishlar',callback_data:'admin:links'}],[{text:'🚪 Chiqish',callback_data:'admin:logout'}]]}};
   const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}};
   async function student(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved'}).lean();}
+  async function telegramApplication(chatId){return Application.findOne({telegramChatId:String(chatId)}).sort({createdAt:-1}).lean();}
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
 
-  bot.onText(/^\/start$/,async msg=>{const s=await student(msg.chat.id);if(s){sessions.delete(msg.chat.id);return bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz, '+s.firstName+'!',menu);}sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\\n\\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring.',menu);});
+  bot.onText(/^\/start$/,async msg=>{
+    const a=await telegramApplication(msg.chat.id);
+    if(a?.status==='approved'){
+      sessions.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz, '+a.firstName+'!\\n\\nSizning akkauntingiz Mini App bilan ham ulangan.',menu);
+    }
+    if(a?.status==='pending'){
+      sessions.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'⏳ Ro‘yxatdan o‘tish arizangiz katta administrator tomonidan tekshirilmoqda.\\n\\nMini App va botdagi akkauntingiz bir xil.',menu);
+    }
+    if(a?.status==='rejected'){
+      sessions.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'❌ Arizangiz rad etilgan.\\nSabab: '+(a.rejectionReason||'Ko‘rsatilmagan.')+'\\n\\nQayta ro‘yxatdan o‘tish uchun Mini Appdan foydalaning.',menu);
+    }
+    sessions.set(msg.chat.id,{waitingId:true});
+    await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\\n\\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring yoki Mini App orqali ro‘yxatdan o‘ting.',menu);
+  });
   bot.onText(/^\/staff$/,async msg=>{staffSessions.set(msg.chat.id,{step:'username'});await bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti\n\nLoginni yuboring:');});
   bot.onText(/^\/admin$/,async msg=>{if(!adminSessions.get(msg.chat.id)?.active)return bot.sendMessage(msg.chat.id,'Avval /staff orqali Katta Admin sifatida kiring.');return bot.sendMessage(msg.chat.id,'🛡 KATTA ADMIN PANELI',adminMenu);});
   bot.on('callback_query',async q=>{
