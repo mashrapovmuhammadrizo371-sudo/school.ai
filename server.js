@@ -43,7 +43,7 @@ const Staff=mongoose.model('Staff',new mongoose.Schema({
   username:{type:String,required:true,unique:true,trim:true,index:true},
   passwordHash:{type:String,required:true},
   passwordSalt:{type:String,required:true},
-  role:{type:String,enum:['teacher','staff-admin','director','telegram-admin'],required:true},
+  role:{type:String,enum:['teacher','staff-admin','director'],required:true},
   subject:{type:String,default:'',trim:true},
   telegramChatId:{type:String,default:'',index:true},
   isBlocked:{type:Boolean,default:false},
