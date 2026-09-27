@@ -3,20 +3,18 @@ let telegramStartedAt=null;
 const TelegramBot=require('node-telegram-bot-api');
 
 function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession}){
-  const bot=new TelegramBot(token,{polling:false});
+  const bot=new TelegramBot(token,{polling:true});
   activeBot=bot;
   telegramStartedAt=new Date().toISOString();
   const sessions=new Map();
   const staffSessions=new Map();
   const adminSessions=new Map();
-  const adminLoginSessions=new Map();
   const adminMenu={reply_markup:{inline_keyboard:[[{text:'📢 Xabar yuborish',callback_data:'admin:broadcast'}],[{text:'📊 Bot holati',callback_data:'admin:status'},{text:'👥 Ulanishlar',callback_data:'admin:links'}],[{text:'🚪 Chiqish',callback_data:'admin:logout'}]]}};
   const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}};
   async function student(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved'}).lean();}
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
 
   bot.onText(/^\/start$/,async msg=>{sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring.\nIshchi bo‘lsangiz /staff buyrug‘idan foydalaning.',menu);});
-  bot.onText(/^\/admin$/,async msg=>{adminLoginSessions.set(msg.chat.id,{step:'username'});return bot.sendMessage(msg.chat.id,'🛡 Katta Admin\n\nLoginni yuboring:');});
   bot.onText(/^\/staff$/,async msg=>{staffSessions.set(msg.chat.id,{step:'username'});await bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti\n\nLoginni yuboring:');});
   bot.onText(/^\\/admin$/,async msg=>{if(!adminSessions.get(msg.chat.id)?.active)return bot.sendMessage(msg.chat.id,'Avval /staff orqali Katta Admin sifatida kiring.');return bot.sendMessage(msg.chat.id,'🛡 KATTA ADMIN PANELI',adminMenu);});
   bot.on('callback_query',async q=>{
@@ -69,8 +67,6 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(t==='📖 Kitobxona')return sendContent(msg,'library','📖 Kitobxona','Hozircha kitob yo‘q.');
     if(t==='👤 Profil')return sendProfile(msg);
     if(t==='❓ Yordam')return bot.sendMessage(msg.chat.id,'/start\n/id 123456\n/jadval\n/fanlar\n/elon\n/kitoblar\n/profil',menu);
-    if(adminLoginSessions.get(msg.chat.id)?.step==='username'){adminLoginSessions.set(msg.chat.id,{step:'password',username:t});return bot.sendMessage(msg.chat.id,'🔐 Parolni yuboring:');}
-    if(adminLoginSessions.get(msg.chat.id)?.step==='password'){const x=adminLoginSessions.get(msg.chat.id);adminLoginSessions.delete(msg.chat.id);if(String(x.username).trim()!==String(process.env.ADMIN_USERNAME||'admin').trim()||String(t)!==String(process.env.ADMIN_PASSWORD||'change-this-password'))return bot.sendMessage(msg.chat.id,'❌ Login yoki parol noto‘g‘ri. /admin orqali qayta urinib ko‘ring.');adminSessions.set(msg.chat.id,{active:true});return bot.sendMessage(msg.chat.id,'✅ Katta Admin tizimiga kirdingiz.\n\n🛡 KATTA ADMIN PANELI',adminMenu);}
     if(adminSessions.get(msg.chat.id)?.step==='broadcast'){if(t==='/admin')return bot.sendMessage(msg.chat.id,'🛡 KATTA ADMIN PANELI',adminMenu);adminSessions.delete(msg.chat.id);const ids=[];const students=await Application.find({status:'approved',telegramChatId:{$ne:''}}).select('telegramChatId').lean();const staff=await Staff.find({telegramChatId:{$ne:''},isBlocked:{$ne:true}}).select('telegramChatId').lean();for(const x of [...students,...staff])if(x.telegramChatId&&!ids.includes(String(x.telegramChatId)))ids.push(String(x.telegramChatId));const result=await broadcastTelegram(ids,t);return bot.sendMessage(msg.chat.id,'✅ Xabar yuborildi.\n\nYuborildi: '+result.sent+'\nYuborilmadi: '+result.failed,adminMenu);}
     if(staffSessions.get(msg.chat.id)?.step==='username'){staffSessions.set(msg.chat.id,{step:'password',username:t});return bot.sendMessage(msg.chat.id,'🔐 Parolni yuboring:');}
     if(staffSessions.get(msg.chat.id)?.step==='password'){const x=staffSessions.get(msg.chat.id);const ok=await staffLogin(msg,x.username,t);if(!ok)return bot.sendMessage(msg.chat.id,'❌ Login yoki parol noto‘g‘ri. /staff orqali qayta urinib ko‘ring.');return;}
@@ -82,7 +78,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function sendSubjects(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');const items=await SchoolData.find({kind:'subjects'}).sort({updatedAt:-1}).lean();const names=[...new Set(items.map(x=>x.data?.name).filter(Boolean))];return bot.sendMessage(msg.chat.id,names.length?'📚 Fanlar\n\n'+names.map((x,i)=>(i+1)+'. '+x).join('\n'):'📚 Hozircha fanlar kiritilmagan.',menu);}
   async function sendContent(msg,kind,title,empty){const items=await SchoolContent.find({kind}).sort({createdAt:-1}).lean();if(!items.length)return bot.sendMessage(msg.chat.id,empty,menu);let out=title+'\n\n';for(const x of items.slice(0,10)){out+='• '+x.title+'\n'+(x.body||'')+(x.url?'\n'+x.url:'')+'\n\n';}return bot.sendMessage(msg.chat.id,out.slice(0,4000),menu,{disable_web_page_preview:true});}
   bot.on('polling_error',err=>console.error('[telegram] polling error',err.message));
-  console.log('[telegram] bot webhook mode started');
+  console.log('[telegram] bot polling started');
   return bot;
 }
 function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
