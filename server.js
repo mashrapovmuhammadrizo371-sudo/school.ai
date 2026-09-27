@@ -29,7 +29,7 @@ app.post('/api/admin/telegram/broadcast',auth,async(req,res)=>{
     if(!tg.broadcastTelegram)return res.status(503).json({error:'Telegram bot hali ishga tushmagan.'});
     const ids=new Set();
     if(audience==='all'||audience==='students'){(await Application.find({status:'approved',telegramChatId:{$ne:''}}).select('telegramChatId').lean()).forEach(x=>ids.add(String(x.telegramChatId)))}
-    if(audience==='all'||audience==='staff'){(await Staff.find({telegramChatId:{$ne:'',isBlocked:false}}).select('telegramChatId').lean()).forEach(x=>ids.add(String(x.telegramChatId)))}
+    if(audience==='all'||audience==='staff'){(await Staff.find({telegramChatId:{$ne:''},isBlocked:{$ne:true}}).select('telegramChatId').lean()).forEach(x=>ids.add(String(x.telegramChatId)))}
     const result=await tg.broadcastTelegram([...ids],message);
     res.json({ok:true,total:ids.size,sent:result.sent,failed:result.failed});
   }catch(e){console.error('[telegram] broadcast failed',e);res.status(500).json({error:'Telegram xabarini yuborishda xatolik.'})}
