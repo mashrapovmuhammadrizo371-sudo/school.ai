@@ -134,5 +134,43 @@ app.delete('/api/admin/data/:id',auth,async(req,res)=>{try{const item=await Scho
 app.post('/api/students/results',async(req,res)=>{try{const data=req.body||{};if(!data.studentId||!data.subject)return res.status(400).json({error:'Natija ma\'lumotlari to\'liq emas.'});const item=await SchoolData.create({kind:'results',data,updatedAt:new Date()});res.status(201).json({ok:true,item})}catch(e){res.status(400).json({error:'Natijani saqlashda xatolik.'})}});
 app.post('/api/admin/applications/:id/approve',auth,async(req,res)=>{const a=await Application.findById(req.params.id);if(!a)return res.status(404).json({error:'Ariza topilmadi.'});if(a.status!=='pending')return res.status(400).json({error:'Ariza allaqachon ko‘rib chiqilgan.'});a.status='approved';a.studentId=await newId();a.reviewedAt=new Date();await a.save();res.json({ok:true,studentId:a.studentId})});
 app.post('/api/admin/applications/:id/reject',auth,async(req,res)=>{const a=await Application.findById(req.params.id);if(!a)return res.status(404).json({error:'Ariza topilmadi.'});a.status='rejected';a.rejectionReason=String(req.body.reason||'Ma’lumotlar tasdiqlanmadi.').trim();a.reviewedAt=new Date();await a.save();res.json({ok:true})});
-async function start(){if(process.env.TELEGRAM_BOT_TOKEN){try{require('./telegramBot').startTelegramBot({token:process.env.TELEGRAM_BOT_TOKEN,Application,SchoolContent,SchoolData,Staff,hashPassword,verifyPassword,createAdminTelegramSession:async()=>{const key=crypto.randomBytes(32).toString('hex');adminTelegramSessions.set(key,{expiresAt:Date.now()+5*60*1000});setTimeout(()=>adminTelegramSessions.delete(key),5*60*1000);return key}})}catch(e){console.error('[telegram] failed to start',e)}}if(process.env.MONGODB_URI){await mongoose.connect(process.env.MONGODB_URI);console.log('MongoDB connected')}else console.warn('MONGODB_URI is not set');app.listen(PORT,()=>console.log('MySchool API listening on '+PORT))}
+async function start(){
+  try{
+    if(process.env.MONGODB_URI){
+      await mongoose.connect(process.env.MONGODB_URI);
+      console.log('MongoDB connected');
+    }else{
+      console.warn('MONGODB_URI is not set');
+    }
+
+    // Telegram polling must run on only the primary MySchool backend.
+    // Multiple Render services using the same bot token cause Telegram 409 polling conflicts.
+    const telegramEnabled=Boolean(process.env.TELEGRAM_BOT_TOKEN) &&
+      (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://school-ai-1cie.onrender.com');
+
+    if(telegramEnabled){
+      try{
+        require('./telegramBot').startTelegramBot({
+          token:process.env.TELEGRAM_BOT_TOKEN,
+          Application,SchoolContent,SchoolData,Staff,hashPassword,verifyPassword,
+          createAdminTelegramSession:async()=>{
+            const key=crypto.randomBytes(32).toString('hex');
+            adminTelegramSessions.set(key,{expiresAt:Date.now()+5*60*1000});
+            setTimeout(()=>adminTelegramSessions.delete(key),5*60*1000);
+            return key;
+          }
+        });
+      }catch(e){
+        console.error('[telegram] failed to start',e);
+      }
+    }else if(process.env.TELEGRAM_BOT_TOKEN){
+      console.log('[telegram] disabled on non-primary Render service');
+    }
+
+    app.listen(PORT,()=>console.log('MySchool API listening on '+PORT));
+  }catch(e){
+    console.error('[startup] failed',e);
+    process.exit(1);
+  }
+}
 start().catch(e=>{console.error(e);process.exit(1)})
