@@ -5,9 +5,37 @@ const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const classLetters=['A','B','G','V']; const classes=Array.from({length:11},(_,i)=>classLetters.map(l=>(i+1)+'-'+l)).flat();
 
+function getTelegramInitData(){try{return window.Telegram?.WebApp?.initData||''}catch(e){return ''}}
+async function syncTelegramAccount(){
+  const initData=getTelegramInitData();
+  if(!initData)return false;
+  try{
+    const r=await fetch(API+'/api/telegram/webapp-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData})});
+    const d=await r.json();
+    if(!r.ok)return false;
+    if(d.status==='approved'&&d.student){
+      save('myschool_student',d.student);
+      if(d.token)save('myschool_student_token',d.token);
+      localStorage.removeItem('myschool_pending_application');
+      return true;
+    }
+    if(d.status==='pending'&&d.applicationId){
+      save('myschool_pending_application',d.applicationId);
+      localStorage.removeItem('myschool_student');
+      return true;
+    }
+    if(d.status==='blocked'){
+      localStorage.removeItem('myschool_student');
+      localStorage.removeItem('myschool_pending_application');
+      app.innerHTML='<div class="wrap"><section class="card center"><h1 class="title">🚫 Hisob bloklangan</h1><p class="muted">Katta administrator bilan bog‘laning.</p></section></div>';
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 function welcome(){app.innerHTML='<section class="screen"><div class="panel center"><div class="cap">🎓</div><div class="brand">STEM SCHOOL</div><div class="divider"></div><div class="welcome-sub">Maktab tizimi</div><button class="primary" onclick="register()">KIRISH</button></div></section>'}
 function register(){app.innerHTML='<div class="wrap"><section class="card"><button class="back" onclick="welcome()">← Orqaga</button><h1 class="title">Ro\'yxatdan o\'tish</h1><p class="muted">Ma\'lumotlaringiz katta administrator tomonidan tekshiriladi.</p><form id="reg"><div class="field"><label>Ism</label><input id="firstName" required maxlength="60"></div><div class="field"><label>Familiya</label><input id="lastName" required maxlength="60"></div><div class="field"><label>Sinf</label><select id="className" required><option value="">Sinfni tanlang</option>'+classes.map(x=>'<option>'+x+'</option>').join('')+'</select></div><div class="field"><label>Maktab kodi (agar berilgan bo\'lsa)</label><input id="schoolCode" maxlength="40"></div><button class="btn">Ariza yuborish</button><div id="formMsg"></div></form></section></div>';document.getElementById('reg').onsubmit=submitRegistration}
-async function submitRegistration(e){e.preventDefault();const msg=document.getElementById('formMsg');msg.textContent='Yuborilmoqda...';try{const r=await fetch(API+'/api/students/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:firstName.value,lastName:lastName.value,className:className.value,schoolCode:schoolCode.value})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Xatolik');save('myschool_pending_application',d.applicationId);pending()}catch(x){msg.className='error';msg.textContent=x.message}}
+async function submitRegistration(e){e.preventDefault();const msg=document.getElementById('formMsg');msg.textContent='Yuborilmoqda...';try{const r=await fetch(API+'/api/students/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:firstName.value,lastName:lastName.value,className:className.value,schoolCode:schoolCode.value,telegramInitData:getTelegramInitData()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Xatolik');if(d.status==='approved'&&d.student){save('myschool_student',d.student);if(d.token)save('myschool_student_token',d.token);localStorage.removeItem('myschool_pending_application');return home()}save('myschool_pending_application',d.applicationId);pending()}catch(x){msg.className='error';msg.textContent=x.message}}
 function pending(){app.innerHTML='<div class="wrap"><section class="card center"><div class="logo">⏳</div><h1 class="title">Arizangiz qabul qilindi</h1><p class="muted">Ma\'lumotlaringiz katta administrator tomonidan tekshirilmoqda.</p><div id="pendingStatus" class="status">Arizangiz tekshirilmoqda...</div><button class="btn secondary" onclick="checkStatus()">Holatni tekshirish</button></section></div>';checkStatus();window.poll=setInterval(checkStatus,10000)}
 async function checkStatus(){const id=get('myschool_pending_application');if(!id)return;try{const r=await fetch(API+'/api/students/status/'+encodeURIComponent(id));const d=await r.json();const box=document.getElementById('pendingStatus');if(!box)return;if(d.status==='approved'){clearInterval(window.poll);save('myschool_student',{studentId:d.studentId,firstName:d.firstName,lastName:d.lastName,className:d.className});localStorage.removeItem('myschool_pending_application');box.innerHTML='<div class="success"><b>Tasdiqlandi!</b><br>Student ID: <strong>'+esc(d.studentId)+'</strong></div>';setTimeout(home,1500)}else if(d.status==='rejected'){clearInterval(window.poll);box.innerHTML='<div class="error"><b>Ariza rad etildi.</b><br>'+esc(d.rejectionReason)+'</div>'}else box.textContent='Arizangiz hali tekshirilmoqda...'}catch(e){const box=document.getElementById('pendingStatus');if(box)box.textContent='Server bilan bog‘lanishda xatolik.'}}
 
@@ -120,7 +148,6 @@ async function deleteStudent(id){if(!confirm('O‘quvchini butunlay o‘chirasiz
 async function approve(id){const t=get('myschool_admin_token');const r=await fetch(API+'/api/admin/applications/'+id+'/approve',{method:'POST',headers:{Authorization:'Bearer '+t}});const d=await r.json();if(!r.ok)return alert(d.error||'Xatolik');alert('Tasdiqlandi. Student ID: '+d.studentId);adminPanel()}
 async function rejectApp(id){const reason=prompt('Rad etish sababi:','Ma’lumotlar rasmiy ro‘yxat bilan tasdiqlanmadi.');if(reason===null)return;const t=get('myschool_admin_token');const r=await fetch(API+'/api/admin/applications/'+id+'/reject',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({reason})});const d=await r.json();if(!r.ok)return alert(d.error||'Xatolik');adminPanel()}
 
-const student=get('myschool_student'),pendingId=get('myschool_pending_application');
 async function bootAdminFromTelegram(){
   const key=new URLSearchParams(location.search).get('telegram_key');
   if(!key)return false;
@@ -141,7 +168,16 @@ async function bootAdminFromTelegram(){
 }
 if(location.pathname==='/admin'||location.pathname==='/admin/'){
   bootAdminFromTelegram().then(done=>{if(!done)adminLogin()});
-}else if(location.pathname==='/staff'||location.pathname==='/staff/')staffLoginPage();
-else if(student)home();
-else if(pendingId)pending();
-else welcome();
+}else if(location.pathname==='/staff'||location.pathname==='/staff/'){
+  staffLoginPage();
+}else{
+  (async()=>{
+    const synced=await syncTelegramAccount();
+    if(synced){
+      if(get('myschool_student'))home();
+      else if(get('myschool_pending_application'))pending();
+    }else if(get('myschool_student'))home();
+    else if(get('myschool_pending_application'))pending();
+    else welcome();
+  })();
+}
