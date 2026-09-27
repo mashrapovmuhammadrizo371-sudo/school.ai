@@ -57,3 +57,19 @@
 
 /* Mobile admin menu fix: hamburger stays above sidebar so it can open and close */
 @media(max-width:850px){.admin-topbar{z-index:40}.admin-menu{position:relative;z-index:50;min-width:42px}.admin-menu-open .admin-sidebar{z-index:25;box-shadow:18px 0 45px #0009}.section-card{position:relative}.section-menu-title{display:none}}
+
+
+/* Compact student/admin list cards */
+.student-list,.admin-card .status#studentList{max-width:100%}
+.app-item{padding:12px 14px;margin-top:8px;border-radius:12px;background:#101720;border:1px solid #ffffff0b;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.app-item h3{margin:0;flex:1 1 220px;font-size:15px;line-height:1.3}
+.app-item p{margin:0!important;color:#8f9aaa;font-size:12px;line-height:1.55;flex:1 1 230px}
+.app-item .row{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.app-item .btn{padding:8px 10px;font-size:12px;border-radius:8px}
+@media(max-width:700px){
+  .app-item{display:block;padding:12px;margin-top:7px}
+  .app-item h3{font-size:14px;margin-bottom:5px}
+  .app-item p{font-size:11px;margin-bottom:9px!important}
+  .app-item .row{margin-top:8px}
+  .app-item .btn{padding:7px 9px}
+}
