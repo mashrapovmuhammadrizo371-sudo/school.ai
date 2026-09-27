@@ -102,8 +102,27 @@ async function approve(id){const t=get('myschool_admin_token');const r=await fet
 async function rejectApp(id){const reason=prompt('Rad etish sababi:','Ma’lumotlar rasmiy ro‘yxat bilan tasdiqlanmadi.');if(reason===null)return;const t=get('myschool_admin_token');const r=await fetch(API+'/api/admin/applications/'+id+'/reject',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({reason})});const d=await r.json();if(!r.ok)return alert(d.error||'Xatolik');adminPanel()}
 
 const student=get('myschool_student'),pendingId=get('myschool_pending_application');
-if(location.pathname==='/admin'||location.pathname==='/admin/')adminLogin();
-else if(location.pathname==='/staff'||location.pathname==='/staff/')staffLoginPage();
+async function bootAdminFromTelegram(){
+  const key=new URLSearchParams(location.search).get('telegram_key');
+  if(!key)return false;
+  try{
+    const r=await fetch(API+'/api/admin/telegram-session/'+encodeURIComponent(key));
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Telegram sessiyasi yaroqsiz.');
+    save('myschool_admin_token',d.token);
+    history.replaceState({},document.title,'/admin');
+    adminPanel();
+    return true;
+  }catch(e){
+    history.replaceState({},document.title,'/admin');
+    adminLogin();
+    const box=document.getElementById('adminMsg');if(box){box.className='error';box.textContent=e.message;}
+    return true;
+  }
+}
+if(location.pathname==='/admin'||location.pathname==='/admin/'){
+  bootAdminFromTelegram().then(done=>{if(!done)adminLogin()});
+}else if(location.pathname==='/staff'||location.pathname==='/staff/')staffLoginPage();
 else if(student)home();
 else if(pendingId)pending();
 else welcome();
