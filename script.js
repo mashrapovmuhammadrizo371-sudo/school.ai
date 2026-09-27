@@ -24,8 +24,21 @@ async function syncTelegramAccount(){
       localStorage.removeItem('myschool_student');
       return true;
     }
+    if(d.status==='not_registered'){
+      localStorage.removeItem('myschool_student');
+      localStorage.removeItem('myschool_student_token');
+      localStorage.removeItem('myschool_pending_application');
+      return false;
+    }
+    if(d.status==='rejected'){
+      localStorage.removeItem('myschool_student');
+      localStorage.removeItem('myschool_student_token');
+      localStorage.removeItem('myschool_pending_application');
+      return false;
+    }
     if(d.status==='blocked'){
       localStorage.removeItem('myschool_student');
+      localStorage.removeItem('myschool_student_token');
       localStorage.removeItem('myschool_pending_application');
       app.innerHTML='<div class="wrap"><section class="card center"><h1 class="title">🚫 Hisob bloklangan</h1><p class="muted">Katta administrator bilan bog‘laning.</p></section></div>';
       return true;
