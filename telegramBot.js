@@ -74,7 +74,80 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   });
 
   async function sendProfile(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');return bot.sendMessage(msg.chat.id,'👤 Profil\n\nIsm: '+s.firstName+'\nFamiliya: '+s.lastName+'\nSinf: '+s.className+'\nStudent ID: '+s.studentId,menu);}
-  async function sendSchedule(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');const className=String(s.className||'').trim();const normalize=v=>String(v||'').trim().toLowerCase().replace(/[-–—_\\s]/g,'');const items=await SchoolData.find({kind:'schedule'}).lean();const own=items.filter(x=>{const d=x.data||{};return [d.className,d.class,d.sinf,d.class_name].some(v=>normalize(v)===normalize(className));});if(!own.length)return bot.sendMessage(msg.chat.id,'📅 '+className+' uchun jadval hali kiritilmagan.');const order=['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];const dayIndex=d=>{const n=normalize(d);const aliases={'dushanba':0,'seshanba':1,'chorshanba':2,'payshanba':3,'juma':4,'shanba':5};return aliases[n]??99};const byDay=new Map();for(const x of own){const d=x.data||{};const day=String(d.day||d.kun||'').trim();if(day&&!byDay.has(day))byDay.set(day,d);}let out='📅 '+className+' sinfi jadvali\\n\\n';for(const day of order){const d=byDay.get(day);if(!d)continue;const rows=(Array.isArray(d.rows)?d.rows:Array.isArray(d.lessons)?d.lessons:[]).map((row,index)=>({row,index})).filter(x=>String(x.row?.subject||x.row?.name||x.row?.fan||'').trim());rows.sort((a,b)=>{const ta=String(a.row?.time||a.row?.vaqt||'').trim();const tb=String(b.row?.time||b.row?.vaqt||'').trim();const ma=ta.match(/^(\\d{1,2}):(\\d{2})/),mb=tb.match(/^(\\d{1,2}):(\\d{2})/);if(ma&&mb)return (Number(ma[1])*60+Number(ma[2]))-(Number(mb[1])*60+Number(mb[2]));return a.index-b.index;});if(!rows.length)continue;out+='📌 '+day+'\\n';rows.forEach((x,i)=>{const row=x.row;const subject=String(row?.subject||row?.name||row?.fan||'').trim();const time=String(row?.time||row?.vaqt||'').trim();out+=(i+1)+'. '+subject+(time?' — '+time:'')+'\\n';});out+='\\n';}return bot.sendMessage(msg.chat.id,out.trim().slice(0,4000)||('📅 '+className+' uchun jadval hali kiritilmagan.'),menu);} async function sendSubjects(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');const items=await SchoolData.find({kind:'subjects'}).sort({updatedAt:-1}).lean();const names=[...new Set(items.flatMap(x=>{const d=x.data||{};return [d.name,d.subject,d.fan].filter(Boolean).map(v=>String(v).trim())}))];return bot.sendMessage(msg.chat.id,names.length?'📚 Fanlar\\n\\n'+names.map((x,i)=>(i+1)+'. '+x).join('\\n'):'📚 Hozircha fanlar kiritilmagan.',menu);}  async function sendContent(msg,kind,title,empty){const items=await SchoolContent.find({kind}).sort({createdAt:-1}).lean();if(!items.length)return bot.sendMessage(msg.chat.id,empty,menu);let out=title+'\n\n';for(const x of items.slice(0,10)){out+='• '+x.title+'\n'+(x.body||'')+(x.url?'\n'+x.url:'')+'\n\n';}return bot.sendMessage(msg.chat.id,out.slice(0,4000),menu,{disable_web_page_preview:true});}
+  async function sendSchedule(msg){
+    const s=await student(msg.chat.id);
+    if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');
+
+    const className=String(s.className||'').trim();
+    const normalize=v=>String(v||'').trim().toLowerCase().replace(/[-–—_\s]/g,'');
+    const normalizeDay=v=>{
+      const n=normalize(v);
+      const aliases={
+        dushanba:'Dushanba',
+        seshanba:'Seshanba',
+        chorshanba:'Chorshanba',
+        payshanba:'Payshanba',
+        juma:'Juma',
+        shanba:'Shanba'
+      };
+      return aliases[n]||String(v||'').trim();
+    };
+
+    const items=await SchoolData.find({kind:'schedule'}).lean();
+    const own=items.filter(x=>{
+      const d=x.data||{};
+      return [d.className,d.class,d.sinf,d.class_name].some(v=>normalize(v)===normalize(className));
+    });
+
+    if(!own.length)return bot.sendMessage(msg.chat.id,'📅 '+className+' uchun jadval hali kiritilmagan.');
+
+    const order=['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+    const byDay=new Map();
+
+    for(const x of own){
+      const d=x.data||{};
+      const day=normalizeDay(d.day||d.kun);
+      if(!order.includes(day))continue;
+
+      const rows=Array.isArray(d.rows)?d.rows:Array.isArray(d.lessons)?d.lessons:[];
+      if(!byDay.has(day))byDay.set(day,[]);
+      byDay.get(day).push(...rows);
+    }
+
+    let out='📅 '+className+' sinfi jadvali\n\n';
+
+    for(const day of order){
+      const rows=(byDay.get(day)||[])
+        .map((row,index)=>({row,index}))
+        .filter(x=>String(x.row?.subject||x.row?.name||x.row?.fan||'').trim());
+
+      rows.sort((a,b)=>{
+        const ta=String(a.row?.time||a.row?.vaqt||'').trim();
+        const tb=String(b.row?.time||b.row?.vaqt||'').trim();
+        const ma=ta.match(/^(\d{1,2}):(\d{2})/);
+        const mb=tb.match(/^(\d{1,2}):(\d{2})/);
+        if(ma&&mb)return (Number(ma[1])*60+Number(ma[2]))-(Number(mb[1])*60+Number(mb[2]));
+        return a.index-b.index;
+      });
+
+      if(!rows.length)continue;
+
+      out+='📌 '+day+'\n';
+      rows.forEach((x,i)=>{
+        const row=x.row;
+        const subject=String(row?.subject||row?.name||row?.fan||'').trim();
+        const time=String(row?.time||row?.vaqt||'').trim();
+        out+=(i+1)+'. '+subject+(time?' — '+time:'')+'\n';
+      });
+      out+='\n';
+    }
+
+    return bot.sendMessage(
+      msg.chat.id,
+      out.trim().slice(0,4000)||('📅 '+className+' uchun jadval hali kiritilmagan.'),
+      menu
+    );
+  } async function sendSubjects(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');const items=await SchoolData.find({kind:'subjects'}).sort({updatedAt:-1}).lean();const names=[...new Set(items.flatMap(x=>{const d=x.data||{};return [d.name,d.subject,d.fan].filter(Boolean).map(v=>String(v).trim())}))];return bot.sendMessage(msg.chat.id,names.length?'📚 Fanlar\\n\\n'+names.map((x,i)=>(i+1)+'. '+x).join('\\n'):'📚 Hozircha fanlar kiritilmagan.',menu);}  async function sendContent(msg,kind,title,empty){const items=await SchoolContent.find({kind}).sort({createdAt:-1}).lean();if(!items.length)return bot.sendMessage(msg.chat.id,empty,menu);let out=title+'\n\n';for(const x of items.slice(0,10)){out+='• '+x.title+'\n'+(x.body||'')+(x.url?'\n'+x.url:'')+'\n\n';}return bot.sendMessage(msg.chat.id,out.slice(0,4000),menu,{disable_web_page_preview:true});}
   bot.on('polling_error',err=>console.error('[telegram] polling error',err.message));
   bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));
   return bot;
