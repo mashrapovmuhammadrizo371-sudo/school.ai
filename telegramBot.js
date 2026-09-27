@@ -1,6 +1,6 @@
 const TelegramBot=require('node-telegram-bot-api');
 
-function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword}){
+function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession}){
   const bot=new TelegramBot(token,{polling:true});
   const sessions=new Map();
   const staffSessions=new Map();
@@ -14,6 +14,15 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   bot.onText(/^\/staffme$/,async msg=>{const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).select('-passwordHash -passwordSalt').lean();if(!st)return bot.sendMessage(msg.chat.id,'Avval /staff orqali kiring.');await bot.sendMessage(msg.chat.id,'👨‍💼 '+st.fullName+'\n\nRol: '+roleName(st.role)+'\nLogin: '+st.username);});
   function roleName(r){return r==='teacher'?'O‘qituvchi':r==='director'?'Direktor':'Admin';}
   async function staffLogin(msg,username,password){
+    const adminUser=String(process.env.ADMIN_USERNAME||'admin').trim();
+    const adminPass=String(process.env.ADMIN_PASSWORD||'change-this-password');
+    if(String(username).trim()===adminUser&&String(password)===adminPass&&createAdminTelegramSession){
+      const key=await createAdminTelegramSession();
+      staffSessions.delete(msg.chat.id);
+      const url='https://school-ai-fronted.onrender.com/admin?telegram_key='+encodeURIComponent(key);
+      await bot.sendMessage(msg.chat.id,'✅ Katta Admin tasdiqlandi!\n\nQuyidagi tugma orqali Katta Admin panelini oching:',{reply_markup:{inline_keyboard:[[{'text':'🛡 Katta Admin paneli','url':url}]]}});
+      return true;
+    }
     const st=await Staff.findOne({username:String(username).trim().toLowerCase()});
     if(!st||st.isBlocked||!verifyPassword(password,st.passwordSalt,st.passwordHash))return false;
     await Staff.updateMany({telegramChatId:String(msg.chat.id)},{$set:{telegramChatId:''}});
