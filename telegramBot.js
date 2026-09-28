@@ -12,7 +12,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   const adminMenu={reply_markup:{inline_keyboard:[[{text:'📢 Xabar yuborish',callback_data:'admin:broadcast'}],[{text:'📊 Bot holati',callback_data:'admin:status'},{text:'👥 Ulanishlar',callback_data:'admin:links'}],[{text:'🚪 Chiqish',callback_data:'admin:logout'}]]}};
   const competitionSessions=new Map();
   async function competitionStudent(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved',isBlocked:false}).lean();}
-  const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}};
+  const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'📚 Kitobxonlik tanlovi'},{'text':'👤 Profil'}],[{'text':'❓ Yordam'}]],resize_keyboard:true}};
   async function student(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved'}).lean();}
   async function telegramApplication(chatId){return Application.findOne({telegramChatId:String(chatId)}).sort({createdAt:-1}).lean();}
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
@@ -70,6 +70,25 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   }
   bot.onText(/^\/id(?:\s+(\d{6}))?$/,async(msg,m)=>{if(m[1])return connect(msg,m[1]);sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🆔 6 xonali Student ID raqamingizni yuboring.');});
   async function connect(msg,id){const s=await linkStudent(msg.chat.id,id);sessions.delete(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'❌ Student ID topilmadi yoki hali tasdiqlanmagan.',menu);if(s.blocked)return bot.sendMessage(msg.chat.id,'🚫 Hisobingiz bloklangan.',menu);return bot.sendMessage(msg.chat.id,'✅ Hisob ulandi!\n\n👤 '+s.firstName+' '+s.lastName+'\n🏫 Sinf: '+s.className+'\n🆔 ID: '+s.studentId,menu);}
+  bot.onText(/^\/tanlovadmin$/,async msg=>{
+    const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+    if(!st||!['teacher','director','staff-admin'].includes(st.role))return bot.sendMessage(msg.chat.id,'❌ Faqat o‘qituvchi yoki administrator uchun.');
+    const rows=await SchoolData.find({kind:'book_competition'}).sort({createdAt:-1}).lean();
+    if(!rows.length)return bot.sendMessage(msg.chat.id,'📚 Hozircha video topshirilmagan.');
+    let out='📚 KITOBXONLIK TANLOVI — USTOZ\n\n';
+    rows.slice(0,15).forEach((x,i)=>{const d=x.data||{};out+=(i+1)+'. '+d.studentName+' ('+d.className+')\nID: '+x._id+'\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\n\n';});
+    out+='✏️ Ball berish:\n/ball ID BALL izoh';
+    return bot.sendMessage(msg.chat.id,out.slice(0,4000));
+  });
+  bot.onText(/^\/ball\s+([a-f0-9]{24})\s+(\d{1,3})(?:\s+([\\s\\S]+))?$/i,async(msg,m)=>{
+    const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+    if(!st||!['teacher','director','staff-admin'].includes(st.role))return;
+    const score=Number(m[2]); if(score<0||score>100)return bot.sendMessage(msg.chat.id,'Ball 0–100 oralig‘ida bo‘lishi kerak.');
+    const item=await SchoolData.findOne({_id:m[1],kind:'book_competition'}); if(!item)return bot.sendMessage(msg.chat.id,'❌ Topshiriq topilmadi.');
+    item.data={...(item.data||{}),totalScore:score,teacherComment:String(m[3]||'').trim(),scored:true}; item.updatedAt=new Date(); await item.save();
+    try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'📚 Tanlov natijasi!\n\n⭐ Ball: '+score+'/100\n💬 Ustoz: '+(item.data.teacherComment||'Izoh yo‘q.'));}catch(_){}
+    return bot.sendMessage(msg.chat.id,'✅ Ball va izoh saqlandi.');
+  });
   bot.onText(/^\/tanlov$/,async msg=>{
     const st=await competitionStudent(msg.chat.id);
     if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',menu);
