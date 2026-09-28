@@ -175,33 +175,35 @@ app.get('/api/admin/students',auth,async(req,res)=>{try{const search=String(req.
 app.patch('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOne({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});if(req.body.firstName!==undefined)a.firstName=String(req.body.firstName).trim();if(req.body.lastName!==undefined)a.lastName=String(req.body.lastName).trim();if(req.body.className!==undefined)a.className=String(req.body.className).trim().toUpperCase();if(req.body.isBlocked!==undefined)a.isBlocked=Boolean(req.body.isBlocked);if(!a.firstName||!a.lastName||!a.className)return res.status(400).json({error:'Ism, familiya va sinf bo‘sh bo‘lmasin.'});await a.save();res.json({ok:true})}catch(e){res.status(400).json({error:'O‘quvchini yangilashda xatolik.'})}});
 app.delete('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOneAndDelete({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});res.json({ok:true})}catch(e){res.status(500).json({error:'O‘quvchini o‘chirishda xatolik.'})}});
 app.get('/api/competition/me',studentAuth,async(req,res)=>{try{
-    const s=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean();
-    if(!s)return res.status(404).json({error:'O‘quvchi topilmadi.'});
-    const item=await BookCompetition.findOne({studentId:s.studentId}).sort({updatedAt:-1}).lean();
-    const all=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).lean();
-    const rank=item&&item.scored?(all.findIndex(x=>String(x.studentId)===String(item.studentId))+1):null;
-    res.json({ok:true,item:item?{studentId:item.studentId,studentName:item.studentName,className:item.className,teacherComment:item.teacherComment,totalScore:item.totalScore,scored:item.scored,createdAt:item.createdAt,updatedAt:item.updatedAt}:null,rank,totalParticipants:all.length});
-  }catch(e){res.status(500).json({error:'Tanlov ma’lumotlarini yuklashda xatolik.'})}});
+  const st=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean(); if(!st)return res.status(404).json({error:'O‘quvchi topilmadi.'});
+  const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
+  const x=rows[0]?.data;
+  const all=(await SchoolData.find({kind:'book_competition','data.scored':true}).lean()).map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
+  const rank=x&&x.scored?(all.findIndex(r=>String(r.studentId)===String(x.studentId))+1):null;
+  res.json({ok:true,item:x?{studentId:x.studentId,studentName:x.studentName,className:x.className,teacherComment:x.teacherComment,totalScore:Number(x.totalScore||0),scored:Boolean(x.scored),createdAt:rows[0].createdAt,updatedAt:rows[0].updatedAt}:null,rank,totalParticipants:all.length});
+}catch(e){res.status(500).json({error:'Tanlov ma’lumotlarini yuklashda xatolik.'})}});
 app.get('/api/competition/ranking',studentAuth,async(req,res)=>{try{
-  const items=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).lean();
-  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentId:x.studentId,studentName:x.studentName,className:x.className,totalScore:x.totalScore}))});
+  const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
+  const items=rows.map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
+  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentId:x.studentId,studentName:x.studentName,className:x.className,totalScore:Number(x.totalScore||0)}))});
 }catch(e){res.status(500).json({error:'Reytingni yuklashda xatolik.'})}});
 app.get('/api/competition/teacher',staffAuth,async(req,res)=>{try{
-  if(req.staff.staffRole!=='teacher'&&req.staff.staffRole!=='director'&&req.staff.staffRole!=='staff-admin')return res.status(403).json({error:'Ruxsat yo‘q.'});
-  const items=await BookCompetition.find().sort({scored:1,createdAt:-1}).lean();
+  if(!['teacher','director','staff-admin'].includes(req.staff.staffRole))return res.status(403).json({error:'Ruxsat yo‘q.'});
+  const items=await SchoolData.find({kind:'book_competition'}).sort({createdAt:-1}).lean();
   res.json({ok:true,items});
 }catch(e){res.status(500).json({error:'Tanlov topshiriqlarini yuklashda xatolik.'})}});
 app.patch('/api/competition/teacher/:id',staffAuth,async(req,res)=>{try{
-  if(req.staff.staffRole!=='teacher'&&req.staff.staffRole!=='director'&&req.staff.staffRole!=='staff-admin')return res.status(403).json({error:'Ruxsat yo‘q.'});
+  if(!['teacher','director','staff-admin'].includes(req.staff.staffRole))return res.status(403).json({error:'Ruxsat yo‘q.'});
   const score=Number(req.body.totalScore); if(!Number.isFinite(score)||score<0||score>100)return res.status(400).json({error:'Ball 0 dan 100 gacha bo‘lishi kerak.'});
-  const item=await BookCompetition.findById(req.params.id); if(!item)return res.status(404).json({error:'Topshiriq topilmadi.'});
-  item.totalScore=score; item.teacherComment=String(req.body.teacherComment||'').trim().slice(0,2000); item.scored=true; item.updatedAt=new Date(); await item.save();
-  try{const tg=require('./telegramBot'); if(tg.notifyCompetitionScored)await tg.notifyCompetitionScored(item.telegramChatId,item)}catch(_){}
+  const item=await SchoolData.findOne({_id:req.params.id,kind:'book_competition'}); if(!item)return res.status(404).json({error:'Topshiriq topilmadi.'});
+  item.data={...(item.data||{}),totalScore:score,teacherComment:String(req.body.teacherComment||'').trim().slice(0,2000),scored:true}; item.updatedAt=new Date(); await item.save();
+  try{const tg=require('./telegramBot');if(tg.notifyCompetitionScored)await tg.notifyCompetitionScored(item.data.telegramChatId,item.data)}catch(_){}
   res.json({ok:true});
 }catch(e){res.status(400).json({error:'Ballni saqlashda xatolik.'})}});
 app.get('/api/competition/top',async(req,res)=>{try{
-  const items=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).limit(3).lean();
-  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentName:x.studentName,className:x.className,totalScore:x.totalScore}))});
+  const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
+  const items=rows.map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0)).slice(0,3);
+  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentName:x.studentName,className:x.className,totalScore:Number(x.totalScore||0)}))});
 }catch(e){res.status(500).json({error:'TOP-3 yuklashda xatolik.'})}});
 app.get('/api/public/content/:kind',async(req,res)=>{try{const kind=String(req.params.kind||'');if(!['announcements','library','social'].includes(kind))return res.status(400).json({error:'Noto‘g‘ri bo‘lim.'});res.json({items:await SchoolContent.find({kind}).sort({createdAt:-1}).lean()})}catch(e){res.status(500).json({error:'Ma’lumotlarni yuklashda xatolik.'})}});
 app.get('/api/admin/content',auth,async(req,res)=>{try{const kind=String(req.query.kind||'');if(!['announcements','library','social'].includes(kind))return res.status(400).json({error:'Noto‘g‘ri bo‘lim.'});res.json({items:await SchoolContent.find({kind}).sort({createdAt:-1}).lean()})}catch(e){res.status(500).json({error:'Ma’lumotlarni yuklashda xatolik.'})}});
