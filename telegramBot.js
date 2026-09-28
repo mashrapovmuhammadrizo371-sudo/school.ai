@@ -12,7 +12,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   const adminMenu={reply_markup:{inline_keyboard:[[{text:'📢 Xabar yuborish',callback_data:'admin:broadcast'}],[{text:'📊 Bot holati',callback_data:'admin:status'},{text:'👥 Ulanishlar',callback_data:'admin:links'}],[{text:'🚪 Chiqish',callback_data:'admin:logout'}]]}};
   const competitionSessions=new Map();
   async function competitionStudent(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved',isBlocked:false}).lean();}
-  const menu={reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'📚 Kitobxonlik tanlovi'},{'text':'👤 Profil'}],[{'text':'❓ Yordam'}]],resize_keyboard:true}};
+  const MINI_APP_URL='https://school-ai-fronted.onrender.com';
+  const menu={reply_markup:{keyboard:[[{'text':'📱 MySchool Mini App',web_app:{url:MINI_APP_URL}}],[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'📚 Kitobxonlik tanlovi'},{'text':'👤 Profil'}],[{'text':'❓ Yordam'}]],resize_keyboard:true}};
   async function student(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved'}).lean();}
   async function telegramApplication(chatId){return Application.findOne({telegramChatId:String(chatId)}).sort({createdAt:-1}).lean();}
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
@@ -227,7 +228,7 @@ async function notifyStudentApproved(chatId,student){
   try{
     await activeBot.sendMessage(String(chatId),
       '🎉 Tabriklaymiz, '+String(student.firstName||'o‘quvchi')+'!\n\nSiz MySchool tizimida ro‘yxatdan muvaffaqiyatli o‘tdingiz. ✅\n\n🆔 Sizning Student ID: '+String(student.studentId)+'\n🏫 Sinf: '+String(student.className||'')+'\n\nEndi Mini App va Telegram bot orqali akkauntingizdan foydalanishingiz mumkin.',
-      {reply_markup:{keyboard:[[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}}
+      {reply_markup:{keyboard:[[{'text':'📱 MySchool Mini App',web_app:{url:'https://school-ai-fronted.onrender.com'}}],[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'👤 Profil'},{'text':'❓ Yordam'}]],resize_keyboard:true}}
     );
     return true;
   }catch(e){
