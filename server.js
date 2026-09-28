@@ -62,8 +62,22 @@ const SchoolData=mongoose.model('SchoolData',new mongoose.Schema({
  updatedAt:{type:Date,default:Date.now}
 }));
 
+const BookCompetition=mongoose.model('BookCompetition',new mongoose.Schema({
+  studentId:{type:String,required:true,index:true},
+  studentName:{type:String,default:''},
+  className:{type:String,default:''},
+  telegramChatId:{type:String,default:''},
+  videoFileId:{type:String,default:''},
+  videoCaption:{type:String,default:''},
+  teacherComment:{type:String,default:''},
+  totalScore:{type:Number,default:0,min:0},
+  scored:{type:Boolean,default:false},
+  createdAt:{type:Date,default:Date.now},
+  updatedAt:{type:Date,default:Date.now}
+}));
 function auth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='big-admin')throw new Error();req.auth=p;next()}catch(e){res.status(401).json({error:'Admin authentication required'})}}
 function staffAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='staff')throw new Error();req.staff=p;next()}catch(e){res.status(401).json({error:'Staff authentication required'})}}
+function studentAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='student')throw new Error();req.student=p;next()}catch(e){res.status(401).json({error:'Student authentication required'})}}
 async function newId(){let id;do{id=String(Math.floor(100000+Math.random()*900000))}while(await Application.exists({studentId:id}));return id}
 app.get('/api/health',(q,r)=>r.json({ok:true,service:'myschool'}));
 function verifyTelegramWebAppInitData(initData){
@@ -160,6 +174,35 @@ app.get('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Applic
 app.get('/api/admin/students',auth,async(req,res)=>{try{const search=String(req.query.search||'').trim().toLowerCase();const items=await Application.find({status:'approved'}).sort({createdAt:-1}).select('firstName lastName className studentId isBlocked createdAt').lean();const matched=search?items.filter(a=>[a.studentId,a.firstName,a.lastName,a.className].some(v=>String(v||'').toLowerCase().includes(search))):items;res.json({items:matched})}catch(e){res.status(500).json({error:'O‘quvchilarni yuklashda xatolik.'})}});
 app.patch('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOne({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});if(req.body.firstName!==undefined)a.firstName=String(req.body.firstName).trim();if(req.body.lastName!==undefined)a.lastName=String(req.body.lastName).trim();if(req.body.className!==undefined)a.className=String(req.body.className).trim().toUpperCase();if(req.body.isBlocked!==undefined)a.isBlocked=Boolean(req.body.isBlocked);if(!a.firstName||!a.lastName||!a.className)return res.status(400).json({error:'Ism, familiya va sinf bo‘sh bo‘lmasin.'});await a.save();res.json({ok:true})}catch(e){res.status(400).json({error:'O‘quvchini yangilashda xatolik.'})}});
 app.delete('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOneAndDelete({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});res.json({ok:true})}catch(e){res.status(500).json({error:'O‘quvchini o‘chirishda xatolik.'})}});
+app.get('/api/competition/me',studentAuth,async(req,res)=>{try{
+    const s=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean();
+    if(!s)return res.status(404).json({error:'O‘quvchi topilmadi.'});
+    const item=await BookCompetition.findOne({studentId:s.studentId}).sort({updatedAt:-1}).lean();
+    const all=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).lean();
+    const rank=item&&item.scored?(all.findIndex(x=>String(x.studentId)===String(item.studentId))+1):null;
+    res.json({ok:true,item:item?{studentId:item.studentId,studentName:item.studentName,className:item.className,teacherComment:item.teacherComment,totalScore:item.totalScore,scored:item.scored,createdAt:item.createdAt,updatedAt:item.updatedAt}:null,rank,totalParticipants:all.length});
+  }catch(e){res.status(500).json({error:'Tanlov ma’lumotlarini yuklashda xatolik.'})}});
+app.get('/api/competition/ranking',studentAuth,async(req,res)=>{try{
+  const items=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).lean();
+  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentId:x.studentId,studentName:x.studentName,className:x.className,totalScore:x.totalScore}))});
+}catch(e){res.status(500).json({error:'Reytingni yuklashda xatolik.'})}});
+app.get('/api/competition/teacher',staffAuth,async(req,res)=>{try{
+  if(req.staff.staffRole!=='teacher'&&req.staff.staffRole!=='director'&&req.staff.staffRole!=='staff-admin')return res.status(403).json({error:'Ruxsat yo‘q.'});
+  const items=await BookCompetition.find().sort({scored:1,createdAt:-1}).lean();
+  res.json({ok:true,items});
+}catch(e){res.status(500).json({error:'Tanlov topshiriqlarini yuklashda xatolik.'})}});
+app.patch('/api/competition/teacher/:id',staffAuth,async(req,res)=>{try{
+  if(req.staff.staffRole!=='teacher'&&req.staff.staffRole!=='director'&&req.staff.staffRole!=='staff-admin')return res.status(403).json({error:'Ruxsat yo‘q.'});
+  const score=Number(req.body.totalScore); if(!Number.isFinite(score)||score<0||score>100)return res.status(400).json({error:'Ball 0 dan 100 gacha bo‘lishi kerak.'});
+  const item=await BookCompetition.findById(req.params.id); if(!item)return res.status(404).json({error:'Topshiriq topilmadi.'});
+  item.totalScore=score; item.teacherComment=String(req.body.teacherComment||'').trim().slice(0,2000); item.scored=true; item.updatedAt=new Date(); await item.save();
+  try{const tg=require('./telegramBot'); if(tg.notifyCompetitionScored)await tg.notifyCompetitionScored(item.telegramChatId,item)}catch(_){}
+  res.json({ok:true});
+}catch(e){res.status(400).json({error:'Ballni saqlashda xatolik.'})}});
+app.get('/api/competition/top',async(req,res)=>{try{
+  const items=await BookCompetition.find({scored:true}).sort({totalScore:-1,updatedAt:1}).limit(3).lean();
+  res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentName:x.studentName,className:x.className,totalScore:x.totalScore}))});
+}catch(e){res.status(500).json({error:'TOP-3 yuklashda xatolik.'})}});
 app.get('/api/public/content/:kind',async(req,res)=>{try{const kind=String(req.params.kind||'');if(!['announcements','library','social'].includes(kind))return res.status(400).json({error:'Noto‘g‘ri bo‘lim.'});res.json({items:await SchoolContent.find({kind}).sort({createdAt:-1}).lean()})}catch(e){res.status(500).json({error:'Ma’lumotlarni yuklashda xatolik.'})}});
 app.get('/api/admin/content',auth,async(req,res)=>{try{const kind=String(req.query.kind||'');if(!['announcements','library','social'].includes(kind))return res.status(400).json({error:'Noto‘g‘ri bo‘lim.'});res.json({items:await SchoolContent.find({kind}).sort({createdAt:-1}).lean()})}catch(e){res.status(500).json({error:'Ma’lumotlarni yuklashda xatolik.'})}});
 app.post('/api/admin/content',auth,async(req,res)=>{try{const kind=String(req.body.kind||''),title=String(req.body.title||'').trim(),body=String(req.body.body||'').trim(),url=String(req.body.url||'').trim();if(!['announcements','library','social'].includes(kind)||!title)return res.status(400).json({error:'Bo‘lim va nom majburiy.'});if(url&&!/^https?:\/\//i.test(url))return res.status(400).json({error:'Havola http:// yoki https:// bilan boshlansin.'});const item=await SchoolContent.create({kind,title,body,url});res.status(201).json({ok:true,item})}catch(e){res.status(400).json({error:'Ma’lumotni saqlashda xatolik.'})}});
