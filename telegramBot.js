@@ -22,7 +22,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     const a=await telegramApplication(msg.chat.id);
     if(a?.status==='approved'){
       sessions.delete(msg.chat.id);
-      return bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz, '+a.firstName+'!\\n\\nSizning akkauntingiz Mini App bilan ham ulangan.',menu);
+      return bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz, '+a.firstName+'!',menu);
     }
     if(a?.status==='pending'){
       sessions.delete(msg.chat.id);
