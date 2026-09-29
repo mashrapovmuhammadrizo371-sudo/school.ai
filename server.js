@@ -160,7 +160,7 @@ app.post('/api/admin/staff',auth,async(req,res)=>{
   try{
     const fullName=String(req.body.fullName||'').trim(),username=String(req.body.username||'').trim().toLowerCase(),password=String(req.body.password||''),role=String(req.body.role||''),subject=String(req.body.subject||'').trim(),task=String(req.body.task||'').trim();
     if(!fullName||!username||password.length<6||!['teacher','staff-admin','director','telegram-admin'].includes(role))return res.status(400).json({error:'Ism, login, kamida 6 belgili parol va rol majburiy.'});
-    if(role==='teacher'&&!subject)return res.status(400).json({error:'O‘qituvchi uchun fan tanlanishi shart.'});
+    if(!subject&&!task)return res.status(400).json({error:'Fan yoki Vazifani tanlang.'});
     if(await Staff.exists({username}))return res.status(409).json({error:'Bu login band.'});
     const hp=hashPassword(password);const st=await Staff.create({fullName,username,passwordHash:hp.hash,passwordSalt:hp.salt,role,subject:role==='teacher'?subject:'',task});
     res.status(201).json({ok:true,item:{id:String(st._id),fullName,username,role}});
@@ -177,7 +177,7 @@ app.patch('/api/admin/staff/:id',auth,async(req,res)=>{
     if(req.body.role!==undefined&&['teacher','staff-admin','director','telegram-admin'].includes(String(req.body.role)))st.role=String(req.body.role);
     if(req.body.subject!==undefined)st.subject=st.role==='teacher'?String(req.body.subject).trim():'';
     if(req.body.task!==undefined)st.task=String(req.body.task).trim();
-    if(st.role==='teacher'&&!st.subject)return res.status(400).json({error:'O‘qituvchi uchun fan tanlanishi shart.'});
+    if(!st.subject&&!st.task)return res.status(400).json({error:'Fan yoki Vazifani tanlang.'});
     if(req.body.password!==undefined&&String(req.body.password).length>=6){const hp=hashPassword(String(req.body.password));st.passwordHash=hp.hash;st.passwordSalt=hp.salt}
     if(req.body.isBlocked!==undefined)st.isBlocked=Boolean(req.body.isBlocked);
     await st.save();res.json({ok:true});
