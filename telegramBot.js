@@ -150,10 +150,17 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       return bot.sendMessage(msg.chat.id,'🎥 Shu video to‘g‘rimi?',{reply_markup:{inline_keyboard:[[{'text':'✅ Ha','callback_data':'competition:yes'},{'text':'❌ Yo‘q','callback_data':'competition:no'}]]}});
     }
 
-    if(compSession?.step==='name'){
-      const name=String(t).trim();
-      if(!name||name.split(/\s+/).length<2)return bot.sendMessage(msg.chat.id,'❌ Iltimos, ism va familiyangizni birga yozing. Masalan: Abdurahimov Abdullo');
-      competitionSessions.set(msg.chat.id,{...compSession,step:'class',studentName:name});
+    if(compSession?.step==='surname'){
+      const surname=String(t).trim();
+      if(!surname||/^\d+$/.test(surname))return bot.sendMessage(msg.chat.id,'❌ Фамилияни киритинг.');
+      competitionSessions.set(msg.chat.id,{...compSession,step:'firstName',surname});
+      return bot.sendMessage(msg.chat.id,'👤 Исмингизни ёзинг:');
+    }
+
+    if(compSession?.step==='firstName'){
+      const firstName=String(t).trim();
+      if(!firstName||/^\d+$/.test(firstName))return bot.sendMessage(msg.chat.id,'❌ Исмни киритинг.');
+      competitionSessions.set(msg.chat.id,{...compSession,step:'class',firstName});
       return bot.sendMessage(msg.chat.id,'🏫 Синфингизни ёзинг:');
     }
 
@@ -176,7 +183,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const bookName=String(t).trim();
       if(!bookName)return bot.sendMessage(msg.chat.id,'❌ Китоб номини киритинг.');
       competitionSessions.set(msg.chat.id,{...compSession,step:'pages',bookName});
-      return bot.sendMessage(msg.chat.id,'📄 Нечта саҳифа ўқидингиз?\\n\\nФақат рақам киритинг. Масалан: 15');
+      return bot.sendMessage(msg.chat.id,'📄 Нечта саҳифа ўқидингиз?\n\nФақат рақам киритинг. Масалан: 15');
     }
 
     if(compSession?.step==='pages'){
@@ -186,7 +193,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const pages=Number(t.trim());
       const data={
         studentId:st.studentId,
-        studentName:compSession.studentName,
+        studentName:(compSession.surname+' '+compSession.firstName),
         className:compSession.className,
         telegramChatId:String(msg.chat.id),
         videoFileId:compSession.videoFileId,
