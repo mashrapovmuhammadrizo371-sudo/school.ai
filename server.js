@@ -4,6 +4,13 @@ const cors=require('cors');
 const mongoose=require('mongoose');
 const jwt=require('jsonwebtoken');
 const app=express(); app.use(cors()); app.use(express.json({limit:'2mb'}));
+app.post('/telegram/webhook',(req,res)=>{
+  const token=process.env.TELEGRAM_BOT_TOKEN;
+  if(!token)return res.sendStatus(404);
+  const secret=crypto.createHash('sha256').update(token).digest('hex');
+  if(req.get('X-Telegram-Bot-Api-Secret-Token')!==secret)return res.sendStatus(403);
+  try{require('./telegramBot').processTelegramUpdate(req.body);return res.sendStatus(200)}catch(e){console.error('[telegram] webhook update failed',e.message);return res.sendStatus(500)}
+});
 const PORT=process.env.PORT||10000;
 const JWT_SECRET=process.env.JWT_SECRET||process.env.ADMIN_SECRET||'change-this-secret';
 const ADMIN_USERNAME=process.env.ADMIN_USERNAME||'admin';
@@ -237,7 +244,7 @@ async function start(){
       console.warn('MONGODB_URI is not set');
     }
 
-    // Telegram polling must run on only the primary MySchool backend.
+    // Telegram webhook runs only on the primary MySchool backend.
     // Multiple Render services using the same bot token cause Telegram 409 polling conflicts.
     const telegramEnabled=Boolean(process.env.TELEGRAM_BOT_TOKEN) &&
       (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://myschool-ai.onrender.com');
@@ -247,6 +254,8 @@ async function start(){
         require('./telegramBot').startTelegramBot({
           token:process.env.TELEGRAM_BOT_TOKEN,
           Application,SchoolContent,SchoolData,Staff,hashPassword,verifyPassword,
+          webhookUrl:process.env.RENDER_EXTERNAL_URL==='https://myschool-ai.onrender.com'?'https://myschool-ai.onrender.com/telegram/webhook':null,
+          webhookSecret:crypto.createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN).digest('hex'),
           createAdminTelegramSession:async()=>{
             const key=crypto.randomBytes(32).toString('hex');
             adminTelegramSessions.set(key,{expiresAt:Date.now()+5*60*1000});
