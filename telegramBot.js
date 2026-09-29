@@ -168,9 +168,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const className=String(t).trim();
       if(!className)return bot.sendMessage(msg.chat.id,'❌ Синфни киритинг. Масалан: 1-V');
       competitionSessions.set(msg.chat.id,{...compSession,step:'bookNumber',className});
-      return bot.sendMessage(msg.chat.id,'📚 Нечинчи китобни ўқидингиз?
-
-Фақат рақам киритинг. Масалан: 1');
+      return bot.sendMessage(msg.chat.id,'📚 Нечинчи китобни ўқидингиз?\n\nФақат рақам киритинг. Масалан: 1');
     }
 
     if(compSession?.step==='bookNumber'){
