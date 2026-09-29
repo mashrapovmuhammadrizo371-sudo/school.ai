@@ -167,7 +167,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     }
 
     if(compSession?.step==='bookNumber'){
-      if(!/^\\d+$/.test(t.trim())||Number(t.trim())<1)return bot.sendMessage(msg.chat.id,'❌ Фақат китоб рақамини киритинг. Масалан: 1');
+      if(!/^\d+$/.test(t.trim())||Number(t.trim())<1)return bot.sendMessage(msg.chat.id,'❌ Фақат китоб рақамини киритинг. Масалан: 1');
       competitionSessions.set(msg.chat.id,{...compSession,step:'bookName',bookNumber:Number(t.trim())});
       return bot.sendMessage(msg.chat.id,'📖 Китоб номини ёзинг:');
     }
@@ -180,7 +180,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     }
 
     if(compSession?.step==='pages'){
-      if(!/^\\d+$/.test(t.trim())||Number(t.trim())<1)return bot.sendMessage(msg.chat.id,'❌ Фақат саҳифалар сонини рақамда киритинг. Масалан: 15');
+      if(!/^\d+$/.test(t.trim())||Number(t.trim())<1)return bot.sendMessage(msg.chat.id,'❌ Фақат саҳифалар сонини рақамда киритинг. Масалан: 15');
       const st=await competitionStudent(msg.chat.id);
       if(!st)return bot.sendMessage(msg.chat.id,'❌ Ўқувчи аккаунти топилмади. /id 123456 орқали қайта уланинг.',menu);
       const pages=Number(t.trim());
