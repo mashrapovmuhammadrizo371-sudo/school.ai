@@ -2,7 +2,7 @@ let activeBot=null;
 let telegramStartedAt=null;
 const TelegramBot=require('node-telegram-bot-api');
 
-function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession}){
+function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession,webhookUrl,webhookSecret}){
   const bot=new TelegramBot(token,{polling:false,badRejection:true});
   activeBot=bot;
   telegramStartedAt=new Date().toISOString();
@@ -223,7 +223,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     );
   } async function sendSubjects(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');const items=await SchoolData.find({kind:'subjects'}).sort({updatedAt:-1}).lean();const names=[...new Set(items.flatMap(x=>{const d=x.data||{};return [d.name,d.subject,d.fan].filter(Boolean).map(v=>String(v).trim())}))];return bot.sendMessage(msg.chat.id,names.length?'📚 Fanlar\\n\\n'+names.map((x,i)=>(i+1)+'. '+x).join('\\n'):'📚 Hozircha fanlar kiritilmagan.',menu);}  async function sendContent(msg,kind,title,empty){const items=await SchoolContent.find({kind}).sort({createdAt:-1}).lean();if(!items.length)return bot.sendMessage(msg.chat.id,empty,menu);let out=title+'\n\n';for(const x of items.slice(0,10)){out+='• '+x.title+'\n'+(x.body||'')+(x.url?'\n'+x.url:'')+'\n\n';}return bot.sendMessage(msg.chat.id,out.slice(0,4000),menu,{disable_web_page_preview:true});}
   bot.on('polling_error',err=>console.error('[telegram] polling error',err.message));
-  bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));
+  if(webhookUrl){\n    bot.setWebHook(webhookUrl,{secret_token:webhookSecret}).then(()=>console.log('[telegram] webhook configured')).catch(err=>console.error('[telegram] webhook setup failed',err.message));\n  }else{\n    bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));\n  }
   return bot;
 }
 function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
@@ -245,4 +245,4 @@ async function notifyCompetitionScored(chatId,item){
   try{await activeBot.sendMessage(String(chatId),'📚 Kitobxonlik tanlovi natijasi!\n\n⭐ Ball: '+item.totalScore+'/100\n💬 Ustoz izohi: '+(item.teacherComment||'Izoh yo‘q.')+'\n\n🏆 Reytingni Mini App yoki /reyting orqali ko‘rishingiz mumkin.');return true}catch(e){return false}
 }
 async function broadcastTelegram(chatIds,message){if(!activeBot)throw new Error('Telegram bot is not running');let sent=0,failed=0;for(const chatId of chatIds){try{await activeBot.sendMessage(String(chatId),message);sent++}catch(e){failed++;console.error('[telegram] send failed',chatId,e.message)}}return {sent,failed};}
-module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram,notifyStudentApproved};
+function processTelegramUpdate(update){if(activeBot)activeBot.processUpdate(update);}\nmodule.exports={startTelegramBot,getTelegramStatus,broadcastTelegram,notifyStudentApproved,processTelegramUpdate};
