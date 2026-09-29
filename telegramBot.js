@@ -152,7 +152,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
 
     if(compSession?.step==='name'){
       const name=String(t).trim();
-      if(!name||name.split(/\\s+/).length<2)return bot.sendMessage(msg.chat.id,'❌ Iltimos, ism va familiyangizni birga yozing. Masalan: Abdurahimov Abdullo');
+      if(!name||name.split(/\s+/).length<2)return bot.sendMessage(msg.chat.id,'❌ Iltimos, ism va familiyangizni birga yozing. Masalan: Abdurahimov Abdullo');
       competitionSessions.set(msg.chat.id,{...compSession,step:'class',studentName:name});
       return bot.sendMessage(msg.chat.id,'🏫 Синфингизни ёзинг:');
     }
