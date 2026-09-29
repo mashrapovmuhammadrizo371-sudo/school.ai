@@ -254,7 +254,7 @@ async function start(){
         require('./telegramBot').startTelegramBot({
           token:process.env.TELEGRAM_BOT_TOKEN,
           Application,SchoolContent,SchoolData,Staff,hashPassword,verifyPassword,
-          webhookUrl:process.env.RENDER_EXTERNAL_URL==='https://myschool-ai.onrender.com'?'https://myschool-ai.onrender.com/telegram/webhook':null,
+          webhookUrl:(process.env.RENDER_EXTERNAL_URL||'https://myschool-ai.onrender.com').replace(/\/$/,'')+'/telegram/webhook',
           webhookSecret:crypto.createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN).digest('hex'),
           createAdminTelegramSession:async()=>{
             const key=crypto.randomBytes(32).toString('hex');
