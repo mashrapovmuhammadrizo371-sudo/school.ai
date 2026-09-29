@@ -226,8 +226,10 @@ if(location.pathname==='/admin'||location.pathname==='/admin/'){
       if(synced.status==='approved')home();
       else if(synced.status==='pending')pending();
       else if(synced.status==='not_registered'||synced.status==='rejected')welcome();
-    }else if(synced.ok===false){
-      // Telegram Mini Appda server tasdig'isiz eski local akkaunt ochilmaydi.
-    }else welcome();
+    }else{
+      // Oddiy sayt ochilganda ham welcome ekrani ko‘rsatiladi.
+      // Telegram Mini App bo‘lsa, syncTelegramAccount() yuqoridagi holatlarni boshqaradi.
+      welcome();
+    }
   })();
 }
