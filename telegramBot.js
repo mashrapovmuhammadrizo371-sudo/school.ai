@@ -45,8 +45,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const s=competitionSessions.get(chatId);
       await bot.answerCallbackQuery(q.id);
       if(!s?.videoFileId)return bot.sendMessage(chatId,'❌ Video topilmadi. Iltimos, videoni qaytadan yuboring.',menu);
-      competitionSessions.set(chatId,{...s,step:'name'});
-      return bot.sendMessage(chatId,'👤 Ism va familiyangizni yozing:');
+      competitionSessions.set(chatId,{...s,step:'surname'});
+      return bot.sendMessage(chatId,'👤 Фамилиянгизни ёзинг:');
     }
     if(data==='competition:no'){
       await bot.answerCallbackQuery(q.id);
