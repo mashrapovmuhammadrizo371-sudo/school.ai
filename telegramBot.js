@@ -84,9 +84,21 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   }
   bot.onText(/^\/id(?:\s+(\d{6}))?$/,async(msg,m)=>{if(m[1])return connect(msg,m[1]);sessions.set(msg.chat.id,{waitingId:true});await bot.sendMessage(msg.chat.id,'🆔 6 xonali Student ID raqamingizni yuboring.');});
   async function connect(msg,id){const s=await linkStudent(msg.chat.id,id);sessions.delete(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'❌ Student ID topilmadi yoki hali tasdiqlanmagan.',menu);if(s.blocked)return bot.sendMessage(msg.chat.id,'🚫 Hisobingiz bloklangan.',menu);return bot.sendMessage(msg.chat.id,'✅ Hisob ulandi!\n\n👤 '+s.firstName+' '+s.lastName+'\n🏫 Sinf: '+s.className+'\n🆔 ID: '+s.studentId,menu);}
+  async function notifyCompetitionStaff(item){
+    const d=item.data||{};
+    const staff=await Staff.find({task:'Kitobxonlik tanlovini',isBlocked:false,telegramChatId:{$ne:''}}).select('telegramChatId fullName').lean();
+    for(const st of staff){
+      try{
+        await activeBot.sendVideo(String(st.telegramChatId),String(d.videoFileId),{
+          caption:'📚 YANGI KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 Topshiriq ID: '+String(item._id)+'\n\nBall berish: /ball '+String(item._id)+' BALL izoh'
+        });
+      }catch(e){console.error('[telegram] competition staff notification failed',st.telegramChatId,e.message)}
+    }
+    return staff.length;
+  }
   bot.onText(/^\/tanlovadmin$/,async msg=>{
     const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
-    if(!st||!['teacher','director','staff-admin'].includes(st.role))return bot.sendMessage(msg.chat.id,'❌ Faqat o‘qituvchi yoki administrator uchun.');
+    if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
     const rows=await SchoolData.find({kind:'book_competition'}).sort({createdAt:-1}).lean();
     if(!rows.length)return bot.sendMessage(msg.chat.id,'📚 Hozircha video topshirilmagan.');
     let out='📚 KITOBXONLIK TANLOVI — USTOZ\n\n';
@@ -203,7 +215,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
         totalScore:0,
         scored:false
       };
-      await SchoolData.create({kind:'book_competition',data,updatedAt:new Date()});
+      const saved=await SchoolData.create({kind:'book_competition',data,updatedAt:new Date()});\n      await notifyCompetitionStaff(saved);
       competitionSessions.delete(msg.chat.id);
       return bot.sendMessage(msg.chat.id,'✅ Анкета қабул қилинди!\n\n📚 Китоб: '+data.bookName+'\n🔢 Китоб рақами: '+data.bookNumber+'\n📄 Саҳифалар: '+data.pages+'\n👤 '+data.studentName+'\n🏫 Синф: '+data.className+'\n\nУстоз текшириб, натижани белгилайди.',menu);
     }
