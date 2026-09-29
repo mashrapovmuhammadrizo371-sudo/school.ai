@@ -215,7 +215,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
         totalScore:0,
         scored:false
       };
-      const saved=await SchoolData.create({kind:'book_competition',data,updatedAt:new Date()});\n      await notifyCompetitionStaff(saved);
+      const saved=await SchoolData.create({kind:'book_competition',data,updatedAt:new Date()});
+      await notifyCompetitionStaff(saved);
       competitionSessions.delete(msg.chat.id);
       return bot.sendMessage(msg.chat.id,'✅ Анкета қабул қилинди!\n\n📚 Китоб: '+data.bookName+'\n🔢 Китоб рақами: '+data.bookNumber+'\n📄 Саҳифалар: '+data.pages+'\n👤 '+data.studentName+'\n🏫 Синф: '+data.className+'\n\nУстоз текшириб, натижани белгилайди.',menu);
     }
