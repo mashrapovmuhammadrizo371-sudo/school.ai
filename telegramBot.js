@@ -226,7 +226,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   if(webhookUrl){
     bot.setWebHook(webhookUrl,{secret_token:webhookSecret}).then(()=>console.log('[telegram] webhook configured')).catch(err=>console.error('[telegram] webhook setup failed',err.message));
   }else{
-    bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));\n  }
+    bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));
+  }
   return bot;
 }
 function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
