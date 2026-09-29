@@ -118,12 +118,12 @@ app.post('/api/telegram/webapp-auth',async(req,res)=>{
 });
 
 app.post('/api/students/register',async(req,res)=>{try{const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),className=String(req.body.className||'').trim().toUpperCase(),schoolCode=String(req.body.schoolCode||'').trim(),photoData=String(req.body.photoData||'').trim();if(!firstName||!lastName||!className)return res.status(400).json({error:'Ism, familiya va sinf majburiy.'});if(!/^data:image\\/jpeg;base64,/.test(photoData)||photoData.length>850000)return res.status(400).json({error:'Faqat hozir kamerada olingan rasm yuborilishi kerak.'});const tgUser=verifyTelegramWebAppInitData(req.body.telegramInitData);const telegramChatId=tgUser?String(tgUser.id):'';if(telegramChatId){const existing=await Application.findOne({telegramChatId}).sort({createdAt:-1});if(existing){if(existing.status==='approved'&&!existing.isBlocked){const token=jwt.sign({role:'student',studentId:existing.studentId},JWT_SECRET,{expiresIn:'30d'});return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status,token,student:{studentId:existing.studentId,firstName:existing.firstName,lastName:existing.lastName,className:existing.className}})}if(existing.status==='pending'){
-  // Agar eski ariza rasm olinmasdan qolgan bo‘lsa, yangi kamera rasmini shu arizaga biriktiramiz.
+  // Har safar qayta yuborilganda ariza ma'lumotlari va yangi kamera rasmi yangilanadi.
   existing.firstName=firstName;
   existing.lastName=lastName;
   existing.className=className;
   existing.schoolCode=schoolCode;
-  if(photoData)existing.photoData=photoData;
+  existing.photoData=photoData;
   await existing.save();
   return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status});
 }}}const a=await Application.create({firstName,lastName,className,schoolCode,photoData,telegramChatId});res.status(201).json({ok:true,applicationId:String(a._id),status:a.status})}catch(e){console.error(e);res.status(500).json({error:'Arizani yuborishda xatolik.'})}});
