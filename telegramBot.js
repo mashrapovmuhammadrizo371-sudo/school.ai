@@ -96,16 +96,17 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     }
     return staff.length;
   }
-  bot.onText(/^\/tanlovadmin$/,async msg=>{
+  async function tanlovAdminHandler(msg){
     const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
     if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
     const rows=await SchoolData.find({kind:'book_competition'}).sort({createdAt:-1}).lean();
     if(!rows.length)return bot.sendMessage(msg.chat.id,'📚 Hozircha video topshirilmagan.');
-    let out='📚 KITOBXONLIK TANLOVI — USTOZ\n\n';
-    rows.slice(0,15).forEach((x,i)=>{const d=x.data||{};out+=(i+1)+'. '+d.studentName+' ('+d.className+')\nID: '+x._id+'\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\n\n';});
-    out+='✏️ Ball berish:\n/ball ID BALL izoh';
+    let out='📚 KITOBXONLIK TANLOVI — USTOZ\\n\\n';
+    rows.slice(0,15).forEach((x,i)=>{const d=x.data||{};out+=(i+1)+'. '+d.studentName+' ('+d.className+')\\nID: '+x._id+'\\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\\n\\n';});
+    out+='✏️ Ball berish:\\n/ball ID BALL izoh';
     return bot.sendMessage(msg.chat.id,out.slice(0,4000));
-  });
+  }
+  bot.onText(/^\/tanlovadmin$/,tanlovAdminHandler);
   bot.onText(/^\/ball\s+([a-f0-9]{24})\s+(\d{1,3})(?:\s+([\\s\\S]+))?$/i,async(msg,m)=>{
     const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
     if(!st||!['teacher','director','staff-admin'].includes(st.role))return;
@@ -147,7 +148,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   bot.on('message',async msg=>{
     if(msg.text?.startsWith('/'))return;
     const t=String(msg.text||'');
-    if(t==='📚 Kitobxonlik tanlovi — tekshirish'){const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();if(st?.task==='Kitobxonlik tanlovini')return bot.emit('message',{...msg,text:'/tanlovadmin'});return;}
+    if(t==='📚 Kitobxonlik tanlovi — tekshirish'){return tanlovAdminHandler(msg);}
     if(t==='👤 Profilim')return bot.emit('message',{...msg,text:'/staffme'});
     if(t==='🚪 Chiqish')return bot.emit('message',{...msg,text:'/stafflogout'});
     if(t==='📅 Jadval')return sendSchedule(msg);
