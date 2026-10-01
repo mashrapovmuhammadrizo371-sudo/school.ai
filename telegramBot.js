@@ -213,8 +213,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const pages=Number(t.trim());
       const data={
         studentId:st.studentId,
-        studentName:(compSession.surname+' '+compSession.firstName),
-        className:compSession.className,
+        studentName:((st.firstName||'')+' '+(st.lastName||'')).trim(),
+        className:st.className,
         telegramChatId:String(msg.chat.id),
         videoFileId:compSession.videoFileId,
         videoCaption:'',
