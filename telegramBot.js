@@ -366,7 +366,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
       competitionSessions.set(msg.chat.id,{staffLookupId:true});
-      return bot.sendMessage(msg.chat.id,'🆔 ID orqali ma’lumot',competitionStaffMenu);
+      return bot.sendMessage(msg.chat.id,'🆔 4 xonali topshiriq ID ni kiriting:',competitionStaffMenu);
     }
     if(t==='🔙 Orqaga'){
       return bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi paneli',staffMenu((await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean())?.task));
