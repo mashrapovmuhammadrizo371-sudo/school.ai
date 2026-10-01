@@ -235,7 +235,6 @@ app.post('/api/competition/submit',studentAuth,competitionUpload.single('video')
   if(!tgRes.ok||!tgData.ok)return res.status(502).json({error:'Videoni ustozga yuborishda xatolik.'});
   const videoFileId=String(tgData.result?.video?.file_id||'');
   if(!videoFileId)return res.status(502).json({error:'Telegram video ID qaytarmadi.'});
-  const taskId=String(Math.floor(1000+Math.random()*9000));
   const data={
     studentId:st.studentId,
     studentName:((st.firstName||'')+' '+(st.lastName||'')).trim(),
