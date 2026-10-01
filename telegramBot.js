@@ -20,6 +20,11 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function linkStudent(chatId,id){const s=await Application.findOne({studentId:String(id),status:'approved'}).lean();if(!s)return null;if(s.isBlocked)return {blocked:true};await Application.updateMany({telegramChatId:String(chatId)},{$set:{telegramChatId:''}});await Application.findByIdAndUpdate(s._id,{$set:{telegramChatId:String(chatId)}});return s;}
 
   bot.onText(/^\/start$/,async msg=>{
+    const existingStaff=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+    if(existingStaff){
+      staffSessions.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'👨‍💼 Xush kelibsiz, '+existingStaff.fullName+'!\\n\\nSizning ishchi kabinetingiz allaqachon ulangan. Qayta login/parol kiritish shart emas.',staffMenu(existingStaff.task));
+    }
     const a=await telegramApplication(msg.chat.id);
     if(a?.status==='approved'){
       sessions.delete(msg.chat.id);
@@ -36,7 +41,15 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     sessions.set(msg.chat.id,{waitingId:true});
     await bot.sendMessage(msg.chat.id,'🎓 MySchool botiga xush kelibsiz!\\n\\nO‘quvchi bo‘lsangiz 6 xonali Student ID yuboring yoki Mini App orqali ro‘yxatdan o‘ting.',menu);
   });
-  bot.onText(/^\/staff$/,async msg=>{staffSessions.set(msg.chat.id,{step:'username'});await bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti\n\nLoginni yuboring:');});
+  bot.onText(/^\/staff$/,async msg=>{
+    const existingStaff=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+    if(existingStaff){
+      staffSessions.delete(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti allaqachon ulangan.\\n\\n👤 '+existingStaff.fullName+'\\n🎖 Rol: '+roleName(existingStaff.role)+(existingStaff.task?'\\n📌 Vazifa: '+existingStaff.task:'')+'\\n\\n/staffme — profil\\n/stafflogout — chiqish',staffMenu(existingStaff.task));
+    }
+    staffSessions.set(msg.chat.id,{step:'username'});
+    await bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi kabineti\\n\\nLoginni yuboring:');
+  });
   bot.onText(/^\/admin$/,async msg=>{if(!adminSessions.get(msg.chat.id)?.active)return bot.sendMessage(msg.chat.id,'Avval /staff orqali Katta Admin sifatida kiring.');return bot.sendMessage(msg.chat.id,'🛡 KATTA ADMIN PANELI',adminMenu);});
   bot.on('callback_query',async q=>{
     const chatId=q.message.chat.id;
