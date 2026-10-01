@@ -374,7 +374,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     const lookupSession=competitionSessions.get(msg.chat.id);
     if(lookupSession?.staffLookupId){
       const idText=t.trim();
-      if(!/^\\d{4}$/.test(idText))return bot.sendMessage(msg.chat.id,'❌ Faqat 4 xonali ID kiriting.',competitionStaffMenu);
+      if(!/^\d{4}$/.test(idText))return bot.sendMessage(msg.chat.id,'❌ Faqat 4 xonali ID kiriting.',competitionStaffMenu);
       const item=await SchoolData.findOne({kind:'book_competition',$or:[{'data.taskId':idText},{'data.taskId':Number(idText)}]}).lean();
       if(!item)return bot.sendMessage(msg.chat.id,'❌ Bu ID bo‘yicha topshiriq topilmadi.',competitionStaffMenu);
       const d=item.data||{};
