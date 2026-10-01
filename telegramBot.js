@@ -1,6 +1,7 @@
 let activeBot=null;
 let telegramStartedAt=null;
 const TelegramBot=require('node-telegram-bot-api');
+const sharp=require('sharp');
 
 function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,verifyPassword,createAdminTelegramSession,webhookUrl,webhookSecret}){
   const bot=new TelegramBot(token,{polling:false,badRejection:true});
@@ -512,7 +513,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
 
   async function sendProfile(msg){const s=await student(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id');return bot.sendMessage(msg.chat.id,'👤 Profil\n\nIsm: '+s.firstName+'\nFamiliya: '+s.lastName+'\nSinf: '+s.className+'\nStudent ID: '+s.studentId,menu);}
   async function sendScheduleForClass(chatId,className,replyMarkup){
-    const normalize=v=>String(v||'').trim().toLowerCase().replace(/[-–—_\s]/g,'');
+    const normalize=v=>String(v||'').trim().toLowerCase().replace(/[-–—_\\s]/g,'');
     const normalizeDay=v=>{
       const n=normalize(v);
       const aliases={dushanba:'Dushanba',seshanba:'Seshanba',chorshanba:'Chorshanba',payshanba:'Payshanba',juma:'Juma',shanba:'Shanba'};
@@ -524,6 +525,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       return [d.className,d.class,d.sinf,d.class_name].some(v=>normalize(v)===normalize(className));
     });
     if(!own.length)return bot.sendMessage(chatId,'📅 '+className+' uchun jadval hali kiritilmagan.',replyMarkup);
+
     const order=['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
     const byDay=new Map();
     for(const x of own){
@@ -534,29 +536,80 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       if(!byDay.has(day))byDay.set(day,[]);
       byDay.get(day).push(...rows);
     }
-    let out='📅 '+className+' sinfi jadvali\n\n';
+
+    const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const cells=new Map();
+    let maxLessons=0;
     for(const day of order){
-      const rows=(byDay.get(day)||[]).map((row,index)=>({row,index}))
-        .filter(x=>String(x.row?.subject||x.row?.name||x.row?.fan||'').trim());
+      const rows=(byDay.get(day)||[]).map((row,index)=>({row,index})).filter(x=>{
+        const r=x.row||{};
+        return String(r.subject||r.name||r.fan||'').trim();
+      });
       rows.sort((a,b)=>{
-        const ta=String(a.row?.time||a.row?.vaqt||'').trim();
-        const tb=String(b.row?.time||b.row?.vaqt||'').trim();
-        const ma=ta.match(/^(\\d{1,2}):(\\d{2})/);
-        const mb=tb.match(/^(\\d{1,2}):(\\d{2})/);
-        if(ma&&mb)return (Number(ma[1])*60+Number(ma[2]))-(Number(mb[1])*60+Number(mb[2]));
+        const na=Number(a.row?.lesson||a.row?.lessonNumber||a.row?.dars||a.row?.number||0);
+        const nb=Number(b.row?.lesson||b.row?.lessonNumber||b.row?.dars||b.row?.number||0);
+        if(na&&nb&&na!==nb)return na-nb;
         return a.index-b.index;
       });
-      if(!rows.length)continue;
-      out+='📌 '+day+'\n';
       rows.forEach((x,i)=>{
-        const row=x.row;
-        const subject=String(row?.subject||row?.name||row?.fan||'').trim();
-        const time=String(row?.time||row?.vaqt||'').trim();
-        out+=(i+1)+'. '+subject+(time?' — '+time:'')+'\n';
+        const r=x.row||{};
+        const lesson=Number(r.lesson||r.lessonNumber||r.dars||r.number||i+1)||i+1;
+        const subject=String(r.subject||r.name||r.fan||'').trim();
+        const teacher=String(r.teacher||r.ustoz||'').trim();
+        const time=String(r.time||r.vaqt||'').trim();
+        cells.set(day+'|'+lesson,{subject,teacher,time});
+        maxLessons=Math.max(maxLessons,lesson);
       });
-      out+='\n';
     }
-    return bot.sendMessage(chatId,out.trim().slice(0,4000)||('📅 '+className+' uchun jadval hali kiritilmagan.'),replyMarkup);
+    if(!maxLessons)return bot.sendMessage(chatId,'📅 '+className+' uchun jadval hali kiritilmagan.',replyMarkup);
+
+    const width=1800, left=150, top=260, rowH=105, dayW=275, lessonW=90, bottom=90;
+    const height=top+maxLessons*rowH+bottom;
+    let svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'">';
+    svg+='<rect width="100%" height="100%" fill="#0A0E14"/>';
+    svg+='<text x="'+left+'" y="80" fill="#C9A961" font-family="Arial,sans-serif" font-size="52" font-weight="700">📅 '+esc(className)+' SINF JADVALI</text>';
+    svg+='<text x="'+left+'" y="140" fill="#AAB2C0" font-family="Arial,sans-serif" font-size="25">MySchool</text>';
+    svg+='<rect x="'+left+'" y="185" width="'+lessonW+'" height="75" rx="12" fill="#C9A961"/>';
+    svg+='<text x="'+(left+45)+'" y="233" text-anchor="middle" fill="#0A0E14" font-family="Arial,sans-serif" font-size="23" font-weight="700">№</text>';
+    order.forEach((day,i)=>{
+      const x=left+lessonW+i*dayW;
+      svg+='<rect x="'+x+'" y="185" width="'+(dayW-5)+'" height="75" rx="12" fill="#171D27"/>';
+      svg+='<text x="'+(x+(dayW-5)/2)+'" y="233" text-anchor="middle" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="23" font-weight="700">'+esc(day)+'</text>';
+    });
+    for(let lesson=1;lesson<=maxLessons;lesson++){
+      const y=top+(lesson-1)*rowH;
+      svg+='<rect x="'+left+'" y="'+y+'" width="'+lessonW+'" height="'+(rowH-5)+'" rx="10" fill="#C9A961"/>';
+      svg+='<text x="'+(left+lessonW/2)+'" y="'+(y+61)+'" text-anchor="middle" fill="#0A0E14" font-family="Arial,sans-serif" font-size="28" font-weight="700">'+lesson+'</text>';
+      order.forEach((day,i)=>{
+        const x=left+lessonW+i*dayW;
+        const cell=cells.get(day+'|'+lesson);
+        svg+='<rect x="'+x+'" y="'+y+'" width="'+(dayW-5)+'" height="'+(rowH-5)+'" rx="10" fill="#111720" stroke="#29313D" stroke-width="2"/>';
+        if(cell){
+          svg+='<text x="'+(x+18)+'" y="'+(y+37)+'" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="22" font-weight="700">'+esc(cell.subject).slice(0,42)+'</text>';
+          if(cell.time)svg+='<text x="'+(x+18)+'" y="'+(y+67)+'" fill="#C9A961" font-family="Arial,sans-serif" font-size="17">'+esc(cell.time).slice(0,20)+'</text>';
+          if(cell.teacher)svg+='<text x="'+(x+18)+'" y="'+(y+89)+'" fill="#8E98A8" font-family="Arial,sans-serif" font-size="15">'+esc(cell.teacher).slice(0,28)+'</text>';
+        }else{
+          svg+='<text x="'+(x+(dayW-5)/2)+'" y="'+(y+58)+'" text-anchor="middle" fill="#4F5968" font-family="Arial,sans-serif" font-size="20">—</text>';
+        }
+      });
+    }
+    svg+='</svg>';
+    try{
+      const image=await sharp(Buffer.from(svg)).png().toBuffer();
+      return bot.sendPhoto(chatId,image,{caption:'📅 '+className+' sinfi jadvali',reply_markup:replyMarkup?.reply_markup});
+    }catch(e){
+      console.error('[telegram] schedule image generation failed',e.message);
+      let out='📅 '+className+' sinfi jadvali\\n\\n';
+      for(const day of order){
+        const dayRows=[];
+        for(let lesson=1;lesson<=maxLessons;lesson++){
+          const cell=cells.get(day+'|'+lesson);
+          if(cell)dayRows.push(lesson+'. '+cell.subject+(cell.time?' — '+cell.time:''));
+        }
+        if(dayRows.length)out+='📌 '+day+'\\n'+dayRows.join('\\n')+'\\n\\n';
+      }
+      return bot.sendMessage(chatId,out.trim().slice(0,4000)||('📅 '+className+' uchun jadval hali kiritilmagan.'),replyMarkup);
+    }
   }
 
   async function staffSchedulePicker(msg){
