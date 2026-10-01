@@ -101,9 +101,18 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
     const rows=await SchoolData.find({kind:'book_competition'}).sort({createdAt:-1}).lean();
     if(!rows.length)return bot.sendMessage(msg.chat.id,'📚 Hozircha video topshirilmagan.');
+    const studentIds=[...new Set(rows.map(x=>String(x.data?.studentId||'')).filter(Boolean))];
+    const students=await Application.find({studentId:{$in:studentIds},status:'approved'}).select('studentId firstName lastName className').lean();
+    const studentMap=new Map(students.map(s=>[String(s.studentId),s]));
     let out='📚 KITOBXONLIK TANLOVI — USTOZ\\n\\n';
-    rows.slice(0,15).forEach((x,i)=>{const d=x.data||{};out+=(i+1)+'. '+d.studentName+' ('+d.className+')\\nID: '+x._id+'\\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\\n\\n';});
-    out+='✏️ Ball berish:\\n/ball ID BALL izoh';
+    rows.slice(0,15).forEach((x,i)=>{
+      const d=x.data||{};
+      const s=studentMap.get(String(d.studentId));
+      const name=s?((s.firstName||'')+' '+(s.lastName||'')).trim():(d.studentName||'Noma’lum o‘quvchi');
+      const className=s?.className||d.className||'—';
+      out+=(i+1)+'. '+name+' ('+className+')\\nStudent ID: '+(d.studentId||'—')+'\\nTopshiriq ID: '+x._id+'\\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\\n\\n';
+    });
+    out+='✏️ Ball berish:\\n/ball TOPSHIRIQ_ID BALL izoh';
     return bot.sendMessage(msg.chat.id,out.slice(0,4000));
   }
   bot.onText(/^\/tanlovadmin$/,tanlovAdminHandler);
