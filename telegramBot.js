@@ -100,7 +100,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       await postCompetitionToChannel(item);
       pendingBallSessions.delete(chatId);
       try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'🎉 Natijangiz tasdiqlandi!\n📚 Tanlov natijasi!\n⭐ Ball: '+p.score+'/100\n💬 Ustoz: '+(p.teacherComment||'Izoh yo‘q.')+'\n📢 Natijangizni bizning rasmiy kanalimizda ko‘rishingiz mumkin.');}catch(_){}
-      return bot.sendMessage(chatId,'✅ Tasdiqlandi. '+p.score+' ball va izoh saqlandi.');
+      return bot.sendMessage(chatId,'✅ Tasdiqlandi. '+pages+' sahifa qo‘shildi. Jami: '+total+' ball.');
     }
     if(data==='ball:reject'){
       await bot.answerCallbackQuery(q.id);
@@ -266,14 +266,14 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     const rows=await BookCompetition.find({kind:'book_competition', 'data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
     const x=rows[0]?.data;
     if(!x)return bot.sendMessage(msg.chat.id,'⭐ Hozircha tanlovga topshirgan videongiz yo‘q.',menu);
-    const all=(await BookCompetition.find({kind:'book_competition','data.scored':true}).lean()).map(z=>z.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
-    const rank=all.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
-    return bot.sendMessage(msg.chat.id,'⭐ BALLARIM\n\nBall: '+(x.scored?x.totalScore:0)+'/100\n🏆 O‘rin: '+(x.scored?rank+'-o‘rin':'Hali belgilanmagan')+'\n💬 Ustoz izohi: '+(x.teacherComment||'Hali izoh yo‘q.'),menu);
+    const ranking=await competitionRanking();
+    const total=await competitionPoints(st.studentId);
+    const rank=ranking.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
+    return bot.sendMessage(msg.chat.id,'⭐ BALLARIM\n\n📄 Jami o‘qilgan sahifalar: '+total+'\n⭐ Jami ball: '+total+'\n🏆 O‘rin: '+(total>0?rank+'-o‘rin':'Hali belgilanmagan'),menu);
   });
   bot.onText(/^\/reyting$/,async msg=>{
     const st=await competitionStudent(msg.chat.id); if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',menu);
-    const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean(); rows.sort((a,b)=>Number(b.data.totalScore||0)-Number(a.data.totalScore||0));
-    const top=rows.slice(0,10).map((x,i)=>(i+1)+'. '+x.data.studentName+' — '+x.data.totalScore+' ball').join('\n');
+    const top=(await competitionRanking()).slice(0,10).map((x,i)=>(i+1)+'. '+x.studentName+' — '+x.totalScore+' ball').join('\n');
     return bot.sendMessage(msg.chat.id,'🏆 MUSOBAQA BALLARI\n\n'+(top||'Hozircha natijalar yo‘q.'),menu);
   });
   bot.onText(/^\/jadval$/,sendSchedule);
@@ -314,15 +314,15 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const st=await competitionStudent(msg.chat.id); if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',competitionMenu);
       const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
       const x=rows[0]?.data; if(!x)return bot.sendMessage(msg.chat.id,'⭐ Hozircha tanlovga topshirgan videongiz yo‘q.',competitionMenu);
-      const all=(await SchoolData.find({kind:'book_competition','data.scored':true}).lean()).map(z=>z.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
-      const rank=all.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
-      return bot.sendMessage(msg.chat.id,'⭐ BALLARIM\n\nBall: '+(x.scored?x.totalScore:0)+'/100\n🏆 O‘rin: '+(x.scored?rank+'-o‘rin':'Hali belgilanmagan')+'\n💬 Ustoz izohi: '+(x.teacherComment||'Hali izoh yo‘q.'),competitionMenu);
+      const ranking=await competitionRanking();
+      const total=await competitionPoints(st.studentId);
+      const rank=ranking.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
+      return bot.sendMessage(msg.chat.id,'⭐ BALLARIM\n\n📄 Jami o‘qilgan sahifalar: '+total+'\n⭐ Jami ball: '+total+'\n🏆 O‘rin: '+(total>0?rank+'-o‘rin':'Hali belgilanmagan'),competitionMenu);
     }
     if(t==='🏆 Reyting'){
       const st=await competitionStudent(msg.chat.id); if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',competitionMenu);
-      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean(); rows.sort((a,b)=>Number(b.data.totalScore||0)-Number(a.data.totalScore||0));
-      const top=rows.slice(0,10); let out='🏆 KITOBXONLIK REYTINGI\n\n';
-      for(let i=0;i<top.length;i++){const d=top[i].data||{};out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' — '+String(d.totalScore||0)+'/100\n';}
+      const top=(await competitionRanking()).slice(0,10); let out='🏆 KITOBXONLIK REYTINGI\n\n';
+      for(let i=0;i<top.length;i++){const d=top[i];out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' — '+String(d.totalScore||0)+' ball\n';}
       return bot.sendMessage(msg.chat.id,out||'🏆 Hozircha reyting mavjud emas.',competitionMenu);
     }
     if(t==='📩 Adminga xabar yuborish'){
@@ -559,7 +559,7 @@ async function postCompetitionToChannel(item){
 }
 async function notifyCompetitionScored(chatId,item){
   if(!activeBot||!chatId)return false;
-  try{await activeBot.sendMessage(String(chatId),'📚 Kitobxonlik tanlovi natijasi!\n\n⭐ Ball: '+item.totalScore+'/100\n💬 Ustoz izohi: '+(item.teacherComment||'Izoh yo‘q.')+'\n\n🏆 Reytingni Mini App yoki /reyting orqali ko‘rishingiz mumkin.');return true}catch(e){return false}
+  try{await activeBot.sendMessage(String(chatId),'📚 Kitobxonlik tanlovi natijasi!\n\n📄 Qo‘shilgan sahifa: '+item.pages+'\n⭐ Jami ball: '+item.totalScore+'\n\n🏆 Reytingni Mini App yoki /reyting orqali ko‘rishingiz mumkin.');return true}catch(e){return false}
 }
 async function broadcastTelegram(chatIds,message){if(!activeBot)throw new Error('Telegram bot is not running');let sent=0,failed=0;for(const chatId of chatIds){try{await activeBot.sendMessage(String(chatId),message);sent++}catch(e){failed++;console.error('[telegram] send failed',chatId,e.message)}}return {sent,failed};}
 function processTelegramUpdate(update){if(activeBot)activeBot.processUpdate(update);}
