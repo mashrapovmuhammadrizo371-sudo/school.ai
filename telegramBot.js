@@ -99,7 +99,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       item.data={...(item.data||{}),totalScore:total,teacherComment:'',scored:true,rejected:false}; item.updatedAt=new Date(); await item.save();
       await postCompetitionToChannel(item);
       pendingBallSessions.delete(chatId);
-      try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'🎉 Natijangiz tasdiqlandi!\n📚 Tanlov natijasi!\n⭐ Ball: '+p.score+'/100\n💬 Ustoz: '+(p.teacherComment||'Izoh yo‘q.')+'\n📢 Natijangizni bizning rasmiy kanalimizda ko‘rishingiz mumkin.');}catch(_){}
+      try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'🎉 Natijangiz tasdiqlandi!\n📚 Kitobxonlik tanlovi\n📄 Qo‘shilgan sahifa: '+pages+'\n⭐ Jami ball: '+total+'\n📢 Natijangizni bizning rasmiy kanalimizda ko‘rishingiz mumkin.');}catch(_){}
       return bot.sendMessage(chatId,'✅ Tasdiqlandi. '+pages+' sahifa qo‘shildi. Jami: '+total+' ball.');
     }
     if(data==='ball:reject'){
