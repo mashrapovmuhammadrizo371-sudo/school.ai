@@ -350,6 +350,18 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       });
       return bot.sendMessage(msg.chat.id,out.slice(0,4000),competitionStaffMenu);
     }
+    if(t==='🏆 Reyting'){
+      const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+      if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
+      const top=(await competitionRanking()).slice(0,20);
+      if(!top.length)return bot.sendMessage(msg.chat.id,'🏆 Hozircha reyting mavjud emas.',competitionStaffMenu);
+      let out='🏆 KITOBXONLIK REYTINGI\\n\\n';
+      for(let i=0;i<top.length;i++){
+        const d=top[i];
+        out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' ('+String(d.className||'—')+')\\n⭐ Jami ball: '+String(d.totalScore||0)+'\\n\\n';
+      }
+      return bot.sendMessage(msg.chat.id,out.slice(0,4000),competitionStaffMenu);
+    }
     if(t==='🆔 ID orqali ma’lumot'){
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
