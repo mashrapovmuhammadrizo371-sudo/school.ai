@@ -375,7 +375,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(lookupSession?.staffLookupId){
       const idText=t.trim();
       if(!/^\\d{4}$/.test(idText))return bot.sendMessage(msg.chat.id,'❌ Faqat 4 xonali ID kiriting.',competitionStaffMenu);
-      const item=await SchoolData.findOne({kind:'book_competition','data.taskId':idText}).lean();
+      const item=await SchoolData.findOne({kind:'book_competition',$or:[{'data.taskId':idText},{'data.taskId':Number(idText)}]}).lean();
       if(!item)return bot.sendMessage(msg.chat.id,'❌ Bu ID bo‘yicha topshiriq topilmadi.',competitionStaffMenu);
       const d=item.data||{};
       const info='📚 KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n🆔 Student ID: '+String(d.studentId||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||0)+'\n🆔 Topshiriq ID: '+idText+'\n📌 Holat: '+(d.scored?'✅ Tasdiqlangan':(d.rejected?'❌ Rad etilgan':'⏳ Kutilmoqda'))+'\n⭐ Ball: '+String(d.scored?Math.max(0,Number(d.pages)||0):0);
