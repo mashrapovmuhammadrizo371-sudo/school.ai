@@ -131,7 +131,7 @@ async function staffCompetitionView(){
     '<p>Holat: <b>'+(q.scored?'⭐ '+esc(q.totalScore)+'/100':'⏳ Baholanmagan')+'</b></p>'+
     (q.videoFileId?'<p>🎥 Video Telegram orqali yuborilgan</p>':'')+
     '<div class="field"><label>Ball (0–100)</label>'+
-    '<input id="score_'+x._id+'" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="3" value="'+escapedScore+'" placeholder="0–100" oninput="sanitizeCompetitionScore(this,''+x._id+'')">'+
+    '<input id="score_'+x._id+'" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="3" value="'+escapedScore+'" placeholder="0–100" oninput="sanitizeCompetitionScore(this,\''+x._id+'\')">'+
     '</div>'+
     '<div class="field"><label>Ustoz izohi</label><textarea id="comment_'+x._id+'" rows="3">'+esc(q.teacherComment||'')+'</textarea></div>'+
     '<div id="scoreActions_'+x._id+'" class="row" style="display:'+(currentScore!==''?'flex':'none')+';gap:8px;flex-wrap:wrap">'+
