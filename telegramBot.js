@@ -14,6 +14,22 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   const pendingBallSessions=new Map();
   const competitionAdminMessageSessions=new Set();
   async function competitionStudent(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved',isBlocked:false}).lean();}
+  async function competitionPoints(studentId){
+    const rows=await SchoolData.find({kind:'book_competition','data.studentId':String(studentId),'data.scored':true}).lean();
+    return rows.reduce((sum,row)=>sum+Math.max(0,Number(row.data?.pages)||0),0);
+  }
+  async function competitionRanking(){
+    const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
+    const map=new Map();
+    for(const row of rows){
+      const d=row.data||{}; const id=String(d.studentId||''); if(!id)continue;
+      const current=map.get(id)||{studentId:id,studentName:d.studentName||'Noma’lum',className:d.className||'—',totalScore:0};
+      current.totalScore+=Math.max(0,Number(d.pages)||0);
+      if(!current.studentName&&d.studentName)current.studentName=d.studentName;
+      map.set(id,current);
+    }
+    return [...map.values()].sort((a,b)=>b.totalScore-a.totalScore);
+  }
   const MINI_APP_URL='https://school-ai-fronted.onrender.com';
   const menu={reply_markup:{keyboard:[[{'text':'📱 MySchool Mini App',web_app:{url:MINI_APP_URL}}],[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'📚 Kitobxonlik tanlovi'},{'text':'👤 Profil'}],[{'text':'❓ Yordam'}]],resize_keyboard:true}};
   const competitionMenu={reply_markup:{keyboard:[[
@@ -76,7 +92,11 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       if(!p)return bot.sendMessage(chatId,'❌ Ball sessiyasi topilmadi. /ball ID BALL orqali qayta urinib ko‘ring.');
       const item=await SchoolData.findOne({_id:p.itemId,kind:'book_competition'});
       if(!item)return bot.sendMessage(chatId,'❌ Topshiriq topilmadi.');
-      item.data={...(item.data||{}),totalScore:p.score,teacherComment:p.teacherComment,scored:true}; item.updatedAt=new Date(); await item.save();
+      if(item.data?.scored)return bot.sendMessage(chatId,'ℹ️ Bu topshiriq allaqachon tasdiqlangan.');
+      const pages=Math.max(0,Number(item.data?.pages)||0);
+      const previous=await competitionPoints(item.data?.studentId);
+      const total=previous+pages;
+      item.data={...(item.data||{}),totalScore:total,teacherComment:'',scored:true,rejected:false}; item.updatedAt=new Date(); await item.save();
       await postCompetitionToChannel(item);
       pendingBallSessions.delete(chatId);
       try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'🎉 Natijangiz tasdiqlandi!\n📚 Tanlov natijasi!\n⭐ Ball: '+p.score+'/100\n💬 Ustoz: '+(p.teacherComment||'Izoh yo‘q.')+'\n📢 Natijangizni bizning rasmiy kanalimizda ko‘rishingiz mumkin.');}catch(_){}
@@ -85,7 +105,8 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(data==='ball:reject'){
       await bot.answerCallbackQuery(q.id);
       const p=pendingBallSessions.get(chatId); pendingBallSessions.delete(chatId);
-      return bot.sendMessage(chatId,'❌ Ball bekor qilindi.\n\nQaytadan kiriting:\n/ball '+(p?.taskId||'XXXX')+' BALL [izoh]');
+      if(p?.itemId){const item=await SchoolData.findOne({_id:p.itemId,kind:'book_competition'});if(item){item.data={...(item.data||{}),scored:false,rejected:true};item.updatedAt=new Date();await item.save();}}
+      return bot.sendMessage(chatId,'❌ Topshiriq rad etildi. O‘quvchi qayta topshirishi mumkin.');
     }
     if(data==='competition:add'){
       await bot.answerCallbackQuery(q.id);
@@ -98,18 +119,17 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
       const x=rows[0]?.data;
       if(!x)return bot.sendMessage(chatId,'⭐ Hozircha tanlovga topshirgan videongiz yo‘q.');
-      const all=(await SchoolData.find({kind:'book_competition','data.scored':true}).lean()).map(z=>z.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
-      const rank=all.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
-      return bot.sendMessage(chatId,'⭐ BALLARIM\n\nBall: '+(x.scored?x.totalScore:0)+'/100\n🏆 O‘rin: '+(x.scored?rank+'-o‘rin':'Hali belgilanmagan')+'\n💬 Ustoz izohi: '+(x.teacherComment||'Hali izoh yo‘q.'));
+      const ranking=await competitionRanking();
+      const total=await competitionPoints(st.studentId);
+      const rank=ranking.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
+      return bot.sendMessage(chatId,'⭐ BALLARIM\n\n📄 Jami o‘qilgan sahifalar: '+total+'\n⭐ Jami ball: '+total+'\n🏆 O‘rin: '+(total>0?rank+'-o‘rin':'Hali belgilanmagan'));
     }
     if(data==='competition:reyting'){
       await bot.answerCallbackQuery(q.id);
       const st=await competitionStudent(chatId); if(!st)return bot.sendMessage(chatId,'Avval Student ID ni ulang: /id 123456');
-      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
-      rows.sort((a,b)=>Number(b.data.totalScore||0)-Number(a.data.totalScore||0));
-      const top=rows.slice(0,10);
+      const top=(await competitionRanking()).slice(0,10);
       let out='🏆 KITOBXONLIK REYTINGI\n\n';
-      for(let i=0;i<top.length;i++){const d=top[i].data||{};out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' — '+String(d.totalScore||0)+'/100\n';}
+      for(let i=0;i<top.length;i++){const d=top[i];out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' — '+String(d.totalScore||0)+' ball\n';}
       return bot.sendMessage(chatId,out||'🏆 Hozircha reyting mavjud emas.');
     }
     if(data==='competition:admin'){
@@ -194,7 +214,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     for(const st of staff){
       try{
         await activeBot.sendVideo(String(st.telegramChatId),String(d.videoFileId),{
-          caption:'📚 YANGI KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 ID: '+taskId+'\n\nBall berish: /ball '+taskId+' BALL [izoh]'
+          caption:'📚 YANGI KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 ID: '+taskId+'\n\nTasdiqlash uchun: /ball '+taskId+'\nKeyin faqat Tasdiqlash yoki Rad etish.'
         });
       }catch(e){console.error('[telegram] competition staff notification failed',st.telegramChatId,e.message)}
     }
@@ -214,23 +234,22 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const s=studentMap.get(String(d.studentId));
       const name=s?((s.firstName||'')+' '+(s.lastName||'')).trim():(d.studentName||'Noma’lum o‘quvchi');
       const className=s?.className||d.className||'—';
-      out+=(i+1)+'. '+name+' ('+className+')\nStudent ID: '+(d.studentId||'—')+'\nID: '+(d.taskId||'—')+'\nBall: '+(d.scored?d.totalScore+'/100':'Baholanmagan')+'\n\n';
+      out+=(i+1)+'. '+name+' ('+className+')\nStudent ID: '+(d.studentId||'—')+'\nID: '+(d.taskId||'—')+'\nSahifa: '+(d.pages||'0')+'\nHolat: '+(d.scored?'✅ Tasdiqlangan':(d.rejected?'❌ Rad etilgan':'⏳ Kutilmoqda'))+'\n\n';
     });
-    out+='✏️ Ball berish:\n/ball ID BALL [izoh]';
+    out+='Tasdiqlash uchun: /ball ID\nBallni ustoz kiritmaydi — sahifalar avtomatik ball bo‘ladi.';
     return bot.sendMessage(msg.chat.id,out.slice(0,4000));
   }
   bot.onText(/^\/tanlovadmin$/,tanlovAdminHandler);
-  bot.onText(/^\/ball\s+(\d{4})\s+(\d{1,3})(?:\s+([\s\S]+))?$/i,async(msg,m)=>{
+  bot.onText(/^\/ball\s+(\d{4})$/i,async(msg,m)=>{
     const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
     if(!st||!['teacher','director','staff-admin'].includes(st.role))return;
-    const taskId=String(m[1]); const score=Number(m[2]);
-    if(score<0||score>100)return bot.sendMessage(msg.chat.id,'❌ Ball 0–100 oralig‘ida bo‘lishi kerak.');
+    const taskId=String(m[1]);
     const item=await SchoolData.findOne({kind:'book_competition','data.taskId':taskId});
     if(!item)return bot.sendMessage(msg.chat.id,'❌ ID topilmadi. 4 xonali topshiriq ID ni tekshiring.');
     const d=item.data||{};
-    const p={itemId:String(item._id),taskId,score,teacherComment:String(m[3]||'').trim(),videoFileId:String(d.videoFileId||''),studentName:String(d.studentName||'—'),className:String(d.className||'—'),bookName:String(d.bookName||'—'),bookNumber:String(d.bookNumber||'—'),pages:String(d.pages||'—')};
+    const p={itemId:String(item._id),taskId,videoFileId:String(d.videoFileId||''),studentName:String(d.studentName||'—'),className:String(d.className||'—'),bookName:String(d.bookName||'—'),bookNumber:String(d.bookNumber||'—'),pages:String(d.pages||'—')};
     pendingBallSessions.set(msg.chat.id,p);
-    const caption='📚 KITOBXONLIK TANLOVI — BALL\n\n👤 Ism-familiya: '+p.studentName+'\n🏫 Sinf: '+p.className+'\n📖 Kitob: '+p.bookName+'\n🔢 Kitob raqami: '+p.bookNumber+'\n📄 Sahifa: '+p.pages+'\n🆔 ID: '+p.taskId+'\n🔢 Ball: '+p.score+'\n📝 Izoh: '+(p.teacherComment||'—');
+    const caption='📚 KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+p.studentName+'\n🏫 Sinf: '+p.className+'\n📖 Kitob: '+p.bookName+'\n🔢 Kitob raqami: '+p.bookNumber+'\n📄 Sahifa: '+p.pages+'\n🆔 ID: '+p.taskId+'\n\n⭐ Ball avtomatik hisoblanadi: '+p.pages+' sahifa = '+p.pages+' ball.\n\nUstoz faqat tugmalardan birini bosadi.';
     const markup={reply_markup:{inline_keyboard:[[{text:'✅ Tasdiqlash',callback_data:'ball:confirm'},{text:'❌ Rad etish',callback_data:'ball:reject'}]]}};
     if(p.videoFileId)return bot.sendVideo(msg.chat.id,p.videoFileId,{caption,...markup});
     return bot.sendMessage(msg.chat.id,caption,markup);
@@ -535,7 +554,7 @@ async function postCompetitionToChannel(item){
   const channelId=String(process.env.KITOBXONLIK_CHANNEL_ID||process.env.COMPETITION_CHANNEL_ID||'').trim();
   if(!channelId)return false;
   const d=item?.data||{};
-  const caption='📚 KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 ID: '+String(d.taskId||'—')+'\n⭐ Ball: '+String(d.totalScore||0)+'/100\n💬 Ustoz: '+String(d.teacherComment||'Izoh yo‘q.');
+  const caption='📚 KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 ID: '+String(d.taskId||'—')+'\n⭐ Jami ball: '+String(d.totalScore||0)+'\n💬 Ustoz: '+String(d.teacherComment||'Izoh yo‘q.');
   try{if(d.videoFileId)await activeBot.sendVideo(channelId,String(d.videoFileId),{caption});else await activeBot.sendMessage(channelId,caption);return true;}catch(e){console.error('[telegram] competition channel post failed',e.message);return false;}
 }
 async function notifyCompetitionScored(chatId,item){
