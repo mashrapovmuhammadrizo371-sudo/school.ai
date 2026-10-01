@@ -69,8 +69,9 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       const item=await SchoolData.findOne({_id:p.itemId,kind:'book_competition'});
       if(!item)return bot.sendMessage(chatId,'❌ Topshiriq topilmadi.');
       item.data={...(item.data||{}),totalScore:p.score,teacherComment:p.teacherComment,scored:true}; item.updatedAt=new Date(); await item.save();
+      await postCompetitionToChannel(item);
       pendingBallSessions.delete(chatId);
-      try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'📚 Tanlov natijasi!\n\n⭐ Ball: '+p.score+'/100\n💬 Ustoz: '+(p.teacherComment||'Izoh yo‘q.'));}catch(_){}
+      try{if(item.data.telegramChatId)await activeBot.sendMessage(String(item.data.telegramChatId),'🎉 Natijangiz tasdiqlandi!\n📚 Tanlov natijasi!\n⭐ Ball: '+p.score+'/100\n💬 Ustoz: '+(p.teacherComment||'Izoh yo‘q.')+'\n📢 Natijangizni bizning rasmiy kanalimizda ko‘rishingiz mumkin.');}catch(_){}
       return bot.sendMessage(chatId,'✅ Tasdiqlandi. '+p.score+' ball va izoh saqlandi.');
     }
     if(data==='ball:reject'){
@@ -436,6 +437,14 @@ async function notifyStudentApproved(chatId,student){
     console.error('[telegram] approval notification failed',chatId,e.message);
     return false;
   }
+}
+async function postCompetitionToChannel(item){
+  if(!activeBot)return false;
+  const channelId=String(process.env.KITOBXONLIK_CHANNEL_ID||process.env.COMPETITION_CHANNEL_ID||'').trim();
+  if(!channelId)return false;
+  const d=item?.data||{};
+  const caption='📚 KITOBXONLIK TANLOVI\n\n👤 Ism-familiya: '+String(d.studentName||'—')+'\n🏫 Sinf: '+String(d.className||'—')+'\n📖 Kitob: '+String(d.bookName||'—')+'\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\n📄 Sahifa: '+String(d.pages||'—')+'\n🆔 ID: '+String(d.taskId||'—')+'\n⭐ Ball: '+String(d.totalScore||0)+'/100\n💬 Ustoz: '+String(d.teacherComment||'Izoh yo‘q.');
+  try{if(d.videoFileId)await activeBot.sendVideo(channelId,String(d.videoFileId),{caption});else await activeBot.sendMessage(channelId,caption);return true;}catch(e){console.error('[telegram] competition channel post failed',e.message);return false;}
 }
 async function notifyCompetitionScored(chatId,item){
   if(!activeBot||!chatId)return false;
