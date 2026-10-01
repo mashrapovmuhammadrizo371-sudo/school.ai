@@ -14,6 +14,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - run: npm install
       - run: mkdir -p www/icons && cp index.html script.js style.css manifest.webmanifest sw.js www/ && cp icons/icon.svg www/icons/icon.svg
       - run: npx cap add android
