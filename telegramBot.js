@@ -445,6 +445,7 @@ async function verifyCompetitionChannel(){
   try{
     const chat=await activeBot.getChat(channelId);
     console.log('[telegram] competition channel verified',JSON.stringify({id:chat.id,type:chat.type,username:chat.username||null,title:chat.title||null}));
+    console.log('[telegram] USE_THIS_CHANNEL_ID='+String(chat.id));
     return true;
   }catch(e){
     console.error('[telegram] competition channel verification failed',e.message);
