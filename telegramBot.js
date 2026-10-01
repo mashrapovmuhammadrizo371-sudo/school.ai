@@ -18,6 +18,23 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     const rows=await SchoolData.find({kind:'book_competition','data.studentId':String(studentId),'data.scored':true}).lean();
     return rows.reduce((sum,row)=>sum+Math.max(0,Number(row.data?.pages)||0),0);
   }
+  async function ensureCompetitionTaskId(item){
+    const current=String(item?.data?.taskId||'').trim();
+    if(/^\\d{4}$/.test(current))return current;
+    let taskId='';
+    for(let i=0;i<30;i++){
+      const candidate=String(Math.floor(1000+Math.random()*9000));
+      if(!(await SchoolData.exists({kind:'book_competition','data.taskId':candidate}))){
+        taskId=candidate;
+        break;
+      }
+    }
+    if(!taskId)return '';
+    item.data={...(item.data||{}),taskId};
+    item.updatedAt=new Date();
+    await item.save();
+    return taskId;
+  }
   async function competitionRanking(){
     const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
     const map=new Map();
@@ -310,8 +327,9 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(t==='🔎 Tekshirilmaganlar'){
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
-      const rows=await SchoolData.find({kind:'book_competition','data.scored':{$ne:true},'data.rejected':{$ne:true}}).sort({createdAt:-1}).lean();
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':{$ne:true},'data.rejected':{$ne:true}}).sort({createdAt:-1});
       if(!rows.length)return bot.sendMessage(msg.chat.id,'🔎 Hozircha tekshirilmagan topshiriq yo‘q.',competitionStaffMenu);
+      for(const row of rows)await ensureCompetitionTaskId(row);
       let out='🔎 TEKSHIRILMAGAN TOPSHIRIQLAR\\n\\n';
       rows.slice(0,20).forEach((x,i)=>{
         const d=x.data||{};
@@ -322,8 +340,9 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(t==='📋 Barcha tasdiqlanganlar ✅'){
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
-      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).sort({updatedAt:-1}).lean();
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).sort({updatedAt:-1});
       if(!rows.length)return bot.sendMessage(msg.chat.id,'📋 Hozircha tasdiqlangan topshiriqlar yo‘q.',competitionStaffMenu);
+      for(const row of rows)await ensureCompetitionTaskId(row);
       let out='📋 BARCHA TASDIQLANGANLAR\\n\\n';
       rows.slice(0,20).forEach((x,i)=>{
         const d=x.data||{};
