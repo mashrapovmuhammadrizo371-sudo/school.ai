@@ -130,7 +130,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function connect(msg,id){const s=await linkStudent(msg.chat.id,id);sessions.delete(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'❌ Student ID topilmadi yoki hali tasdiqlanmagan.',menu);if(s.blocked)return bot.sendMessage(msg.chat.id,'🚫 Hisobingiz bloklangan.',menu);return bot.sendMessage(msg.chat.id,'✅ Hisob ulandi!\n\n👤 '+s.firstName+' '+s.lastName+'\n🏫 Sinf: '+s.className+'\n🆔 ID: '+s.studentId,menu);}
   async function ensureCompetitionTaskId(item){
     const d=item.data||{};
-    if(/^\\d{4}$/.test(String(d.taskId||''))) return String(d.taskId);
+    if(/^\d{4}$/.test(String(d.taskId||''))) return String(d.taskId);
     let taskId='';
     for(let i=0;i<30;i++){
       const candidate=String(Math.floor(1000+Math.random()*9000));
@@ -177,7 +177,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     return bot.sendMessage(msg.chat.id,out.slice(0,4000));
   }
   bot.onText(/^\/tanlovadmin$/,tanlovAdminHandler);
-  bot.onText(/^\\/ball\\s+(\\d{4})\\s+(\\d{1,3})(?:\\s+([\\s\\S]+))?$/i,async(msg,m)=>{
+  bot.onText(/^\/ball\s+(\d{4})\s+(\d{1,3})(?:\s+([\s\S]+))?$/i,async(msg,m)=>{
     const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
     if(!st||!['teacher','director','staff-admin'].includes(st.role))return;
     const taskId=String(m[1]); const score=Number(m[2]);
