@@ -192,17 +192,29 @@ app.get('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Applic
 app.get('/api/admin/students',auth,async(req,res)=>{try{const search=String(req.query.search||'').trim().toLowerCase();const items=await Application.find({status:'approved'}).sort({createdAt:-1}).select('firstName lastName className studentId isBlocked createdAt').lean();const matched=search?items.filter(a=>[a.studentId,a.firstName,a.lastName,a.className].some(v=>String(v||'').toLowerCase().includes(search))):items;res.json({items:matched})}catch(e){res.status(500).json({error:'O‘quvchilarni yuklashda xatolik.'})}});
 app.patch('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOne({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});if(req.body.firstName!==undefined)a.firstName=String(req.body.firstName).trim();if(req.body.lastName!==undefined)a.lastName=String(req.body.lastName).trim();if(req.body.className!==undefined)a.className=String(req.body.className).trim().toUpperCase();if(req.body.isBlocked!==undefined)a.isBlocked=Boolean(req.body.isBlocked);if(!a.firstName||!a.lastName||!a.className)return res.status(400).json({error:'Ism, familiya va sinf bo‘sh bo‘lmasin.'});await a.save();res.json({ok:true})}catch(e){res.status(400).json({error:'O‘quvchini yangilashda xatolik.'})}});
 app.delete('/api/admin/students/:id',auth,async(req,res)=>{try{const a=await Application.findOneAndDelete({_id:req.params.id,status:'approved'});if(!a)return res.status(404).json({error:'O‘quvchi topilmadi.'});res.json({ok:true})}catch(e){res.status(500).json({error:'O‘quvchini o‘chirishda xatolik.'})}});
+async function getCompetitionRanking(){
+  const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
+  const map=new Map();
+  for(const row of rows){
+    const d=row.data||{}; const id=String(d.studentId||''); if(!id)continue;
+    const current=map.get(id)||{studentId:id,studentName:d.studentName||'Noma’lum',className:d.className||'—',totalScore:0};
+    current.totalScore+=Math.max(0,Number(d.pages)||0);
+    if(!current.studentName&&d.studentName)current.studentName=d.studentName;
+    map.set(id,current);
+  }
+  return [...map.values()].sort((a,b)=>b.totalScore-a.totalScore);
+}
 app.get('/api/competition/me',studentAuth,async(req,res)=>{try{
   const st=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean(); if(!st)return res.status(404).json({error:'O‘quvchi topilmadi.'});
   const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
   const x=rows[0]?.data;
-  const all=(await SchoolData.find({kind:'book_competition','data.scored':true}).lean()).map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
-  const rank=x&&x.scored?(all.findIndex(r=>String(r.studentId)===String(x.studentId))+1):null;
-  res.json({ok:true,item:x?{studentId:x.studentId,studentName:x.studentName,className:x.className,teacherComment:x.teacherComment,totalScore:Number(x.totalScore||0),scored:Boolean(x.scored),createdAt:rows[0].createdAt,updatedAt:rows[0].updatedAt}:null,rank,totalParticipants:all.length});
+  const ranking=await getCompetitionRanking();
+  const total=ranking.find(r=>String(r.studentId)===String(st.studentId))?.totalScore||0;
+  const rank=total>0?(ranking.findIndex(r=>String(r.studentId)===String(st.studentId))+1):null;
+  res.json({ok:true,item:x?{studentId:x.studentId,studentName:x.studentName,className:x.className,totalScore:Number(total),pages:Number(total),scored:Boolean(x.scored),createdAt:rows[0].createdAt,updatedAt:rows[0].updatedAt}:null,rank,totalParticipants:ranking.length});
 }catch(e){res.status(500).json({error:'Tanlov ma’lumotlarini yuklashda xatolik.'})}});
 app.get('/api/competition/ranking',studentAuth,async(req,res)=>{try{
-  const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
-  const items=rows.map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
+  const items=await getCompetitionRanking();
   res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentId:x.studentId,studentName:x.studentName,className:x.className,totalScore:Number(x.totalScore||0)}))});
 }catch(e){res.status(500).json({error:'Reytingni yuklashda xatolik.'})}});
 app.get('/api/competition/teacher',staffAuth,async(req,res)=>{try{
@@ -212,15 +224,22 @@ app.get('/api/competition/teacher',staffAuth,async(req,res)=>{try{
 }catch(e){res.status(500).json({error:'Tanlov topshiriqlarini yuklashda xatolik.'})}});
 app.patch('/api/competition/teacher/:id',staffAuth,async(req,res)=>{try{
   if(!['teacher','director','staff-admin'].includes(req.staff.staffRole))return res.status(403).json({error:'Ruxsat yo‘q.'});
-  const score=Number(req.body.totalScore); if(!Number.isFinite(score)||score<0||score>100)return res.status(400).json({error:'Ball 0 dan 100 gacha bo‘lishi kerak.'});
   const item=await SchoolData.findOne({_id:req.params.id,kind:'book_competition'}); if(!item)return res.status(404).json({error:'Topshiriq topilmadi.'});
-  item.data={...(item.data||{}),totalScore:score,teacherComment:String(req.body.teacherComment||'').trim().slice(0,2000),scored:true}; item.updatedAt=new Date(); await item.save();
+  const action=String(req.body.action||'approve').toLowerCase();
+  if(action==='reject'){
+    item.data={...(item.data||{}),scored:false,rejected:true,teacherComment:''}; item.updatedAt=new Date(); await item.save();
+    return res.json({ok:true,rejected:true});
+  }
+  if(item.data?.scored)return res.status(400).json({error:'Bu topshiriq allaqachon tasdiqlangan.'});
+  const pages=Math.max(0,Number(item.data?.pages)||0);
+  const previousRows=await SchoolData.find({kind:'book_competition','data.studentId':String(item.data?.studentId||''),'data.scored':true,_id:{$ne:item._id}}).lean();
+  const total=previousRows.reduce((sum,row)=>sum+Math.max(0,Number(row.data?.pages)||0),0)+pages;
+  item.data={...(item.data||{}),totalScore:total,teacherComment:'',scored:true,rejected:false}; item.updatedAt=new Date(); await item.save();
   try{const tg=require('./telegramBot');if(tg.notifyCompetitionScored)await tg.notifyCompetitionScored(item.data.telegramChatId,item.data)}catch(_){}
-  res.json({ok:true});
-}catch(e){res.status(400).json({error:'Ballni saqlashda xatolik.'})}});
+  res.json({ok:true,totalScore:total,pages});
+}catch(e){res.status(400).json({error:'Kitobxonlik natijasini saqlashda xatolik.'})}});
 app.get('/api/competition/top',async(req,res)=>{try{
-  const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean();
-  const items=rows.map(r=>r.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0)).slice(0,3);
+  const items=(await getCompetitionRanking()).slice(0,3);
   res.json({ok:true,items:items.map((x,i)=>({rank:i+1,studentName:x.studentName,className:x.className,totalScore:Number(x.totalScore||0)}))});
 }catch(e){res.status(500).json({error:'TOP-3 yuklashda xatolik.'})}});
 app.get('/api/public/content/:kind',async(req,res)=>{try{const kind=String(req.params.kind||'');if(!['announcements','library','social'].includes(kind))return res.status(400).json({error:'Noto‘g‘ri bo‘lim.'});res.json({items:await SchoolContent.find({kind}).sort({createdAt:-1}).lean()})}catch(e){res.status(500).json({error:'Ma’lumotlarni yuklashda xatolik.'})}});
