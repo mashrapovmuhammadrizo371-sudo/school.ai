@@ -72,17 +72,75 @@ async function showCompetition(){
   app.innerHTML='<section class="page-card"><button class="back" onclick="home()">← Orqaga</button><h1>📚 Kitobxonlik tanlovi</h1><p>Kitob o‘qish musobaqasi</p><div id="competitionBox" class="status">Yuklanmoqda...</div></section>';
   try{
     const h={Authorization:'Bearer '+studentToken};
-    const [meR,rankR,topR]=await Promise.all([fetch(API+'/api/competition/me',{headers:h}),fetch(API+'/api/competition/ranking',{headers:h}),fetch(API+'/api/competition/top')]);
+    const [meR,rankR,topR]=await Promise.all([
+      fetch(API+'/api/competition/me',{headers:h,cache:'no-store'}),
+      fetch(API+'/api/competition/ranking',{headers:h,cache:'no-store'}),
+      fetch(API+'/api/competition/top',{cache:'no-store'})
+    ]);
     const me=await meR.json(), ranking=await rankR.json(), top=await topR.json();
     if(!meR.ok)throw new Error(me.error||'Ma’lumot yuklanmadi');
+    const student=get('myschool_student')||{};
     const x=me.item;
     const topHtml=(top.items||[]).map((a,i)=>'<div class="app-item"><b>'+['🥇','🥈','🥉'][i]+' '+esc(a.studentName)+'</b><span> — '+esc(a.totalScore)+' ball</span><small> · '+esc(a.className||'')+'</small></div>').join('');
     const rankHtml=(ranking.items||[]).slice(0,20).map(a=>'<div class="app-item"><b>'+a.rank+'. '+esc(a.studentName)+'</b><span> — '+esc(a.totalScore)+' ball</span><small> · '+esc(a.className||'')+'</small></div>').join('');
     document.getElementById('competitionBox').innerHTML=
-      '<div class="admin-card"><h2>🎥 Video yuborish</h2><p>Videoni Telegram bot orqali yuboring: <b>/tanlov</b> buyrug‘ini bosing va videoni jo‘nating.</p></div>'+
-      '<div class="admin-card"><h2>⭐ Ballarim</h2>'+(x?'<p>Ball: <b>'+(x.scored?x.totalScore:0)+'</b></p><p>O‘rin: <b>'+(me.rank?me.rank+'-o‘rin':'Hali belgilanmagan')+'</b></p><p>💬 Ustoz izohi: '+esc(x.teacherComment||'Hali izoh yo‘q.')+'</p>':'<p>Hozircha video topshirilmagan.</p>')+'</div>'+
+      '<div class="admin-card"><h2>🎥 Video yuborish</h2>'+
+        '<p>Video, kitob nomi va sahifalar sonini shu yerning o‘zida yuboring.</p>'+
+        '<form id="competitionSubmitForm">'+
+          '<label>👤 Ism-familiya</label><input value="'+esc(((student.firstName||'')+' '+(student.lastName||'')).trim())+'" readonly>'+
+          '<label>🏫 Sinf</label><input value="'+esc(student.className||'—')+'" readonly>'+
+          '<label>📖 Kitob nomi</label><input id="competitionBookName" type="text" maxlength="200" placeholder="Kitob nomini yozing" required>'+
+          '<label>📄 Sahifalar soni</label><input id="competitionPages" type="number" min="1" max="100000" inputmode="numeric" placeholder="Masalan: 30" required>'+
+          '<label>🎥 Video</label><input id="competitionVideo" type="file" accept="video/*" required>'+
+          '<div id="competitionVideoPreview" style="margin-top:10px"></div>'+
+          '<button type="submit" class="primary-btn" id="competitionSubmitBtn">📤 Yuborish</button>'+
+          '<div id="competitionSubmitStatus" class="status" style="margin-top:10px;display:none"></div>'+
+        '</form>'+
+      '</div>'+
+      '<div class="admin-card"><h2>⭐ Ballarim</h2>'+
+        (x?'<p>Ball: <b>'+(x.scored?x.totalScore:0)+'</b></p><p>O‘rin: <b>'+(me.rank?me.rank+'-o‘rin':'Hali belgilanmagan')+'</b></p>':'<p>Hozircha video topshirilmagan.</p>')+
+      '</div>'+
       '<div class="admin-card"><h2>🥇 TOP-3</h2>'+(topHtml||'<p>Hali natija yo‘q.</p>')+'</div>'+
       '<div class="admin-card"><h2>🏆 Musobaqa ballari</h2>'+(rankHtml||'<p>Hali natija yo‘q.</p>')+'</div>';
+
+    const videoInput=document.getElementById('competitionVideo');
+    const preview=document.getElementById('competitionVideoPreview');
+    videoInput?.addEventListener('change',()=>{
+      const file=videoInput.files?.[0];
+      if(!file){preview.innerHTML='';return;}
+      if(!file.type.startsWith('video/')){videoInput.value='';preview.innerHTML='<div class="error">Faqat video fayl tanlang.</div>';return;}
+      if(file.size>50*1024*1024){videoInput.value='';preview.innerHTML='<div class="error">Video hajmi 50 MB dan oshmasin.</div>';return;}
+      const url=URL.createObjectURL(file);
+      preview.innerHTML='<video controls playsinline style="width:100%;max-height:320px;border-radius:14px" src="'+url+'"></video><small>'+esc(file.name)+' · '+Math.round(file.size/1024/1024*10)/10+' MB</small>';
+    });
+    document.getElementById('competitionSubmitForm')?.addEventListener('submit',async(e)=>{
+      e.preventDefault();
+      const bookName=document.getElementById('competitionBookName').value.trim();
+      const pages=Number(document.getElementById('competitionPages').value);
+      const file=document.getElementById('competitionVideo').files?.[0];
+      const status=document.getElementById('competitionSubmitStatus');
+      const btn=document.getElementById('competitionSubmitBtn');
+      if(!bookName)return status.style.display='block',status.textContent='❌ Kitob nomini kiriting.';
+      if(!Number.isInteger(pages)||pages<1)return status.style.display='block',status.textContent='❌ Sahifalar sonini to‘g‘ri kiriting.';
+      if(!file||!file.type.startsWith('video/'))return status.style.display='block',status.textContent='❌ Video tanlang.';
+      if(file.size>50*1024*1024)return status.style.display='block',status.textContent='❌ Video hajmi 50 MB dan oshmasin.';
+      const fd=new FormData();
+      fd.append('bookName',bookName);
+      fd.append('pages',String(pages));
+      fd.append('video',file);
+      btn.disabled=true;
+      status.style.display='block';
+      status.textContent='⏳ Video yuborilmoqda...';
+      try{
+        const r=await fetch(API+'/api/competition/submit',{method:'POST',headers:{Authorization:'Bearer '+studentToken},body:fd});
+        const d=await r.json();
+        if(!r.ok)throw new Error(d.error||'Yuborishda xatolik.');
+        status.textContent='✅ Qabul qilindi! Ustoz tekshirishi uchun yuborildi. ID: '+d.item.taskId;
+        document.getElementById('competitionSubmitForm').reset();
+        preview.innerHTML='';
+      }catch(err){status.textContent='❌ '+err.message;}
+      finally{btn.disabled=false;}
+    });
   }catch(e){document.getElementById('competitionBox').innerHTML='<div class="error">'+esc(e.message)+'</div>'}
 }
 async function showAnnouncements(){app.innerHTML='<div class="wrap"><section class="card"><button class="back" onclick="home()">← Orqaga</button><h1 class="title">📢 E’lonlar</h1><div class="status">Yuklanmoqda...</div></section></div>';try{const r=await fetch(API+'/api/public/content/announcements');const d=await r.json();app.innerHTML='<div class="wrap"><section class="card"><button class="back" onclick="home()">← Orqaga</button><h1 class="title">📢 E’lonlar</h1>'+(d.items?.length?d.items.map(x=>'<article class="status" style="margin:10px 0"><b>'+esc(x.title)+'</b><p>'+esc(x.body||'')+'</p>'+(x.url?'<a href="'+esc(x.url)+'" target="_blank">Havolani ochish</a>':'')+'</article>').join(''):'<div class="status">Hozircha e’lon yo‘q.</div>')+'</section></div>'}catch(e){alert(e.message)}}
