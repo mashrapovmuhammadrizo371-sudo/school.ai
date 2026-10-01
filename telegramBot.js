@@ -327,7 +327,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     if(t==='🔎 Tekshirilmaganlar'){
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
-      const rows=await SchoolData.find({kind:'book_competition','data.scored':{$ne:true},'data.rejected':{$ne:true}}).sort({createdAt:-1});
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':{$ne:true},'data.rejected':{$ne:true},'data.pages':{$gt:0}}).sort({createdAt:1});
       if(!rows.length)return bot.sendMessage(msg.chat.id,'🔎 Hozircha tekshirilmagan topshiriq yo‘q.',competitionStaffMenu);
       for(const row of rows)await ensureCompetitionTaskId(row);
       let out='🔎 TEKSHIRILMAGAN TOPSHIRIQLAR\\n\\n';
