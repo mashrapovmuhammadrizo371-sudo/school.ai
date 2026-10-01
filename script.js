@@ -118,14 +118,60 @@ async function staffCabinet(){
 }
 async function staffCompetitionView(){
  const t=get('myschool_staff_token'); app.innerHTML='<div class="admin-shell"><div class="admin-main"><header class="admin-topbar"><button class="admin-menu" onclick="staffCabinet()">←</button><div><div class="admin-page-title">📚 Kitobxonlik tanlovi</div><div class="admin-page-subtitle">Video, ball va ustoz izohi</div></div></header><main class="admin-content"><section id="staffCompetitionList" class="admin-card">Yuklanmoqda...</section></main></div></div>';
- try{const r=await fetch(API+'/api/competition/teacher',{headers:{Authorization:'Bearer '+t}});const d=await r.json();if(!r.ok)throw new Error(d.error||'Yuklanmadi');
- const list=document.getElementById('staffCompetitionList');list.innerHTML=d.items.length?d.items.map(x=>{const q=x.data||{};return '<article class="app-item"><h3>'+esc(q.studentName||'O‘quvchi')+' <small>('+esc(q.className||'')+')</small></h3><p>Holat: <b>'+(q.scored?'⭐ '+esc(q.totalScore)+'/100':'⏳ Baholanmagan')+'</b></p>'+(q.videoFileId?'<p>🎥 Video Telegram orqali yuborilgan</p>':'')+'<div class="field"><label>Ball (0–100)</label><input id="score_'+x._id+'" type="number" min="0" max="100" value="'+(q.scored?esc(q.totalScore):'')+'"></div><div class="field"><label>Ustoz izohi</label><textarea id="comment_'+x._id+'" rows="3">'+esc(q.teacherComment||'')+'</textarea></div><button class="btn" onclick="saveCompetitionScore(\''+x._id+'\')">⭐ Saqlash</button></article>'}).join(''):'Hozircha video yo‘q.';
+ try{
+  const r=await fetch(API+'/api/competition/teacher',{headers:{Authorization:'Bearer '+t}});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'Yuklanmadi');
+  const list=document.getElementById('staffCompetitionList');
+  list.innerHTML=d.items.length?d.items.map(x=>{
+   const q=x.data||{};
+   const currentScore=q.scored?String(q.totalScore):'';
+   const escapedScore=esc(currentScore);
+   return '<article class="app-item">'+
+    '<h3>'+esc(q.studentName||'O‘quvchi')+' <small>('+esc(q.className||'')+')</small></h3>'+
+    '<p>Holat: <b>'+(q.scored?'⭐ '+esc(q.totalScore)+'/100':'⏳ Baholanmagan')+'</b></p>'+
+    (q.videoFileId?'<p>🎥 Video Telegram orqali yuborilgan</p>':'')+
+    '<div class="field"><label>Ball (0–100)</label>'+
+    '<input id="score_'+x._id+'" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="3" value="'+escapedScore+'" placeholder="0–100" oninput="sanitizeCompetitionScore(this,''+x._id+'')">'+
+    '</div>'+
+    '<div class="field"><label>Ustoz izohi</label><textarea id="comment_'+x._id+'" rows="3">'+esc(q.teacherComment||'')+'</textarea></div>'+
+    '<div id="scoreActions_'+x._id+'" class="row" style="display:'+(currentScore!==''?'flex':'none')+';gap:8px;flex-wrap:wrap">'+
+    '<button class="btn" type="button" onclick="confirmCompetitionScore(\''+x._id+'\')">✅ Tasdiqlash</button>'+
+    '<button class="btn danger" type="button" onclick="rejectCompetitionScore(\''+x._id+'\')">❌ Rad etish</button>'+
+    '</div>'+
+    '</article>';
+  }).join(''):'Hozircha video yo‘q.';
  }catch(e){document.getElementById('staffCompetitionList').innerHTML='<div class="error">'+esc(e.message)+'</div>'}
 }
-async function saveCompetitionScore(id){
- const t=get('myschool_staff_token'); const score=Number(document.getElementById('score_'+id).value); const teacherComment=document.getElementById('comment_'+id).value.trim();
- const r=await fetch(API+'/api/competition/teacher/'+id,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({totalScore:score,teacherComment})});
- const d=await r.json(); if(!r.ok)return alert(d.error||'Saqlanmadi'); alert('✅ Ball va izoh saqlandi.'); staffCompetitionView();
+function sanitizeCompetitionScore(input,id){
+ input.value=input.value.replace(/\\D/g,'').slice(0,3);
+ const actions=document.getElementById('scoreActions_'+id);
+ const n=Number(input.value);
+ const valid=input.value!==''&&Number.isInteger(n)&&n>=0&&n<=100;
+ if(actions)actions.style.display=valid?'flex':'none';
+}
+function rejectCompetitionScore(id){
+ const input=document.getElementById('score_'+id);
+ const actions=document.getElementById('scoreActions_'+id);
+ if(input)input.value='';
+ if(actions)actions.style.display='none';
+ if(input)input.focus();
+}
+async function confirmCompetitionScore(id){
+ const input=document.getElementById('score_'+id);
+ const comment=document.getElementById('comment_'+id);
+ if(!input)return;
+ sanitizeCompetitionScore(input,id);
+ const raw=input.value;
+ if(!/^\\d+$/.test(raw))return alert('Faqat raqam kiriting.');
+ const score=Number(raw);
+ if(!Number.isInteger(score)||score<0||score>100)return alert('Ball 0 dan 100 gacha bo‘lishi kerak.');
+ const t=get('myschool_staff_token');
+ try{
+  const r=await fetch(API+'/api/competition/teacher/'+id,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({totalScore:score,teacherComment:comment?.value.trim()||''})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'Saqlanmadi');
+  alert('✅ Ball tasdiqlandi va saqlandi.');
+  staffCompetitionView();
+ }catch(e){alert(e.message)}
 }
 async function staffDataView(kind){
  const t=get('myschool_staff_token');const r=await fetch(API+'/api/data/'+encodeURIComponent(kind));const d=await r.json();if(!r.ok)return alert(d.error||'Yuklanmadi');
