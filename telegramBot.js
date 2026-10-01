@@ -39,6 +39,13 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   ],[
     {'text':'🏠 Asosiy panelga qaytish'}
   ]],resize_keyboard:true}};
+  const competitionStaffMenu={reply_markup:{keyboard:[
+    [{'text':'🔎 Tekshirilmaganlar'}],
+    [{'text':'📋 Barcha tasdiqlanganlar ✅'}],
+    [{'text':'🏆 Reyting'}],
+    [{'text':'🆔 ID orqali ma’lumot'}],
+    [{'text':'🔙 Orqaga'}]
+  ],resize_keyboard:true}};
   const staffMenu=task=>({reply_markup:{keyboard:[
     [{'text':'📱 MySchool Mini App'}],
     [{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],
@@ -297,7 +304,59 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
         return bot.sendMessage(msg.chat.id,'✅ Xabaringiz adminga yuborildi.');
       }catch(e){return bot.sendMessage(msg.chat.id,'❌ Xabarni yuborishda xatolik yuz berdi.');}
     }
-    if(t==='📚 Kitobxonlik tanlovi — tekshirish'){return tanlovAdminHandler(msg);}
+    if(t==='📚 Kitobxonlik tanlovi — tekshirish'){
+      return bot.sendMessage(msg.chat.id,'📚 KITOBXONLIK TANLOVI',competitionStaffMenu);
+    }
+    if(t==='🔎 Tekshirilmaganlar'){
+      const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+      if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':{$ne:true},'data.rejected':{$ne:true}}).sort({createdAt:-1}).lean();
+      if(!rows.length)return bot.sendMessage(msg.chat.id,'🔎 Hozircha tekshirilmagan topshiriq yo‘q.',competitionStaffMenu);
+      let out='🔎 TEKSHIRILMAGAN TOPSHIRIQLAR\\n\\n';
+      rows.slice(0,20).forEach((x,i)=>{
+        const d=x.data||{};
+        out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' ('+String(d.className||'—')+')\\n🆔 ID: '+String(d.taskId||'—')+'\\n📄 Sahifa: '+String(d.pages||0)+'\\n\\n';
+      });
+      return bot.sendMessage(msg.chat.id,out.slice(0,4000),competitionStaffMenu);
+    }
+    if(t==='📋 Barcha tasdiqlanganlar ✅'){
+      const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+      if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).sort({updatedAt:-1}).lean();
+      if(!rows.length)return bot.sendMessage(msg.chat.id,'📋 Hozircha tasdiqlangan topshiriqlar yo‘q.',competitionStaffMenu);
+      let out='📋 BARCHA TASDIQLANGANLAR\\n\\n';
+      rows.slice(0,20).forEach((x,i)=>{
+        const d=x.data||{};
+        out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' ('+String(d.className||'—')+')\\n🆔 ID: '+String(d.taskId||'—')+'\\n📄 Sahifa: '+String(d.pages||0)+'\\n⭐ Ball: '+String(d.pages||0)+'\\n\\n';
+      });
+      return bot.sendMessage(msg.chat.id,out.slice(0,4000),competitionStaffMenu);
+    }
+    if(t==='🆔 ID orqali ma’lumot'){
+      const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
+      if(!st||st.task!=='Kitobxonlik tanlovini')return bot.sendMessage(msg.chat.id,'❌ Sizga Kitobxonlik tanlovi vazifasi biriktirilmagan.');
+      competitionSessions.set(msg.chat.id,{staffLookupId:true});
+      return bot.sendMessage(msg.chat.id,'🆔 ID orqali ma’lumot\\n\\n4 xonali topshiriq ID sini yuboring.\\nMasalan: 8702',competitionStaffMenu);
+    }
+    if(t==='🔙 Orqaga'){
+      return bot.sendMessage(msg.chat.id,'👨‍💼 Ishchi paneli',staffMenu((await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean())?.task));
+    }
+    const lookupSession=competitionSessions.get(msg.chat.id);
+    if(lookupSession?.staffLookupId){
+      const idText=t.trim();
+      if(!/^\\d{4}$/.test(idText))return bot.sendMessage(msg.chat.id,'❌ Faqat 4 xonali ID kiriting. Masalan: 8702',competitionStaffMenu);
+      const item=await SchoolData.findOne({kind:'book_competition','data.taskId':idText}).lean();
+      if(!item)return bot.sendMessage(msg.chat.id,'❌ Bu ID bo‘yicha topshiriq topilmadi.',competitionStaffMenu);
+      const d=item.data||{};
+      const info='📚 KITOBXONLIK TANLOVI\\n\\n👤 Ism-familiya: '+String(d.studentName||'—')+'\\n🏫 Sinf: '+String(d.className||'—')+'\\n🆔 Student ID: '+String(d.studentId||'—')+'\\n📖 Kitob: '+String(d.bookName||'—')+'\\n🔢 Kitob raqami: '+String(d.bookNumber||'—')+'\\n📄 Sahifa: '+String(d.pages||0)+'\\n🆔 Topshiriq ID: '+idText+'\\n📌 Holat: '+(d.scored?'✅ Tasdiqlangan':(d.rejected?'❌ Rad etilgan':'⏳ Kutilmoqda'))+'\\n⭐ Ball: '+String(d.scored?Math.max(0,Number(d.pages)||0):0);
+      competitionSessions.delete(msg.chat.id);
+      if(!d.scored&&!d.rejected){
+        pendingBallSessions.set(msg.chat.id,{itemId:String(item._id),taskId:idText,videoFileId:String(d.videoFileId||''),studentName:String(d.studentName||'—'),className:String(d.className||'—'),bookName:String(d.bookName||'—'),bookNumber:String(d.bookNumber||'—'),pages:String(d.pages||'—')});
+        const markup={reply_markup:{inline_keyboard:[[{text:'✅ Tasdiqlash',callback_data:'ball:confirm'},{text:'❌ Rad etish',callback_data:'ball:reject'}]]}};
+        if(d.videoFileId)return bot.sendVideo(msg.chat.id,String(d.videoFileId),{caption:info, ...markup});
+        return bot.sendMessage(msg.chat.id,info,markup);
+      }
+      return bot.sendMessage(msg.chat.id,info,competitionStaffMenu);
+    }
     if(t==='👤 Profilim')return bot.emit('message',{...msg,text:'/staffme'});
     if(t==='🚪 Chiqish')return bot.emit('message',{...msg,text:'/stafflogout'});
     if(t==='📅 Jadval'){
