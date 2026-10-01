@@ -80,7 +80,7 @@ async function showCompetition(){
     const rankHtml=(ranking.items||[]).slice(0,20).map(a=>'<div class="app-item"><b>'+a.rank+'. '+esc(a.studentName)+'</b><span> — '+esc(a.totalScore)+' ball</span><small> · '+esc(a.className||'')+'</small></div>').join('');
     document.getElementById('competitionBox').innerHTML=
       '<div class="admin-card"><h2>🎥 Video yuborish</h2><p>Videoni Telegram bot orqali yuboring: <b>/tanlov</b> buyrug‘ini bosing va videoni jo‘nating.</p></div>'+
-      '<div class="admin-card"><h2>⭐ Ballarim</h2>'+(x?'<p>Ball: <b>'+(x.scored?x.totalScore:0)+'/100</b></p><p>O‘rin: <b>'+(me.rank?me.rank+'-o‘rin':'Hali belgilanmagan')+'</b></p><p>💬 Ustoz izohi: '+esc(x.teacherComment||'Hali izoh yo‘q.')+'</p>':'<p>Hozircha video topshirilmagan.</p>')+'</div>'+
+      '<div class="admin-card"><h2>⭐ Ballarim</h2>'+(x?'<p>Ball: <b>'+(x.scored?x.totalScore:0)+'</b></p><p>O‘rin: <b>'+(me.rank?me.rank+'-o‘rin':'Hali belgilanmagan')+'</b></p><p>💬 Ustoz izohi: '+esc(x.teacherComment||'Hali izoh yo‘q.')+'</p>':'<p>Hozircha video topshirilmagan.</p>')+'</div>'+
       '<div class="admin-card"><h2>🥇 TOP-3</h2>'+(topHtml||'<p>Hali natija yo‘q.</p>')+'</div>'+
       '<div class="admin-card"><h2>🏆 Musobaqa ballari</h2>'+(rankHtml||'<p>Hali natija yo‘q.</p>')+'</div>';
   }catch(e){document.getElementById('competitionBox').innerHTML='<div class="error">'+esc(e.message)+'</div>'}
