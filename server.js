@@ -247,14 +247,14 @@ async function start(){
     // Telegram webhook runs only on the primary MySchool backend.
     // Multiple Render services using the same bot token cause Telegram 409 polling conflicts.
     const telegramEnabled=Boolean(process.env.TELEGRAM_BOT_TOKEN) &&
-      (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://myschool-ai.onrender.com');
+      (!process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_URL==='https://school-ai-1cie.onrender.com');
 
     if(telegramEnabled){
       try{
         require('./telegramBot').startTelegramBot({
           token:process.env.TELEGRAM_BOT_TOKEN,
           Application,SchoolContent,SchoolData,Staff,hashPassword,verifyPassword,
-          webhookUrl:(process.env.RENDER_EXTERNAL_URL||'https://myschool-ai.onrender.com').replace(/\/$/,'')+'/telegram/webhook',
+          webhookUrl:(process.env.RENDER_EXTERNAL_URL||'https://school-ai-1cie.onrender.com').replace(/\/$/,'')+'/telegram/webhook',
           webhookSecret:crypto.createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN).digest('hex'),
           createAdminTelegramSession:async()=>{
             const key=crypto.randomBytes(32).toString('hex');
