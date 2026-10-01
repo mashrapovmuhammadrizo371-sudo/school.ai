@@ -438,6 +438,20 @@ async function notifyStudentApproved(chatId,student){
     return false;
   }
 }
+async function verifyCompetitionChannel(){
+  if(!activeBot)return false;
+  const channelId=String(process.env.KITOBXONLIK_CHANNEL_ID||process.env.COMPETITION_CHANNEL_ID||'').trim();
+  if(!channelId){console.error('[telegram] competition channel id is empty');return false;}
+  try{
+    const chat=await activeBot.getChat(channelId);
+    console.log('[telegram] competition channel verified',JSON.stringify({id:chat.id,type:chat.type,username:chat.username||null,title:chat.title||null}));
+    return true;
+  }catch(e){
+    console.error('[telegram] competition channel verification failed',e.message);
+    return false;
+  }
+}
+
 async function postCompetitionToChannel(item){
   if(!activeBot)return false;
   const channelId=String(process.env.KITOBXONLIK_CHANNEL_ID||process.env.COMPETITION_CHANNEL_ID||'').trim();
