@@ -113,7 +113,11 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function connect(msg,id){const s=await linkStudent(msg.chat.id,id);sessions.delete(msg.chat.id);if(!s)return bot.sendMessage(msg.chat.id,'❌ Student ID topilmadi yoki hali tasdiqlanmagan.',menu);if(s.blocked)return bot.sendMessage(msg.chat.id,'🚫 Hisobingiz bloklangan.',menu);return bot.sendMessage(msg.chat.id,'✅ Hisob ulandi!\n\n👤 '+s.firstName+' '+s.lastName+'\n🏫 Sinf: '+s.className+'\n🆔 ID: '+s.studentId,menu);}
   async function notifyCompetitionStaff(item){
     const d=item.data||{};
-    const staff=await Staff.find({task:'Kitobxonlik tanlovini',isBlocked:false,telegramChatId:{$ne:''}}).select('telegramChatId fullName').lean();
+    const staff=await Staff.find({task:'Kitobxonlik tanlovini',isBlocked:false,telegramChatId:{$ne:''}})
+      .sort({updatedAt:-1,createdAt:-1})
+      .limit(1)
+      .select('telegramChatId fullName')
+      .lean();
     for(const st of staff){
       try{
         await activeBot.sendVideo(String(st.telegramChatId),String(d.videoFileId),{
