@@ -3,7 +3,9 @@ const crypto=require('crypto');
 const cors=require('cors');
 const mongoose=require('mongoose');
 const jwt=require('jsonwebtoken');
+const multer=require('multer');
 const app=express(); app.use(cors()); app.use(express.json({limit:'2mb'}));
+const competitionUpload=multer({storage:multer.memoryStorage(),limits:{fileSize:50*1024*1024}});
 app.post('/telegram/webhook',(req,res)=>{
   const token=process.env.TELEGRAM_BOT_TOKEN;
   if(!token)return res.sendStatus(404);
@@ -204,6 +206,53 @@ async function getCompetitionRanking(){
   }
   return [...map.values()].sort((a,b)=>b.totalScore-a.totalScore);
 }
+app.post('/api/competition/submit',studentAuth,competitionUpload.single('video'),async(req,res)=>{try{
+  const st=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean();
+  if(!st)return res.status(404).json({error:'O‘quvchi topilmadi.'});
+  if(!req.file)return res.status(400).json({error:'Video tanlang.'});
+  if(!String(req.file.mimetype||'').startsWith('video/'))return res.status(400).json({error:'Faqat video fayl yuboring.'});
+  const bookName=String(req.body.bookName||'').trim();
+  const pages=Number(req.body.pages);
+  if(!bookName)return res.status(400).json({error:'Kitob nomini kiriting.'});
+  if(!Number.isInteger(pages)||pages<1||pages>100000)return res.status(400).json({error:'Sahifalar sonini to‘g‘ri kiriting.'});
+  const staff=await Staff.find({task:'Kitobxonlik tanlovini',isBlocked:false,telegramChatId:{$ne:''}})
+    .sort({updatedAt:-1,createdAt:-1}).limit(1).select('telegramChatId').lean();
+  if(!staff.length)return res.status(503).json({error:'Kitobxonlik tanloviga mas’ul ustoz hozircha ulanmagan.'});
+  const token=process.env.TELEGRAM_BOT_TOKEN;
+  if(!token)return res.status(503).json({error:'Telegram bot sozlanmagan.'});
+  const fd=new FormData();
+  fd.append('chat_id',String(staff[0].telegramChatId));
+  fd.append('video',new Blob([req.file.buffer],{type:req.file.mimetype}),req.file.originalname||'kitobxonlik.mp4');
+  fd.append('caption','📚 YANGI KITOBXONLIK TANLOVI\\n\\n👤 Ism-familiya: '+String(st.firstName||'')+' '+String(st.lastName||'')+'\\n🏫 Sinf: '+String(st.className||'—')+'\\n📖 Kitob: '+bookName+'\\n📄 Sahifa: '+pages+'\\n\\nMini App orqali yuborildi.\\nTasdiqlash uchun /ball ID buyrug‘idan foydalaning.');
+  const tgRes=await fetch('https://api.telegram.org/bot'+encodeURIComponent(token)+'/sendVideo',{method:'POST',body:fd});
+  const tgData=await tgRes.json();
+  if(!tgRes.ok||!tgData.ok)return res.status(502).json({error:'Videoni ustozga yuborishda xatolik.'});
+  const videoFileId=String(tgData.result?.video?.file_id||'');
+  if(!videoFileId)return res.status(502).json({error:'Telegram video ID qaytarmadi.'});
+  const taskId=String(Math.floor(1000+Math.random()*9000));
+  const data={
+    studentId:st.studentId,
+    studentName:((st.firstName||'')+' '+(st.lastName||'')).trim(),
+    className:st.className,
+    telegramChatId:String(st.telegramChatId||''),
+    videoFileId,
+    videoCaption:'',
+    bookName,
+    pages,
+    teacherComment:'',
+    totalScore:0,
+    scored:false,
+    rejected:false,
+    taskId
+  };
+  const saved=await SchoolData.create({kind:'book_competition',data,updatedAt:new Date()});
+  await Staff.updateMany({task:'Kitobxonlik tanlovini',telegramChatId:{$ne:''}},{$set:{updatedAt:new Date()}});
+  res.json({ok:true,item:{id:String(saved._id),taskId,bookName,pages}});
+}catch(e){
+  console.error('[competition] mini app submit failed',e.message);
+  if(e.code==='LIMIT_FILE_SIZE')return res.status(413).json({error:'Video hajmi 50 MB dan oshmasin.'});
+  res.status(500).json({error:'Video yuborishda xatolik yuz berdi.'});
+}});
 app.get('/api/competition/me',studentAuth,async(req,res)=>{try{
   const st=await Application.findOne({studentId:req.student.studentId,status:'approved'}).lean(); if(!st)return res.status(404).json({error:'O‘quvchi topilmadi.'});
   const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
