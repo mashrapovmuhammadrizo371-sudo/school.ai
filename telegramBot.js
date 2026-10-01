@@ -187,7 +187,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
     const d=item.data||{};
     const p={itemId:String(item._id),taskId,score,teacherComment:String(m[3]||'').trim(),videoFileId:String(d.videoFileId||''),studentName:String(d.studentName||'—'),className:String(d.className||'—'),bookName:String(d.bookName||'—'),bookNumber:String(d.bookNumber||'—'),pages:String(d.pages||'—')};
     pendingBallSessions.set(msg.chat.id,p);
-    const caption='📚 KITOBXONLIK TANLOVI — BALL\\n\\n👤 Ism-familiya: '+p.studentName+'\\n🏫 Sinf: '+p.className+'\\n📖 Kitob: '+p.bookName+'\\n🔢 Kitob raqami: '+p.bookNumber+'\\n📄 Sahifa: '+p.pages+'\\n🆔 ID: '+p.taskId+'\\n🔢 Ball: '+p.score+'\\n📝 Izoh: '+(p.teacherComment||'—');
+    const caption='📚 KITOBXONLIK TANLOVI — BALL\n\n👤 Ism-familiya: '+p.studentName+'\n🏫 Sinf: '+p.className+'\n📖 Kitob: '+p.bookName+'\n🔢 Kitob raqami: '+p.bookNumber+'\n📄 Sahifa: '+p.pages+'\n🆔 ID: '+p.taskId+'\n🔢 Ball: '+p.score+'\n📝 Izoh: '+(p.teacherComment||'—');
     const markup={reply_markup:{inline_keyboard:[[{text:'✅ Tasdiqlash',callback_data:'ball:confirm'},{text:'❌ Rad etish',callback_data:'ball:reject'}]]}};
     if(p.videoFileId)return bot.sendVideo(msg.chat.id,p.videoFileId,{caption,...markup});
     return bot.sendMessage(msg.chat.id,caption,markup);
