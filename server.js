@@ -220,6 +220,12 @@ app.post('/api/competition/submit',studentAuth,competitionUpload.single('video')
   if(!staff.length)return res.status(503).json({error:'Kitobxonlik tanloviga mas’ul ustoz hozircha ulanmagan.'});
   const token=process.env.TELEGRAM_BOT_TOKEN;
   if(!token)return res.status(503).json({error:'Telegram bot sozlanmagan.'});
+  let taskId='';
+  for(let i=0;i<30;i++){
+    const candidate=String(Math.floor(1000+Math.random()*9000));
+    if(!(await SchoolData.exists({kind:'book_competition','data.taskId':candidate}))){taskId=candidate;break;}
+  }
+  if(!taskId)return res.status(503).json({error:'Topshiriq ID yaratib bo‘lmadi.'});
   const fd=new FormData();
   fd.append('chat_id',String(staff[0].telegramChatId));
   fd.append('video',new Blob([req.file.buffer],{type:req.file.mimetype}),req.file.originalname||'kitobxonlik.mp4');
