@@ -16,6 +16,13 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   async function competitionStudent(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved',isBlocked:false}).lean();}
   const MINI_APP_URL='https://school-ai-fronted.onrender.com';
   const menu={reply_markup:{keyboard:[[{'text':'📱 MySchool Mini App',web_app:{url:MINI_APP_URL}}],[{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],[{'text':'📢 E’lonlar'},{'text':'📖 Kitobxona'}],[{'text':'📚 Kitobxonlik tanlovi'},{'text':'👤 Profil'}],[{'text':'❓ Yordam'}]],resize_keyboard:true}};
+  const competitionMenu={reply_markup:{keyboard:[[
+    {'text':'➕ Qo‘shish'},{'text':'⭐ Ballarim'}
+  ],[
+    {'text':'🏆 Reyting'},{'text':'📩 Adminga xabar yuborish'}
+  ],[
+    {'text':'🏠 Asosiy panelga qaytish'}
+  ]],resize_keyboard:true}};
   const staffMenu=task=>({reply_markup:{keyboard:[
     [{'text':'📱 MySchool Mini App'}],
     [{'text':'📅 Jadval'},{'text':'📚 Fanlar'}],
@@ -279,14 +286,31 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
       if(st)return staffSchedulePicker(msg);
       return sendSchedule(msg);
     }
-    if(t==='📚 Kitobxonlik tanlovi')return bot.sendMessage(msg.chat.id,'📚 KITOBXONLIK TANLOVI',{
-      reply_markup:{inline_keyboard:[
-        [{text:'➕ Qo‘shish',callback_data:'competition:add'}],
-        [{text:'⭐ Ballarim',callback_data:'competition:ballarim'},{text:'🏆 Reyting',callback_data:'competition:reyting'}],
-        [{text:'📩 Adminga xabar yuborish',callback_data:'competition:admin'}],
-        [{text:'🏠 Asosiy panelga qaytish',callback_data:'competition:back'}]
-      ]}
-    });
+    if(t==='📚 Kitobxonlik tanlovi')return bot.sendMessage(msg.chat.id,'📚 KITOBXONLIK TANLOVI',competitionMenu);
+    if(t==='➕ Qo‘shish'){
+      competitionSessions.set(msg.chat.id,{waitingVideo:true});
+      return bot.sendMessage(msg.chat.id,'📚 KITOBXONLIK TANLOVI\n\n🎥 Kitob o‘qiyotganingiz aks etgan videoni shu yerga yuboring.',competitionMenu);
+    }
+    if(t==='⭐ Ballarim'){
+      const st=await competitionStudent(msg.chat.id); if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',competitionMenu);
+      const rows=await SchoolData.find({kind:'book_competition','data.studentId':st.studentId}).sort({updatedAt:-1}).lean();
+      const x=rows[0]?.data; if(!x)return bot.sendMessage(msg.chat.id,'⭐ Hozircha tanlovga topshirgan videongiz yo‘q.',competitionMenu);
+      const all=(await SchoolData.find({kind:'book_competition','data.scored':true}).lean()).map(z=>z.data).sort((a,b)=>Number(b.totalScore||0)-Number(a.totalScore||0));
+      const rank=all.findIndex(z=>String(z.studentId)===String(st.studentId))+1;
+      return bot.sendMessage(msg.chat.id,'⭐ BALLARIM\n\nBall: '+(x.scored?x.totalScore:0)+'/100\n🏆 O‘rin: '+(x.scored?rank+'-o‘rin':'Hali belgilanmagan')+'\n💬 Ustoz izohi: '+(x.teacherComment||'Hali izoh yo‘q.'),competitionMenu);
+    }
+    if(t==='🏆 Reyting'){
+      const st=await competitionStudent(msg.chat.id); if(!st)return bot.sendMessage(msg.chat.id,'Avval Student ID ni ulang: /id 123456',competitionMenu);
+      const rows=await SchoolData.find({kind:'book_competition','data.scored':true}).lean(); rows.sort((a,b)=>Number(b.data.totalScore||0)-Number(a.data.totalScore||0));
+      const top=rows.slice(0,10); let out='🏆 KITOBXONLIK REYTINGI\n\n';
+      for(let i=0;i<top.length;i++){const d=top[i].data||{};out+=(i+1)+'. '+String(d.studentName||'Noma’lum')+' — '+String(d.totalScore||0)+'/100\n';}
+      return bot.sendMessage(msg.chat.id,out||'🏆 Hozircha reyting mavjud emas.',competitionMenu);
+    }
+    if(t==='📩 Adminga xabar yuborish'){
+      competitionAdminMessageSessions.add(msg.chat.id);
+      return bot.sendMessage(msg.chat.id,'📩 Adminga yubormoqchi bo‘lgan xabaringizni yozing:',competitionMenu);
+    }
+    if(t==='🏠 Asosiy panelga qaytish')return bot.sendMessage(msg.chat.id,'🏠 Asosiy panel',menu);
     if(t==='📚 Fanlar'){
       const st=await Staff.findOne({telegramChatId:String(msg.chat.id),isBlocked:false}).lean();
       if(st)return sendSubjects(msg,staffMenu(st.task));
