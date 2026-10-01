@@ -418,7 +418,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   }
   bot.on('polling_error',err=>console.error('[telegram] polling error',err.message));
   if(webhookUrl){
-    bot.setWebHook(webhookUrl,{secret_token:webhookSecret}).then(()=>console.log('[telegram] webhook configured')).catch(err=>console.error('[telegram] webhook setup failed',err.message));
+    bot.setWebHook(webhookUrl,{secret_token:webhookSecret}).then(()=>{console.log('[telegram] webhook configured');setTimeout(()=>verifyCompetitionChannel(),1000);}).catch(err=>console.error('[telegram] webhook setup failed',err.message));
   }else{
     bot.startPolling().then(()=>console.log('[telegram] bot polling started')).catch(err=>console.error('[telegram] bot polling failed to start',err.message));
   }
