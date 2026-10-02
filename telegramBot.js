@@ -1,5 +1,6 @@
 let activeBot=null;
 let telegramStartedAt=null;
+let activeAdminSessions=null;
 const TelegramBot=require('node-telegram-bot-api');
 const sharp=require('sharp');
 
@@ -14,18 +15,7 @@ function startTelegramBot({token,Application,SchoolContent,SchoolData,Staff,veri
   const competitionSessions=new Map();
   const pendingBallSessions=new Map();
   const competitionAdminMessageSessions=new Set();
-  async function notifyNewApplication(application){
-  if(!activeBot||!application)return false;
-  const d=application;
-  const text='🔔 YANGI O‘QUVCHI ARIZASI\\n\\n👤 Ism-familiya: '+String(d.firstName||'—')+' '+String(d.lastName||'—')+'\\n🏫 Sinf: '+String(d.className||'—')+'\\n🏫 Maktab kodi: '+String(d.schoolCode||'—')+'\\n🆔 Ariza ID: '+String(d._id||'—')+'\\n\\n📋 Katta Admin panelidan tekshiring.';
-  const ids=new Set();
-  const envId=String(process.env.ADMIN_TELEGRAM_CHAT_ID||'').trim();
-  if(envId)ids.add(envId);
-  for(const [chatId,state] of adminSessions.entries())if(state?.active)ids.add(String(chatId));
-  let sent=false;
-  for(const chatId of ids){try{await activeBot.sendMessage(chatId,text,{reply_markup:{inline_keyboard:[[{text:'🛡 Katta Admin paneli',url:'https://school-ai-fronted.onrender.com/admin'}]]}});sent=true}catch(e){console.error('[telegram] new application notify failed',chatId,e.message)}}
-  return sent;
-}
+  activeAdminSessions=adminSessions;
 async function competitionStudent(chatId){return Application.findOne({telegramChatId:String(chatId),status:'approved',isBlocked:false}).lean();}
   async function competitionPoints(studentId){
     const rows=await SchoolData.find({kind:'book_competition','data.studentId':String(studentId),'data.scored':true}).lean();
@@ -676,6 +666,21 @@ async function competitionStudent(chatId){return Application.findOne({telegramCh
   return bot;
 }
 function getTelegramStatus(){return {running:Boolean(activeBot),startedAt:telegramStartedAt};}
+async function notifyNewApplication(application){
+  if(!activeBot||!application)return false;
+  const d=application;
+  const text='🔔 YANGI O‘QUVCHI ARIZASI\\n\\n👤 Ism-familiya: '+String(d.firstName||'—')+' '+String(d.lastName||'—')+'\\n🏫 Sinf: '+String(d.className||'—')+'\\n🏫 Maktab kodi: '+String(d.schoolCode||'—')+'\\n🆔 Ariza ID: '+String(d._id||'—')+'\\n\\n📋 Katta Admin panelidan tekshiring.';
+  const ids=new Set();
+  const envId=String(process.env.ADMIN_TELEGRAM_CHAT_ID||'').trim();
+  if(envId)ids.add(envId);
+  if(activeAdminSessions)for(const [chatId,state] of activeAdminSessions.entries())if(state?.active)ids.add(String(chatId));
+  let sent=false;
+  for(const chatId of ids){
+    try{await activeBot.sendMessage(String(chatId),text,{reply_markup:{inline_keyboard:[[{text:'🛡 Katta Admin paneli',url:'https://school-ai-fronted.onrender.com/admin'}]]}});sent=true}
+    catch(e){console.error('[telegram] new application notify failed',chatId,e.message)}
+  }
+  return sent;
+}
 async function notifyStudentApproved(chatId,student){
   if(!activeBot||!chatId)return false;
   try{
@@ -718,4 +723,4 @@ async function notifyCompetitionScored(chatId,item){
 }
 async function broadcastTelegram(chatIds,message){if(!activeBot)throw new Error('Telegram bot is not running');let sent=0,failed=0;for(const chatId of chatIds){try{await activeBot.sendMessage(String(chatId),message);sent++}catch(e){failed++;console.error('[telegram] send failed',chatId,e.message)}}return {sent,failed};}
 function processTelegramUpdate(update){if(activeBot)activeBot.processUpdate(update);}
-module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram,notifyStudentApproved,processTelegramUpdate};
+module.exports={startTelegramBot,getTelegramStatus,broadcastTelegram,notifyNewApplication,notifyStudentApproved,processTelegramUpdate};
