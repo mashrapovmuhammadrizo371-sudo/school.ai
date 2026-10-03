@@ -1,4 +1,5 @@
 const API='https://myschool-ai.onrender.com';
+const APP_BUILD='20261003-application-sync-1';
 const app=document.getElementById('app');
 const get=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
