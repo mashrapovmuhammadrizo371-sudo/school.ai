@@ -108,8 +108,7 @@ function verifyTelegramWebAppInitData(initData){
     const hash=params.get('hash');
     if(!hash)return null;
     params.delete('hash');
-    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('
-');
+    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\\n');
     const secret=crypto.createHmac('sha256','WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
     const expected=crypto.createHmac('sha256',secret).update(dataCheckString).digest('hex');
     if(!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(hash,'hex')))return null;
