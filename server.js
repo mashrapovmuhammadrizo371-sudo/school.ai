@@ -3,6 +3,8 @@ const crypto=require('crypto');
 const cors=require('cors');
 const mongoose=require('mongoose');
 const jwt=require('jsonwebtoken');
+const School=require('./src/models/School');
+const SchoolMembership=require('./src/models/SchoolMembership');
 const multer=require('multer');
 const app=express(); app.use(cors()); app.use(express.json({limit:'2mb'}));
 const competitionUpload=multer({storage:multer.memoryStorage(),limits:{fileSize:50*1024*1024}});
@@ -43,11 +45,12 @@ app.post('/api/admin/telegram/broadcast',auth,async(req,res)=>{
     res.json({ok:true,total:ids.size,sent:result.sent,failed:result.failed});
   }catch(e){console.error('[telegram] broadcast failed',e);res.status(500).json({error:'Telegram xabarini yuborishda xatolik.'})}
 });
-const schema=new mongoose.Schema({firstName:{type:String,required:true,trim:true},lastName:{type:String,required:true,trim:true},className:{type:String,required:true,trim:true},schoolCode:{type:String,default:'',trim:true},photoData:{type:String,default:''},status:{type:String,enum:['pending','approved','rejected'],default:'pending'},rejectionReason:{type:String,default:''},studentId:{type:String,default:''},isBlocked:{type:Boolean,default:false},telegramChatId:{type:String,default:'',index:true},createdAt:{type:Date,default:Date.now},reviewedAt:{type:Date,default:null}});
+const schema=new mongoose.Schema({schoolId:{type:mongoose.Schema.Types.ObjectId,ref:'School',default:null,index:true},firstName:{type:String,required:true,trim:true},lastName:{type:String,required:true,trim:true},className:{type:String,required:true,trim:true},schoolCode:{type:String,default:'',trim:true},photoData:{type:String,default:''},status:{type:String,enum:['pending','approved','rejected'],default:'pending'},rejectionReason:{type:String,default:''},studentId:{type:String,default:''},isBlocked:{type:Boolean,default:false},telegramChatId:{type:String,default:'',index:true},createdAt:{type:Date,default:Date.now},reviewedAt:{type:Date,default:null}});
 const Application=mongoose.model('Application',schema);
-const contentSchema=new mongoose.Schema({kind:{type:String,enum:['announcements','library','social'],required:true},title:{type:String,required:true,trim:true,maxlength:140},body:{type:String,default:'',maxlength:4000},url:{type:String,default:''},createdAt:{type:Date,default:Date.now}});
+const contentSchema=new mongoose.Schema({schoolId:{type:mongoose.Schema.Types.ObjectId,ref:'School',default:null,index:true},kind:{type:String,enum:['announcements','library','social'],required:true},title:{type:String,required:true,trim:true,maxlength:140},body:{type:String,default:'',maxlength:4000},url:{type:String,default:''},createdAt:{type:Date,default:Date.now}});
 const SchoolContent=mongoose.model('SchoolContent',contentSchema);
 const Staff=mongoose.model('Staff',new mongoose.Schema({
+  schoolId:{type:mongoose.Schema.Types.ObjectId,ref:'School',default:null,index:true},
   fullName:{type:String,required:true,trim:true},
   username:{type:String,required:true,unique:true,trim:true,index:true},
   passwordHash:{type:String,required:true},
@@ -66,6 +69,7 @@ function verifyPassword(password,salt,hash){
   return crypto.timingSafeEqual(Buffer.from(hashPassword(password,salt).hash,'hex'),Buffer.from(hash,'hex'));
 }
 const SchoolData=mongoose.model('SchoolData',new mongoose.Schema({
+ schoolId:{type:mongoose.Schema.Types.ObjectId,ref:'School',default:null,index:true},
  kind:{type:String,required:true,index:true},
  data:{type:mongoose.Schema.Types.Mixed,default:{}},
  createdAt:{type:Date,default:Date.now},
@@ -87,9 +91,9 @@ const BookCompetition=mongoose.model('BookCompetition',new mongoose.Schema({
 }));
 function auth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='big-admin')throw new Error();req.auth=p;next()}catch(e){res.status(401).json({error:'Admin authentication required'})}}
 function staffAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='staff')throw new Error();req.staff=p;next()}catch(e){res.status(401).json({error:'Staff authentication required'})}}
-function studentAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='student')throw new Error();req.student=p;next()}catch(e){res.status(401).json({error:'Student authentication required'})}}
+function superAdminAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(!['big-admin','super-admin'].includes(p.role))throw new Error();req.auth=p;next()}catch(e){res.status(401).json({error:'Super Admin authentication required'})}}\nfunction studentAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='student')throw new Error();req.student=p;next()}catch(e){res.status(401).json({error:'Student authentication required'})}}
 async function newId(){let id;do{id=String(Math.floor(100000+Math.random()*900000))}while(await Application.exists({studentId:id}));return id}
-app.get('/api/health',(q,r)=>r.json({ok:true,service:'myschool'}));
+app.get('/api/health',(q,r)=>r.json({ok:true,service:'myschool'}));\napp.get('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const items=await School.find().sort({createdAt:-1}).lean();res.json({items})}catch(e){res.status(500).json({error:'Maktablarni yuklashda xatolik.'})}});\napp.post('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const name=String(req.body.name||'').trim();const code=String(req.body.code||'').trim().toUpperCase();const slug=String(req.body.slug||'').trim().toLowerCase();if(!name||!code||!slug)return res.status(400).json({error:'Maktab nomi, kodi va slug majburiy.'});if(await School.exists({$or:[{code},{slug}]}))return res.status(409).json({error:'Bu maktab kodi yoki slug band.'});const item=await School.create({name,code,slug,logoUrl:String(req.body.logoUrl||'').trim()});res.status(201).json({ok:true,item})}catch(e){res.status(400).json({error:'Maktab yaratishda xatolik.'})}});\napp.patch('/api/platform/schools/:id',superAdminAuth,async(req,res)=>{try{const item=await School.findById(req.params.id);if(!item)return res.status(404).json({error:'Maktab topilmadi.'});if(req.body.name!==undefined)item.name=String(req.body.name).trim();if(req.body.logoUrl!==undefined)item.logoUrl=String(req.body.logoUrl).trim();if(req.body.isActive!==undefined)item.isActive=Boolean(req.body.isActive);item.updatedAt=new Date();await item.save();res.json({ok:true,item})}catch(e){res.status(400).json({error:'Maktabni yangilashda xatolik.'})}});\napp.post('/api/platform/schools/:id/select',superAdminAuth,async(req,res)=>{try{const school=await School.findOne({_id:req.params.id,isActive:true}).lean();if(!school)return res.status(404).json({error:'Faol maktab topilmadi.'});const token=jwt.sign({role:'super-admin',schoolId:String(school._id),schoolCode:school.code},JWT_SECRET,{expiresIn:'12h'});res.json({ok:true,token,school})}catch(e){res.status(400).json({error:'Maktabni tanlashda xatolik.'})}});\n
 function verifyTelegramWebAppInitData(initData){
   const raw=String(initData||'');
   if(!raw||!process.env.TELEGRAM_BOT_TOKEN)return null;
