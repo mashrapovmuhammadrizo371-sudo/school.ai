@@ -95,7 +95,11 @@ function superAdminAuth(req,res,next){try{const h=req.headers.authorization||'';
 function studentAuth(req,res,next){try{const h=req.headers.authorization||'';const t=h.split(' ')[1]||'';const p=jwt.verify(t,JWT_SECRET);if(p.role!=='student')throw new Error();req.student=p;next()}catch(e){res.status(401).json({error:'Student authentication required'})}}
 async function newId(){let id;do{id=String(Math.floor(100000+Math.random()*900000))}while(await Application.exists({studentId:id}));return id}
 app.get('/api/health',(q,r)=>r.json({ok:true,service:'myschool'}));
-app.get('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const items=await School.find().sort({createdAt:-1}).lean();res.json({items})}catch(e){res.status(500).json({error:'Maktablarni yuklashda xatolik.'})}});\napp.post('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const name=String(req.body.name||'').trim();const code=String(req.body.code||'').trim().toUpperCase();const slug=String(req.body.slug||'').trim().toLowerCase();if(!name||!code||!slug)return res.status(400).json({error:'Maktab nomi, kodi va slug majburiy.'});if(await School.exists({$or:[{code},{slug}]}))return res.status(409).json({error:'Bu maktab kodi yoki slug band.'});const item=await School.create({name,code,slug,logoUrl:String(req.body.logoUrl||'').trim()});res.status(201).json({ok:true,item})}catch(e){res.status(400).json({error:'Maktab yaratishda xatolik.'})}});\napp.patch('/api/platform/schools/:id',superAdminAuth,async(req,res)=>{try{const item=await School.findById(req.params.id);if(!item)return res.status(404).json({error:'Maktab topilmadi.'});if(req.body.name!==undefined)item.name=String(req.body.name).trim();if(req.body.logoUrl!==undefined)item.logoUrl=String(req.body.logoUrl).trim();if(req.body.isActive!==undefined)item.isActive=Boolean(req.body.isActive);item.updatedAt=new Date();await item.save();res.json({ok:true,item})}catch(e){res.status(400).json({error:'Maktabni yangilashda xatolik.'})}});\napp.post('/api/platform/schools/:id/select',superAdminAuth,async(req,res)=>{try{const school=await School.findOne({_id:req.params.id,isActive:true}).lean();if(!school)return res.status(404).json({error:'Faol maktab topilmadi.'});const token=jwt.sign({role:'super-admin',schoolId:String(school._id),schoolCode:school.code},JWT_SECRET,{expiresIn:'12h'});res.json({ok:true,token,school})}catch(e){res.status(400).json({error:'Maktabni tanlashda xatolik.'})}});\n
+app.get('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const items=await School.find().sort({createdAt:-1}).lean();res.json({items})}catch(e){res.status(500).json({error:'Maktablarni yuklashda xatolik.'})}});
+app.post('/api/platform/schools',superAdminAuth,async(req,res)=>{try{const name=String(req.body.name||'').trim();const code=String(req.body.code||'').trim().toUpperCase();const slug=String(req.body.slug||'').trim().toLowerCase();if(!name||!code||!slug)return res.status(400).json({error:'Maktab nomi, kodi va slug majburiy.'});if(await School.exists({$or:[{code},{slug}]}))return res.status(409).json({error:'Bu maktab kodi yoki slug band.'});const item=await School.create({name,code,slug,logoUrl:String(req.body.logoUrl||'').trim()});res.status(201).json({ok:true,item})}catch(e){res.status(400).json({error:'Maktab yaratishda xatolik.'})}});
+app.patch('/api/platform/schools/:id',superAdminAuth,async(req,res)=>{try{const item=await School.findById(req.params.id);if(!item)return res.status(404).json({error:'Maktab topilmadi.'});if(req.body.name!==undefined)item.name=String(req.body.name).trim();if(req.body.logoUrl!==undefined)item.logoUrl=String(req.body.logoUrl).trim();if(req.body.isActive!==undefined)item.isActive=Boolean(req.body.isActive);item.updatedAt=new Date();await item.save();res.json({ok:true,item})}catch(e){res.status(400).json({error:'Maktabni yangilashda xatolik.'})}});
+app.post('/api/platform/schools/:id/select',superAdminAuth,async(req,res)=>{try{const school=await School.findOne({_id:req.params.id,isActive:true}).lean();if(!school)return res.status(404).json({error:'Faol maktab topilmadi.'});const token=jwt.sign({role:'super-admin',schoolId:String(school._id),schoolCode:school.code},JWT_SECRET,{expiresIn:'12h'});res.json({ok:true,token,school})}catch(e){res.status(400).json({error:'Maktabni tanlashda xatolik.'})}});
+
 function verifyTelegramWebAppInitData(initData){
   const raw=String(initData||'');
   if(!raw||!process.env.TELEGRAM_BOT_TOKEN)return null;
@@ -104,7 +108,8 @@ function verifyTelegramWebAppInitData(initData){
     const hash=params.get('hash');
     if(!hash)return null;
     params.delete('hash');
-    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\n');
+    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('
+');
     const secret=crypto.createHmac('sha256','WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
     const expected=crypto.createHmac('sha256',secret).update(dataCheckString).digest('hex');
     if(!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(hash,'hex')))return null;
@@ -238,7 +243,15 @@ app.post('/api/competition/submit',studentAuth,competitionUpload.single('video')
   const fd=new FormData();
   fd.append('chat_id',String(staff[0].telegramChatId));
   fd.append('video',new Blob([req.file.buffer],{type:req.file.mimetype}),req.file.originalname||'kitobxonlik.mp4');
-  fd.append('caption','📚 YANGI KITOBXONLIK TANLOVI\\n\\n👤 Ism-familiya: '+String(st.firstName||'')+' '+String(st.lastName||'')+'\\n🏫 Sinf: '+String(st.className||'—')+'\\n📖 Kitob: '+bookName+'\\n📄 Sahifa: '+pages+'\\n\\nMini App orqali yuborildi.\\nTasdiqlash uchun /ball ID buyrug‘idan foydalaning.');
+  fd.append('caption','📚 YANGI KITOBXONLIK TANLOVI\
+\
+👤 Ism-familiya: '+String(st.firstName||'')+' '+String(st.lastName||'')+'\
+🏫 Sinf: '+String(st.className||'—')+'\
+📖 Kitob: '+bookName+'\
+📄 Sahifa: '+pages+'\
+\
+Mini App orqali yuborildi.\
+Tasdiqlash uchun /ball ID buyrug‘idan foydalaning.');
   const tgRes=await fetch('https://api.telegram.org/bot'+encodeURIComponent(token)+'/sendVideo',{method:'POST',body:fd});
   const tgData=await tgRes.json();
   if(!tgRes.ok||!tgData.ok)return res.status(502).json({error:'Videoni ustozga yuborishda xatolik.'});
