@@ -108,7 +108,7 @@ function verifyTelegramWebAppInitData(initData){
     const hash=params.get('hash');
     if(!hash)return null;
     params.delete('hash');
-    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\\n');
+    const dataCheckString=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\n');
     const secret=crypto.createHmac('sha256','WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest();
     const expected=crypto.createHmac('sha256',secret).update(dataCheckString).digest('hex');
     if(!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(hash,'hex')))return null;
@@ -137,17 +137,18 @@ app.post('/api/telegram/webapp-auth',async(req,res)=>{
   }catch(e){console.error('[telegram] webapp auth failed',e);res.status(500).json({error:'Telegram Mini App ulanishida xatolik.'})}
 });
 
-app.post('/api/students/register',async(req,res)=>{try{const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),className=String(req.body.className||'').trim().toUpperCase(),schoolCode=String(req.body.schoolCode||'').trim(),photoData=String(req.body.photoData||'').trim();if(!firstName||!lastName||!className)return res.status(400).json({error:'Ism, familiya va sinf majburiy.'});if(!/^data:image\/jpeg;base64,/.test(photoData)||photoData.length>850000)return res.status(400).json({error:'Faqat hozir kamerada olingan rasm yuborilishi kerak.'});const tgUser=verifyTelegramWebAppInitData(req.body.telegramInitData);const telegramChatId=tgUser?String(tgUser.id):'';if(telegramChatId){const existing=await Application.findOne({telegramChatId}).sort({createdAt:-1});if(existing){if(existing.status==='approved'&&!existing.isBlocked){const token=jwt.sign({role:'student',studentId:existing.studentId},JWT_SECRET,{expiresIn:'30d'});return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status,token,student:{studentId:existing.studentId,firstName:existing.firstName,lastName:existing.lastName,className:existing.className}})}if(existing.status==='pending'){
+app.post('/api/students/register',async(req,res)=>{try{const firstName=String(req.body.firstName||'').trim(),lastName=String(req.body.lastName||'').trim(),className=String(req.body.className||'').trim().toUpperCase(),schoolCode=String(req.body.schoolCode||'').trim(),photoData=String(req.body.photoData||'').trim();if(!firstName||!lastName||!className)return res.status(400).json({error:'Ism, familiya va sinf majburiy.'});if(!/^data:image\/jpeg;base64,/.test(photoData)||photoData.length>850000)return res.status(400).json({error:'Faqat hozir kamerada olingan rasm yuborilishi kerak.'});const tgUser=verifyTelegramWebAppInitData(req.body.telegramInitData);const telegramChatId=tgUser?String(tgUser.id):'';let schoolId=null;if(schoolCode){const school=await School.findOne({code:schoolCode,isActive:true}).select('_id').lean();if(!school)return res.status(400).json({error:'Maktab kodi topilmadi yoki faol emas.'});schoolId=school._id;}if(telegramChatId){const existing=await Application.findOne({telegramChatId}).sort({createdAt:-1});if(existing){if(existing.status==='approved'&&!existing.isBlocked){const token=jwt.sign({role:'student',studentId:existing.studentId},JWT_SECRET,{expiresIn:'30d'});return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status,token,student:{studentId:existing.studentId,firstName:existing.firstName,lastName:existing.lastName,className:existing.className}})}if(existing.status==='pending'){
   // Qayta yuborilganda ariza yangilanadi va Katta Admin yana xabardor qilinadi.
   existing.firstName=firstName;
   existing.lastName=lastName;
   existing.className=className;
   existing.schoolCode=schoolCode;
+  existing.schoolId=schoolId;
   existing.photoData=photoData;
   await existing.save();
   try{const tg=require('./telegramBot');if(tg.notifyNewApplication)await tg.notifyNewApplication(existing);}catch(e){console.error('[telegram] updated application notification error',e.message)}
   return res.status(200).json({ok:true,applicationId:String(existing._id),status:existing.status});
-}}}const a=await Application.create({firstName,lastName,className,schoolCode,photoData,telegramChatId});
+}}}const a=await Application.create({firstName,lastName,className,schoolCode,schoolId,photoData,telegramChatId});
   try{const tg=require('./telegramBot');if(tg.notifyNewApplication)await tg.notifyNewApplication(a);}catch(e){console.error('[telegram] new application notification error',e.message)}
   res.status(201).json({ok:true,applicationId:String(a._id),status:a.status})}catch(e){console.error(e);res.status(500).json({error:'Arizani yuborishda xatolik.'})}});
 app.get('/api/students/status/:id',async(req,res)=>{try{const a=await Application.findById(req.params.id).lean();if(!a)return res.status(404).json({error:'Ariza topilmadi.'});res.json({status:a.status,studentId:a.studentId||'',rejectionReason:a.rejectionReason||'',firstName:a.firstName,lastName:a.lastName,className:a.className})}catch(e){res.status(400).json({error:'Noto‘g‘ri ariza ID.'})}});
