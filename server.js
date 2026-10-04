@@ -335,7 +335,7 @@ async function start(){
   try{
     if(process.env.MONGODB_URI){
       await mongoose.connect(process.env.MONGODB_URI);
-      console.log('MongoDB connected');
+      console.log('MongoDB connected', { database: mongoose.connection.name });
     }else{
       console.warn('MONGODB_URI is not set');
     }
