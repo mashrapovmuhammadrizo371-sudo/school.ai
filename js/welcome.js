@@ -1,0 +1,2 @@
+function welcome(){app.innerHTML='<section class="screen"><div class="panel center"><div class="cap">🎓</div><div class="brand">STEM SCHOOL</div><div class="divider"></div><div class="welcome-sub">Maktab tizimi</div><button class="primary" onclick="register()">KIRISH</button></div></section>'}
+let registrationPhoto='';let registrationStream=null;
