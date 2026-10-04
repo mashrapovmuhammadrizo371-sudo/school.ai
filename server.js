@@ -336,6 +336,22 @@ async function start(){
     if(process.env.MONGODB_URI){
       await mongoose.connect(process.env.MONGODB_URI);
       console.log('MongoDB connected', { database: mongoose.connection.name });
+      const cleanupBefore=String(process.env.REGISTRATION_CLEANUP_BEFORE||'').trim();
+      if(cleanupBefore){
+        const cutoff=new Date(cleanupBefore);
+        if(!Number.isNaN(cutoff.getTime())){
+          const oldApproved=await Application.find({createdAt:{$lt:cutoff},status:'approved'}).select('studentId').lean();
+          const oldStudentIds=oldApproved.map(x=>String(x.studentId||'')).filter(Boolean);
+          const deleted=await Application.deleteMany({createdAt:{$lt:cutoff}});
+          if(oldStudentIds.length){
+            await SchoolData.deleteMany({'data.studentId':{$in:oldStudentIds}});
+            await BookCompetition.deleteMany({studentId:{$in:oldStudentIds}});
+          }
+          console.log('[registration] one-time cleanup completed',{cutoff:cutoff.toISOString(),deletedApplications:deleted.deletedCount,deletedStudentData:oldStudentIds.length});
+        }else{
+          console.warn('[registration] invalid REGISTRATION_CLEANUP_BEFORE');
+        }
+      }
     }else{
       console.warn('MONGODB_URI is not set');
     }
