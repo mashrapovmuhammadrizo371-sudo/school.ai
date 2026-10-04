@@ -1,0 +1,1 @@
+window.addEventListener('DOMContentLoaded',()=>{const role=localStorage.getItem('ms_role');if(role==='student')showStudent();else if(role==='admin')showAdmin();else if(role==='staff')showStaff();else{const a=localStorage.getItem('ms_application');a?showPending(a):showWelcome()}})
