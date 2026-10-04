@@ -1,5 +1,5 @@
-const CACHE='myschool-v7';
-const STATIC=['./','./index.html','./style.css','./script.js','./manifest.webmanifest','./icons/icon.svg'];
+const CACHE='myschool-v8';
+const STATIC=['./','./index.html','./style.css','./js/core.js','./js/welcome.js','./js/registration.js','./js/student.js','./js/admin-management.js','./js/admin-auth.js','./js/staff.js','./js/app.js','./manifest.webmanifest','./icons/icon.svg'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
