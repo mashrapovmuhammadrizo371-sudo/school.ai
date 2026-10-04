@@ -14,5 +14,6 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.3"
-  }
+  },
+  "description": "MySchool Android application build package"
 }
