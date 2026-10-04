@@ -1,0 +1,60 @@
+name: Build MySchool Android AAB
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mobile/**'
+      - 'index.html'
+      - 'style.css'
+      - 'admin.css'
+      - 'js/**'
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Capacitor
+        working-directory: mobile
+        run: npm install
+
+      - name: Prepare web app
+        working-directory: mobile
+        run: npm run build:web
+
+      - name: Generate Android project
+        working-directory: mobile
+        run: npx cap add android
+
+      - name: Sync Android project
+        working-directory: mobile
+        run: npx cap sync android
+
+      - name: Build unsigned release AAB
+        working-directory: mobile/android
+        run: ./gradlew bundleRelease
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: MySchool-unsigned-aab
+          path: mobile/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
