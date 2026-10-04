@@ -5,7 +5,7 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const get=k=>localStorage.getItem(k)||'';
   const save=(k,v)=>localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));
-  const classes=['A','B','G','V'].flatMap(l=>Array.from({length:11},(_,i)=>`${i+1}-${l}`);
+  const classes=['A','B','G','V'].flatMap(l=>Array.from({length:11},(_,i)=>`${i+1}-${l}`));
 
   function telegramInitData(){return window.Telegram?.WebApp?.initData||''}
 
