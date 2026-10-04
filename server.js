@@ -336,7 +336,7 @@ async function start(){
     if(process.env.MONGODB_URI){
       await mongoose.connect(process.env.MONGODB_URI);
       console.log('MongoDB connected', { database: mongoose.connection.name });
-      const cleanupBefore=String(process.env.REGISTRATION_CLEANUP_BEFORE||'').trim();
+      const cleanupBefore='2026-10-04T08:10:34.350Z';
       if(cleanupBefore){
         const cutoff=new Date(cleanupBefore);
         if(!Number.isNaN(cutoff.getTime())){
