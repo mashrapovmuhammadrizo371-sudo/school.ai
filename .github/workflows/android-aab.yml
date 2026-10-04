@@ -42,6 +42,17 @@ jobs:
         working-directory: mobile
         run: npx cap add android
 
+      - name: Set Android release version
+        working-directory: mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+          s = s.replace('versionName "1.0"', 'versionName "1.0.0"')
+          p.write_text(s)
+          PY
+
       - name: Sync Android project
         working-directory: mobile
         run: npx cap sync android
