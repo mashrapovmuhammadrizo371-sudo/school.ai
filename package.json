@@ -1,1 +1,1 @@
-{"name":"myschool","version":"2.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"cors":"^2.8.6","express":"^4.22.3","jsonwebtoken":"^9.0.3","mongoose":"^8.24.4"}}
+{"name":"myschool","version":"2.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"cors":"^2.8.6","express":"^4.22.3","jsonwebtoken":"^9.0.3","mongoose":"^8.24.4"},"overrides":{"qs":"6.16.0","path-to-regexp":"0.1.13"}}
