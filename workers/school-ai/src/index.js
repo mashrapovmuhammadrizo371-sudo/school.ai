@@ -11,7 +11,7 @@ const fail = (message, status=400) => json({ok:false,error:message},status);
 const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const str = (v, max=5000) => String(v ?? "").trim().slice(0,max);
-const b64u = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,"").replace(/\\+/g,"-").replace(/\\//g,"_");
+const b64u = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
 const unb64u = s => Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));
 async function hmacKey(secret) { return crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign","verify"]); }
 async function issueToken(payload, secret) {
