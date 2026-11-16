@@ -1,0 +1,8 @@
+name = "school-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-16"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "school-ai-db"
+database_id = "d0067da9-e12b-41f4-a4b7-506d02a444b5"
