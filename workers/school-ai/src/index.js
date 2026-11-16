@@ -4,7 +4,12 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "86400"
 };
-const json = (data, status=200) => new Response(JSON.stringify(data), {
+const camelize = value => {
+  if (Array.isArray(value)) return value.map(camelize);
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key,item]) => [key.replace(/_([a-z])/g, (_,letter) => letter.toUpperCase()), camelize(item)]));
+  return value;
+};
+const json = (data, status=200) => new Response(JSON.stringify(camelize(data)), {
   status, headers: { "Content-Type":"application/json; charset=utf-8", ...CORS }
 });
 const fail = (message, status=400) => json({ok:false,error:message},status);
@@ -52,7 +57,15 @@ const cols = {
   media:["title","type","url","description"]
 };
 const tables={announcements:"announcements",books:"library_books",subjects:"subjects",schedule:"schedule_entries",reading:"reading_tasks",tests:"tests",results:"results",media:"media_items"};
-async function body(req){try{return await req.json()}catch{return {}}}
+async function body(req){
+  try {
+    const value=await req.json();
+    if(!value || typeof value!=="object" || Array.isArray(value)) return {};
+    const normalized={...value};
+    for(const [key,item] of Object.entries(value)) normalized[key.replace(/[A-Z]/g,letter=>"_"+letter.toLowerCase())]=item;
+    return normalized;
+  } catch { return {}; }
+}
 async function requireRole(req,env,role){
   const p=await readToken(req,env);
   if(!p || (role && p.role!==role)) throw new Response(JSON.stringify({ok:false,error:"Avtorizatsiya talab qilinadi."}),{status:401,headers:{"Content-Type":"application/json",...CORS}});
