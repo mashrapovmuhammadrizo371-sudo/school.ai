@@ -57,6 +57,7 @@ The existing Render service remains the rollback backend. The frontend has **not
 - Confirmed the D1 schema is present and the database contains one STEM School row; student, staff, and application tables are empty.
 - Added the `ADMIN_USERNAME` Worker Secret using the default backend username, `admin`. Existing `JWT_SECRET` and `ADMIN_PASSWORD` bindings are present, but their values have not been read or verified.
 - Uploaded the corrected Worker module through the Cloudflare API at 2026-11-17 03:07 UTC; Cloudflare returned success and a new deployment ID. The authorization-header and six-digit student-ID regex fixes are included.
-- The frontend still points to Render. Do not switch it until API response-shape compatibility and authenticated end-to-end tests pass.
-- Created Cloudflare Pages project `myschool-ai` connected to this GitHub repository (`main`, static output `.`). No deployment has appeared in the deployment list yet.
+- The frontend now points to the Cloudflare Worker. Keep Render available as a rollback target until authenticated end-to-end tests pass.
+- Uploaded the combined frontend + API Worker on 2026-11-17 03:10 UTC. Cloudflare confirmed automatic deployment with version `0362b24f-a0ee-4a5f-b488-e50ad05a3098` at 100% traffic.
+- Confirmed `workers.dev` subdomain is enabled and D1 plus required secret bindings remain attached. Direct HTTP smoke test from the tool environment was blocked by its outbound-request policy, so browser-level login and registration checks remain to be completed.
 - A binding named `ADMIN_SESSION_SECRET` was found configured as a plain-text variable. Convert/rotate it as a Worker Secret in the Cloudflare Dashboard before production use; do not copy its value into GitHub or chat.
