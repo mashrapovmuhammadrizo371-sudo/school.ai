@@ -79,9 +79,64 @@ function validClass(v){return /^(?:[1-9]|10|11)-[ABGV]$/.test(str(v,8).toUpperCa
 async function seed(db){
   await run(db,"INSERT OR IGNORE INTO schools(id,name,code,slug,is_active) VALUES(?,?,?,?,1)","school-stem","STEM School","STEM","stem-school");
 }
+
+async function telegramApi(env, method, payload={}) {
+  if(!env.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN missing");
+  const response=await fetch("https://api.telegram.org/bot"+env.TELEGRAM_BOT_TOKEN+"/"+method,{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
+  });
+  const data=await response.json();
+  if(!data.ok) throw new Error("Telegram API "+method+" failed: "+(data.description||"unknown"));
+  return data.result;
+}
+async function telegramSecret(env) {
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(env.TELEGRAM_BOT_TOKEN||""));
+  return b64u(digest);
+}
+async function telegramUpdate(req,env) {
+  const secret=await telegramSecret(env);
+  if(!env.TELEGRAM_BOT_TOKEN || req.headers.get("X-Telegram-Bot-Api-Secret-Token")!==secret) return new Response("Forbidden",{status:403});
+  let update; try { update=await req.json(); } catch { return new Response("Bad Request",{status:400}); }
+  const message=update.message;
+  if(!message || !message.chat || !message.chat.id) return new Response("OK");
+  const chatId=message.chat.id, textValue=str(message.text,2000);
+  let reply, keyboard;
+  if(/^\/start(?:@\w+)?(?:\s|$)/i.test(textValue)) {
+    reply="Assalomu alaykum! SCHOOL.AI botiga xush kelibsiz. 🏫\n\nMen maktab yangiliklari va foydali ma’lumotlarni topishda yordam beraman. Quyidagi bo‘limlardan birini tanlang.";
+    keyboard=[[{text:"📚 O‘quvchi"},{text:"👩‍🏫 O‘qituvchi"}],[{text:"📢 Yangiliklar"},{text:"🆘 Yordam"}]];
+  } else if(textValue==="📚 O‘quvchi") {
+    reply="📚 O‘quvchi bo‘limi\n\nO‘quvchi kabinetiga kirish uchun SCHOOL.AI saytida Student ID orqali tizimga kiring. Dars jadvali, fanlar va e’lonlar shaxsiy kabinetingizda ko‘rinadi.";
+  } else if(textValue==="👩‍🏫 O‘qituvchi") {
+    reply="👩‍🏫 O‘qituvchi bo‘limi\n\nO‘qituvchi kabinetiga kirish uchun maktab administratori bergan login va paroldan foydalaning.";
+  } else if(textValue==="📢 Yangiliklar") {
+    reply="📢 Maktab yangiliklari va e’lonlari SCHOOL.AI platformasida joylanadi. Rasmiy kanal manzili maktab administratori tomonidan belgilanadi.";
+  } else if(textValue==="🆘 Yordam" || /^\/help/i.test(textValue)) {
+    reply="🆘 Yordam\n\nMenyu orqali kerakli bo‘limni tanlang. Hisob yoki kirish bilan bog‘liq muammo bo‘lsa, maktab administratoriga murojaat qiling.";
+  } else {
+    reply="Xabaringiz qabul qilindi. 😊\n\nBo‘limlardan foydalanish uchun menyudagi tugmalardan birini tanlang yoki /help buyrug‘ini yuboring.";
+    keyboard=[[{text:"📚 O‘quvchi"},{text:"👩‍🏫 O‘qituvchi"}],[{text:"📢 Yangiliklar"},{text:"🆘 Yordam"}]];
+  }
+  const payload={chat_id:chatId,text:reply};
+  if(keyboard) payload.reply_markup={keyboard,resize_keyboard:true};
+  await telegramApi(env,"sendMessage",payload);
+  return new Response("OK");
+}
+
 async function handle(req,env){
   const db=env.DB, url=new URL(req.url), path=url.pathname, method=req.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
+  if(path==="/telegram/webhook" && method==="POST") return telegramUpdate(req,env);
+  if(path.startsWith("/api/telegram/setup/") && method==="GET") {
+    const expected=await telegramSecret(env);
+    if(path!=="/api/telegram/setup/"+expected || !env.TELEGRAM_BOT_TOKEN) return fail("Not found.",404);
+    try {
+      const me=await telegramApi(env,"getMe",{});
+      const webhookUrl=url.origin+"/telegram/webhook";
+      await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message"],drop_pending_updates:false});
+      const info=await telegramApi(env,"getWebhookInfo",{});
+      return json({ok:true,bot:"@"+me.username,webhook:info.url,pendingUpdates:info.pending_update_count||0,lastError:info.last_error_message||null});
+    } catch(e) { console.error("Telegram setup error",e); return fail("Telegram webhook setup failed.",502); }
+  }
   if(!db) return fail("Database binding DB sozlanmagan.",503);
   if(path==="/"||path==="/health"||path==="/api/health"){
     try { await seed(db); const r=await one(db,"SELECT 1 AS ok"); return json({ok:r?.ok===1,service:"SCHOOL.AI API",database:"connected",stage:"cloudflare-d1-api"}); }
