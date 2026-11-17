@@ -156,6 +156,17 @@ async function tgConnectStudent(db,chatId,studentId) {
   await run(db,"INSERT INTO telegram_links(id,chat_id,school_id,link_type,linked_id,created_at) VALUES(?,?,?,?,?,?)",uid(),String(chatId),student.school_id,"student",student.student_id,now());
   return {student};
 }
+async function tgConnectApplication(db,chatId,applicationId) {
+  const app=await one(db,"SELECT * FROM applications WHERE id=?",String(applicationId));
+  if(!app) return {error:"❌ Ariza ID topilmadi."};
+  await run(db,"DELETE FROM telegram_links WHERE chat_id=?",String(chatId));
+  if(app.status==="approved"&&app.student_id){
+    await run(db,"INSERT INTO telegram_links(id,chat_id,school_id,link_type,linked_id,created_at) VALUES(?,?,?,?,?,?)",uid(),String(chatId),app.school_id,"student",app.student_id,now());
+    return {approved:true,app};
+  }
+  await run(db,"INSERT INTO telegram_links(id,chat_id,school_id,link_type,linked_id,created_at) VALUES(?,?,?,?,?,?)",uid(),String(chatId),app.school_id,"application",app.id,now());
+  return {app};
+}
 async function tgSendSchedule(env,db,chatId,schoolId,className,keyboard) {
   const rows=await all(db,"SELECT day,lesson,subject,teacher,room FROM schedule_entries WHERE school_id=? AND class_name=? ORDER BY day,lesson",schoolId,className);
   if(!rows.length) return tgSend(env,chatId,"📅 "+className+" uchun dars jadvali hali kiritilmagan.",keyboard);
@@ -230,7 +241,7 @@ async function telegramUpdate(req,env) {
     const msg=update.message;
     if(!msg?.chat?.id) return new Response("OK");
     const chatId=msg.chat.id, textValue=str(msg.text,4000), link=await tgLink(db,chatId);
-    let session=await tgGetSession(db,chatId), student=await tgStudent(db,link), staff=await tgStaff(db,link);
+    let session=await tgGetSession(db,chatId), student=await tgStudent(db,link), staff=await tgStaff(db,link), application=link?.link_type==="application"?await one(db,"SELECT * FROM applications WHERE id=?",link.linked_id):null;
     const studentMenu=tgReplyKeyboard(studentKeyboard), staffMenu=tgReplyKeyboard(staffKeyboard);
     if(msg.video && session.step==="competition_video"){
       await tgSession(db,chatId,{step:"competition_confirm",videoFileId:String(msg.video.file_id)});
@@ -241,7 +252,9 @@ async function telegramUpdate(req,env) {
       await tgSession(db,chatId,null);
       if(staff) await tgSend(env,chatId,"👨‍💼 Xush kelibsiz, "+staff.full_name+"!\nIshchi kabinetingiz ulangan.",staffMenu);
       else if(student) await tgSend(env,chatId,"🎓 SCHOOL.AI botiga xush kelibsiz, "+student.first_name+"!",studentMenu);
-      else {await tgSession(db,chatId,{step:"waiting_student_id"});await tgSend(env,chatId,"🎓 SCHOOL.AI botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz, 6 xonali Student ID yuboring. Xodimlar /staff orqali kiradi.",studentMenu);}
+      else if(application?.status==="pending") await tgSend(env,chatId,"⏳ Arizangiz administrator tomonidan tekshirilmoqda.",studentMenu);
+      else if(application?.status==="rejected") await tgSend(env,chatId,"❌ Arizangiz rad etilgan.\nSabab: "+(application.rejection_reason||"Ko‘rsatilmagan."),studentMenu);
+      else {await tgSession(db,chatId,{step:"waiting_student_id"});await tgSend(env,chatId,"🎓 SCHOOL.AI botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz, 6 xonali Student ID yuboring. Arizani kuzatish: /ariza APPLICATION_ID. Xodimlar /staff orqali kiradi.",studentMenu);}
       return new Response("OK");
     }
     if(/^\/help(?:@\w+)?$/i.test(textValue)||textValue==="❓ Yordam"||textValue==="🆘 Yordam"){
@@ -265,6 +278,15 @@ async function telegramUpdate(req,env) {
     if(/^\/admin(?:@\w+)?$/i.test(textValue)){
       if(session.role!=="big-admin") await tgSend(env,chatId,"Avval /staff orqali Katta Admin sifatida kiring.");
       else await tgSend(env,chatId,"🛡 KATTA ADMIN PANELI",adminInline);
+      return new Response("OK");
+    }
+    let appMatch=textValue.match(/^\/ariza(?:@\w+)?\s+([a-f0-9-]{20,40})$/i);
+    if(appMatch){
+      const result=await tgConnectApplication(db,chatId,appMatch[1]);
+      if(result.error) await tgSend(env,chatId,result.error,studentMenu);
+      else if(result.approved) await tgSend(env,chatId,"🎉 Arizangiz tasdiqlangan!\n\n🆔 Student ID: "+result.app.student_id+"\nEndi botdan foydalanishingiz mumkin.",studentMenu);
+      else if(result.app.status==="pending") await tgSend(env,chatId,"⏳ Arizangiz ulandi. Administrator tekshiruvini kuting. Tasdiqlanganda bot sizga xabar yuboradi.",studentMenu);
+      else await tgSend(env,chatId,"❌ Arizangiz rad etilgan.\nSabab: "+(result.app.rejection_reason||"Ko‘rsatilmagan."),studentMenu);
       return new Response("OK");
     }
     let m=textValue.match(/^\/id(?:@\w+)?(?:\s+(\d{6}))?$/i);
