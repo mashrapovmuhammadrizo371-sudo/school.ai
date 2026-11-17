@@ -6,7 +6,11 @@ const CORS = {
 };
 const camelize = value => {
   if (Array.isArray(value)) return value.map(camelize);
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key,item]) => [key.replace(/_([a-z])/g, (_,letter) => letter.toUpperCase()), camelize(item)]));
+  if (value && typeof value === "object") {
+    const out = Object.fromEntries(Object.entries(value).map(([key,item]) => [key.replace(/_([a-z])/g, (_,letter) => letter.toUpperCase()), camelize(item)]));
+    if (Object.prototype.hasOwnProperty.call(value,"id") && !Object.prototype.hasOwnProperty.call(value,"_id")) out._id = value.id;
+    return out;
+  }
   return value;
 };
 const json = (data, status=200) => new Response(JSON.stringify(camelize(data)), {
@@ -194,7 +198,7 @@ async function handle(req,env){
     if(path.startsWith("/api/student/")){
       const p=await requireRole(req,env,"student");
       const s=await one(db,"SELECT * FROM students WHERE student_id=?",p.studentId);if(!s||s.is_blocked)return fail("Profil topilmadi yoki bloklangan.",403);
-      if(method==="GET"&&path==="/api/student/me"){const school=await one(db,"SELECT name,code FROM schools WHERE id=?",s.school_id);return json({ok:true,student:{...s,school}});}
+      if(method==="GET"&&path==="/api/student/me"){const school=await one(db,"SELECT name,code FROM schools WHERE id=?",s.school_id);return json({ok:true,student:{...s,schoolId:school}});}
       const content={
         "/api/student/announcements":["announcements","school_id=?","created_at DESC"],
         "/api/student/books":["library_books","school_id=?","created_at DESC"],
@@ -203,11 +207,13 @@ async function handle(req,env){
       };
       if(method==="GET"&&content[path]){const [table,where,sort]=content[path];return json({ok:true,items:await all(db,"SELECT * FROM "+table+" WHERE "+where+" ORDER BY "+sort,s.school_id)});}
       if(method==="GET"&&path==="/api/student/schedule")return json({ok:true,items:await all(db,"SELECT * FROM schedule_entries WHERE school_id=? AND class_name=? ORDER BY day,lesson",s.school_id,s.class_name)});
+      if(method==="GET"&&path==="/api/student/security"){const item=await one(db,"SELECT phone,telegram FROM security_contacts WHERE school_id=?",s.school_id);return json({ok:true,item:item||{phone:"",telegram:""}});}
       if(method==="GET"&&path==="/api/student/support"){const item=await one(db,"SELECT text FROM support_info WHERE school_id=?",s.school_id);return json({ok:true,item:item||{text:"Savollar bo‘lsa, maktab administratoriga murojaat qiling."}});}
     }
     if(path==="/api/staff/me"&&method==="GET"){
       const p=await requireRole(req,env,"staff"),s=await one(db,"SELECT id,school_id,full_name,username,role,subject,is_blocked,created_at FROM staff WHERE id=?",p.staffId);
-      return s&&!s.is_blocked?json({ok:true,staff:s}):fail("Ishchi topilmadi yoki bloklangan.",404);
+      const school=s?await one(db,"SELECT name,code FROM schools WHERE id=?",s.school_id):null;
+      return s&&!s.is_blocked?json({ok:true,staff:{...s,schoolId:school}}):fail("Ishchi topilmadi yoki bloklangan.",404);
     }
     return fail("API route topilmadi.",404);
   } catch(e) {
