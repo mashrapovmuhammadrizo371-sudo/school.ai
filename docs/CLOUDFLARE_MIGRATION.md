@@ -6,7 +6,7 @@
 - Existing frontend: static HTML/CSS/JavaScript.
 - New Cloudflare Worker: `school-ai`.
 - New Cloudflare D1 database: `school-ai-db`.
-- The Worker is a bootstrap only. It currently exposes health checks and does not yet replace the legacy API.
+- The `school-ai` Worker now serves the static frontend and D1-backed API on the same origin.
 
 ## Safety rules
 
@@ -26,12 +26,12 @@
 6. Admin CRUD: schools, staff, content, tests, results, media, Telegram and security settings.
 7. Export/import MongoDB data into D1 with a reconciliation report.
 8. API contract tests against the old and new backends.
-9. Switch the frontend API base URL only after successful tests.
+9. Frontend now uses the same-origin Worker API; complete browser-based login, registration, and admin CRUD tests.
 10. Keep Render as rollback target until the new production period is stable.
 
 ## API compatibility
 
-The current frontend uses `window.API` in `js/core.js` and calls the legacy Express API. Do not change it until the Worker implements the same routes and response shapes.
+The frontend uses `window.API=''` in `js/core.js`, so requests are same-origin with the Worker. The Worker implements the primary registration, login, student, staff, and BIG ADMIN routes. Complete browser-based end-to-end checks and address any remaining response-shape gaps before retiring Render.
 
 ## Local development
 
