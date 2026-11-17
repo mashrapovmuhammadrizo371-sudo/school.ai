@@ -9,7 +9,7 @@
 - API source: `workers/school-ai/src/index.js`
 - Database schema: `workers/school-ai/schema.sql`
 
-The Worker has been deployed with D1 access and the legacy Express API routes have been ported to D1. The STEM School record is seeded. No legacy MongoDB records have been imported.
+The Worker source has been uploaded to Cloudflare with D1 access. The Worker upload succeeded on 2026-11-17; public health verification is still pending. The STEM School record is seeded. No legacy MongoDB records have been imported.
 
 ## Required Worker secrets
 
@@ -41,7 +41,7 @@ books, subjects, schedule, reading, tests, results, media, Telegram settings, su
 
 ## Important migration boundary
 
-The existing Render service remains the rollback backend. The frontend has **not** been switched from Render to this Worker, and no MongoDB data has been copied to D1. Do not shut down Render or announce a full migration until frontend integration, secret configuration, authenticated endpoint tests, and a data migration plan are complete.
+The existing Render service remains the rollback backend. The frontend has **not** been switched from Render to this Worker, and no MongoDB data has been copied to D1. The Pages project `myschool-ai` has been created and is awaiting its first successful deployment. Do not shut down Render or announce a full migration until frontend integration, secret configuration, authenticated endpoint tests, and a data migration plan are complete.
 
 ## Compatibility and security notes
 
@@ -56,6 +56,7 @@ The existing Render service remains the rollback backend. The frontend has **not
 - Confirmed the Worker has a D1 binding named `DB` pointing to `school-ai-db`.
 - Confirmed the D1 schema is present and the database contains one STEM School row; student, staff, and application tables are empty.
 - Added the `ADMIN_USERNAME` Worker Secret using the default backend username, `admin`. Existing `JWT_SECRET` and `ADMIN_PASSWORD` bindings are present, but their values have not been read or verified.
-- Fixed escaped authorization-header and six-digit student-ID regular expressions in the migration branch. This source fix still needs a successful Worker code upload before it can be considered deployed.
+- Uploaded the corrected Worker module through the Cloudflare API at 2026-11-17 03:07 UTC; Cloudflare returned success and a new deployment ID. The authorization-header and six-digit student-ID regex fixes are included.
 - The frontend still points to Render. Do not switch it until API response-shape compatibility and authenticated end-to-end tests pass.
+- Created Cloudflare Pages project `myschool-ai` connected to this GitHub repository (`main`, static output `.`). No deployment has appeared in the deployment list yet.
 - A binding named `ADMIN_SESSION_SECRET` was found configured as a plain-text variable. Convert/rotate it as a Worker Secret in the Cloudflare Dashboard before production use; do not copy its value into GitHub or chat.
