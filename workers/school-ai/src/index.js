@@ -97,40 +97,338 @@ let telegramWebhookCheckedAt=0;
 async function ensureTelegramWebhook(req,env) {
   if(!env.TELEGRAM_BOT_TOKEN || new URL(req.url).pathname==="/telegram/webhook" || Date.now()-telegramWebhookCheckedAt<300000) return;
   try {
-    const origin=new URL(req.url).origin, webhookUrl=origin+"/telegram/webhook";
+    const webhookUrl=new URL(req.url).origin+"/telegram/webhook";
     const expected=await telegramSecret(env);
     const info=await telegramApi(env,"getWebhookInfo",{});
-    if(info.url!==webhookUrl) await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message"],drop_pending_updates:false});
+    if(info.url!==webhookUrl) await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message","callback_query"],drop_pending_updates:false});
     telegramWebhookCheckedAt=Date.now();
   } catch(e) { console.error("Telegram webhook ensure failed",e); }
+}
+const SCHOOL_APP_URL="https://school-ai-web.pages.dev";
+const studentKeyboard=[
+  [{text:"📱 SCHOOL.AI",web_app:{url:SCHOOL_APP_URL}}],
+  [{text:"📅 Jadval"},{text:"📚 Fanlar"}],
+  [{text:"📢 E’lonlar"},{text:"📖 Kitobxona"}],
+  [{text:"📚 Kitobxonlik tanlovi"},{text:"👤 Profil"}],
+  [{text:"❓ Yordam"}]
+];
+const staffKeyboard=[
+  [{text:"📱 SCHOOL.AI",web_app:{url:SCHOOL_APP_URL}}],
+  [{text:"📅 Jadval"},{text:"📚 Fanlar"}],
+  [{text:"📢 E’lonlar"},{text:"📖 Kitobxona"}],
+  [{text:"👤 Profilim"},{text:"🚪 Chiqish"}],
+  [{text:"❓ Yordam"}]
+];
+const adminInline={inline_keyboard:[
+  [{text:"📢 Xabar yuborish",callback_data:"admin:broadcast"}],
+  [{text:"📊 Bot holati",callback_data:"admin:status"},{text:"👥 Ulanishlar",callback_data:"admin:links"}],
+  [{text:"🚪 Chiqish",callback_data:"admin:logout"}]
+]};
+async function tgSession(db,chatId,state) {
+  if(state===null) return run(db,"DELETE FROM telegram_sessions WHERE chat_id=?",String(chatId));
+  return run(db,"INSERT INTO telegram_sessions(chat_id,state,updated_at) VALUES(?,?,?) ON CONFLICT(chat_id) DO UPDATE SET state=excluded.state,updated_at=excluded.updated_at",String(chatId),JSON.stringify(state),now());
+}
+async function tgGetSession(db,chatId) {
+  const row=await one(db,"SELECT state FROM telegram_sessions WHERE chat_id=?",String(chatId));
+  try{return row?JSON.parse(row.state):{};}catch{return {};}
+}
+async function tgLink(db,chatId) {
+  return one(db,"SELECT * FROM telegram_links WHERE chat_id=?",String(chatId));
+}
+async function tgSend(env,chatId,text,keyboard) {
+  const payload={chat_id:chatId,text:String(text||"").slice(0,4000)};
+  if(keyboard) payload.reply_markup=keyboard;
+  return telegramApi(env,"sendMessage",payload);
+}
+const tgReplyKeyboard=(keyboard)=>({keyboard,resize_keyboard:true});
+const tgRoleName=(role)=>role==="teacher"?"O‘qituvchi":role==="director"?"Direktor":"Admin";
+async function tgStudent(db,link) {
+  return link?.link_type==="student"?one(db,"SELECT * FROM students WHERE student_id=? AND school_id=?",link.linked_id,link.school_id):null;
+}
+async function tgStaff(db,link) {
+  return link?.link_type==="staff"?one(db,"SELECT * FROM staff WHERE id=? AND school_id=? AND is_blocked=0",link.linked_id,link.school_id):null;
+}
+async function tgConnectStudent(db,chatId,studentId) {
+  const student=await one(db,"SELECT * FROM students WHERE student_id=?",String(studentId));
+  if(!student) return {error:"❌ Student ID topilmadi yoki hali tasdiqlanmagan."};
+  if(student.is_blocked) return {error:"🚫 Hisobingiz bloklangan."};
+  await run(db,"DELETE FROM telegram_links WHERE chat_id=?",String(chatId));
+  await run(db,"INSERT INTO telegram_links(id,chat_id,school_id,link_type,linked_id,created_at) VALUES(?,?,?,?,?,?)",uid(),String(chatId),student.school_id,"student",student.student_id,now());
+  return {student};
+}
+async function tgSendSchedule(env,db,chatId,schoolId,className,keyboard) {
+  const rows=await all(db,"SELECT day,lesson,subject,teacher,room FROM schedule_entries WHERE school_id=? AND class_name=? ORDER BY day,lesson",schoolId,className);
+  if(!rows.length) return tgSend(env,chatId,"📅 "+className+" uchun dars jadvali hali kiritilmagan.",keyboard);
+  const days=["Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba"];
+  let out="📅 "+className+" sinfi jadvali\n\n";
+  for(let d=1;d<=6;d++){
+    const dayRows=rows.filter(x=>Number(x.day)===d);
+    if(!dayRows.length) continue;
+    out+="📌 "+days[d-1]+"\n";
+    for(const r of dayRows) out+=String(r.lesson)+". "+r.subject+(r.teacher?" — "+r.teacher:"")+(r.room?" | "+r.room:"")+"\n";
+    out+="\n";
+  }
+  return tgSend(env,chatId,out.trim(),keyboard);
+}
+async function tgContent(env,db,chatId,schoolId,kind,keyboard) {
+  const table=kind==="books"?"library_books":"announcements";
+  const rows=await all(db,"SELECT * FROM "+table+" WHERE school_id=? ORDER BY created_at DESC LIMIT 10",schoolId);
+  const title=kind==="books"?"📖 KITOBXONA":"📢 E’LONLAR";
+  if(!rows.length) return tgSend(env,chatId,kind==="books"?"Hozircha kitob kiritilmagan.":"Hozircha e’lon yo‘q.",keyboard);
+  const out=rows.map((x,i)=>kind==="books"?(i+1)+". "+x.title+(x.author?" — "+x.author:"")+(x.description?"\n"+x.description:""):(i+1)+". "+x.title+"\n"+x.text).join("\n\n");
+  return tgSend(env,chatId,title+"\n\n"+out,keyboard);
+}
+async function tgSubjects(env,db,chatId,schoolId,keyboard) {
+  const rows=await all(db,"SELECT name,teacher FROM subjects WHERE school_id=? ORDER BY name",schoolId);
+  return tgSend(env,chatId,rows.length?"📚 FANLAR\n\n"+rows.map((x,i)=>(i+1)+". "+x.name+(x.teacher?" — "+x.teacher:"")).join("\n"):"Hozircha fanlar kiritilmagan.",keyboard);
+}
+async function tgCompetitionNotifyStaff(env,db,schoolId,item) {
+  const staff=await all(db,"SELECT l.chat_id FROM telegram_links l JOIN staff s ON s.id=l.linked_id WHERE l.school_id=? AND l.link_type='staff' AND s.is_blocked=0",schoolId);
+  for(const row of staff){
+    try{await telegramApi(env,"sendVideo",{chat_id:row.chat_id,video:item.video_file_id,caption:"📚 YANGI KITOBXONLIK TANLOVI\n\n👤 "+item.student_name+"\n🏫 "+item.class_name+"\n📖 "+item.book_name+"\n🔢 Kitob № "+item.book_number+"\n📄 Sahifa: "+item.pages+"\n🆔 Topshiriq: "+item.id+"\n\nBall berish: /ball "+item.id+" BALL izoh"});}catch(e){console.error("Telegram competition notification failed",e);}
+  }
 }
 async function telegramUpdate(req,env) {
   const secret=await telegramSecret(env);
   if(!env.TELEGRAM_BOT_TOKEN || req.headers.get("X-Telegram-Bot-Api-Secret-Token")!==secret) return new Response("Forbidden",{status:403});
   let update; try { update=await req.json(); } catch { return new Response("Bad Request",{status:400}); }
-  const message=update.message;
-  if(!message || !message.chat || !message.chat.id) return new Response("OK");
-  const chatId=message.chat.id, textValue=str(message.text,2000);
-  let reply, keyboard;
-  if(/^\/start(?:@\w+)?(?:\s|$)/i.test(textValue)) {
-    reply="Assalomu alaykum! SCHOOL.AI botiga xush kelibsiz. 🏫\n\nMen maktab yangiliklari va foydali ma’lumotlarni topishda yordam beraman. Quyidagi bo‘limlardan birini tanlang.";
-    keyboard=[[{text:"📚 O‘quvchi"},{text:"👩‍🏫 O‘qituvchi"}],[{text:"📢 Yangiliklar"},{text:"🆘 Yordam"}]];
-  } else if(textValue==="📚 O‘quvchi") {
-    reply="📚 O‘quvchi bo‘limi\n\nO‘quvchi kabinetiga kirish uchun SCHOOL.AI saytida Student ID orqali tizimga kiring. Dars jadvali, fanlar va e’lonlar shaxsiy kabinetingizda ko‘rinadi.";
-  } else if(textValue==="👩‍🏫 O‘qituvchi") {
-    reply="👩‍🏫 O‘qituvchi bo‘limi\n\nO‘qituvchi kabinetiga kirish uchun maktab administratori bergan login va paroldan foydalaning.";
-  } else if(textValue==="📢 Yangiliklar") {
-    reply="📢 Maktab yangiliklari va e’lonlari SCHOOL.AI platformasida joylanadi. Rasmiy kanal manzili maktab administratori tomonidan belgilanadi.";
-  } else if(textValue==="🆘 Yordam" || /^\/help/i.test(textValue)) {
-    reply="🆘 Yordam\n\nMenyu orqali kerakli bo‘limni tanlang. Hisob yoki kirish bilan bog‘liq muammo bo‘lsa, maktab administratoriga murojaat qiling.";
-  } else {
-    reply="Xabaringiz qabul qilindi. 😊\n\nBo‘limlardan foydalanish uchun menyudagi tugmalardan birini tanlang yoki /help buyrug‘ini yuboring.";
-    keyboard=[[{text:"📚 O‘quvchi"},{text:"👩‍🏫 O‘qituvchi"}],[{text:"📢 Yangiliklar"},{text:"🆘 Yordam"}]];
+  const db=env.DB;
+  if(!db) return new Response("Database unavailable",{status:503});
+  try {
+    const callback=update.callback_query;
+    if(callback){
+      const chatId=callback.message?.chat?.id, data=String(callback.data||"");
+      if(!chatId) return new Response("OK");
+      const link=await tgLink(db,chatId), staff=await tgStaff(db,link), session=await tgGetSession(db,chatId);
+      await telegramApi(env,"answerCallbackQuery",{callback_query_id:callback.id});
+      if(data==="competition:yes"){
+        if(session.step!=="competition_confirm"||!session.videoFileId) return tgSend(env,chatId,"❌ Video topilmadi. /tanlov orqali qayta boshlang.",tgReplyKeyboard(studentKeyboard)).then(()=>new Response("OK"));
+        await tgSession(db,chatId,{step:"competition_surname",videoFileId:session.videoFileId});
+        await tgSend(env,chatId,"👤 Familiyangizni yozing:");
+      } else if(data==="competition:no"){
+        await tgSession(db,chatId,{step:"competition_video"});
+        await tgSend(env,chatId,"🔄 Yaxshi, videoni boshidan qayta yuboring.");
+      } else if(data.startsWith("staff:schedule:")){
+        if(!staff) await tgSend(env,chatId,"Avval /staff orqali kiring.");
+        else await tgSendSchedule(env,db,chatId,staff.school_id,decodeURIComponent(data.slice(15)),tgReplyKeyboard(staffKeyboard));
+      } else if(data==="admin:broadcast"&&session.role==="big-admin"){
+        await tgSession(db,chatId,{role:"big-admin",step:"broadcast"});
+        await tgSend(env,chatId,"📢 Xabar yuborish rejimi.\n\nYubormoqchi bo‘lgan xabaringizni yozing.\nBekor qilish: /admin");
+      } else if(data==="admin:status"&&session.role==="big-admin"){
+        const students=await one(db,"SELECT COUNT(*) n FROM telegram_links WHERE link_type='student'");
+        const staffs=await one(db,"SELECT COUNT(*) n FROM telegram_links WHERE link_type='staff'");
+        await tgSend(env,chatId,"📊 BOT HOLATI\n\n🟢 Bot: ishlayapti\n👨‍🎓 O‘quvchi ulanishlari: "+students.n+"\n👨‍💼 Ishchi ulanishlari: "+staffs.n,{inline_keyboard:adminInline.inline_keyboard});
+      } else if(data==="admin:links"&&session.role==="big-admin"){
+        const students=await one(db,"SELECT COUNT(*) n FROM telegram_links WHERE link_type='student'");
+        const staffs=await one(db,"SELECT COUNT(*) n FROM telegram_links WHERE link_type='staff'");
+        await tgSend(env,chatId,"👥 ULANISHLAR\n\nO‘quvchilar: "+students.n+"\nIshchilar: "+staffs.n,{inline_keyboard:adminInline.inline_keyboard});
+      } else if(data==="admin:logout"&&session.role==="big-admin"){
+        await tgSession(db,chatId,null); await tgSend(env,chatId,"🚪 Katta Admin panelidan chiqildi.",tgReplyKeyboard(studentKeyboard));
+      }
+      return new Response("OK");
+    }
+    const msg=update.message;
+    if(!msg?.chat?.id) return new Response("OK");
+    const chatId=msg.chat.id, textValue=str(msg.text,4000), link=await tgLink(db,chatId);
+    let session=await tgGetSession(db,chatId), student=await tgStudent(db,link), staff=await tgStaff(db,link);
+    const studentMenu=tgReplyKeyboard(studentKeyboard), staffMenu=tgReplyKeyboard(staffKeyboard);
+    if(msg.video && session.step==="competition_video"){
+      await tgSession(db,chatId,{step:"competition_confirm",videoFileId:String(msg.video.file_id)});
+      await telegramApi(env,"sendMessage",{chat_id:chatId,text:"🎥 Shu video to‘g‘rimi?",reply_markup:{inline_keyboard:[[{text:"✅ Ha",callback_data:"competition:yes"},{text:"❌ Yo‘q",callback_data:"competition:no"}]]}});
+      return new Response("OK");
+    }
+    if(/^\/start(?:@\w+)?(?:\s|$)/i.test(textValue)){
+      await tgSession(db,chatId,null);
+      if(staff) await tgSend(env,chatId,"👨‍💼 Xush kelibsiz, "+staff.full_name+"!\nIshchi kabinetingiz ulangan.",staffMenu);
+      else if(student) await tgSend(env,chatId,"🎓 SCHOOL.AI botiga xush kelibsiz, "+student.first_name+"!",studentMenu);
+      else {await tgSession(db,chatId,{step:"waiting_student_id"});await tgSend(env,chatId,"🎓 SCHOOL.AI botiga xush kelibsiz!\n\nO‘quvchi bo‘lsangiz, 6 xonali Student ID yuboring. Xodimlar /staff orqali kiradi.",studentMenu);}
+      return new Response("OK");
+    }
+    if(/^\/help(?:@\w+)?$/i.test(textValue)||textValue==="❓ Yordam"||textValue==="🆘 Yordam"){
+      const help=staff?"/staffme\n/stafflogout\n/jadval\n/fanlar\n/elon\n/kitoblar\n/tanlovadmin":"/start\n/id 123456\n/jadval\n/fanlar\n/elon\n/kitoblar\n/profil\n/tanlov\n/ballarim\n/reyting";
+      await tgSend(env,chatId,"🆘 YORDAM\n\n"+help,staff?staffMenu:studentMenu);return new Response("OK");
+    }
+    if(/^\/staff(?:@\w+)?$/i.test(textValue)){
+      await tgSession(db,chatId,{step:"staff_username"});
+      await tgSend(env,chatId,"👨‍💼 Ishchi kabineti\n\nLoginni yuboring:");return new Response("OK");
+    }
+    if(/^\/stafflogout(?:@\w+)?$/i.test(textValue)){
+      if(link?.link_type==="staff") await run(db,"DELETE FROM telegram_links WHERE chat_id=?",String(chatId));
+      await tgSession(db,chatId,null);await tgSend(env,chatId,"✅ Telegram ishchi kabinetidan chiqildi.",studentMenu);return new Response("OK");
+    }
+    if(/^\/staffme(?:@\w+)?$/i.test(textValue)){
+      if(!staff) await tgSend(env,chatId,"Avval /staff orqali kiring.");
+      else await tgSend(env,chatId,"👨‍💼 "+staff.full_name+"\n\nRol: "+tgRoleName(staff.role)+"\nLogin: "+staff.username,staffMenu);
+      return new Response("OK");
+    }
+    if(/^\/admin(?:@\w+)?$/i.test(textValue)){
+      if(session.role!=="big-admin") await tgSend(env,chatId,"Avval /staff orqali Katta Admin sifatida kiring.");
+      else await tgSend(env,chatId,"🛡 KATTA ADMIN PANELI",adminInline);
+      return new Response("OK");
+    }
+    let m=textValue.match(/^\/id(?:@\w+)?(?:\s+(\d{6}))?$/i);
+    if(m){
+      if(m[1]){
+        const result=await tgConnectStudent(db,chatId,m[1]);
+        await tgSession(db,chatId,null);
+        if(result.error) await tgSend(env,chatId,result.error,studentMenu);
+        else await tgSend(env,chatId,"✅ Hisob ulandi!\n\n👤 "+result.student.first_name+" "+result.student.last_name+"\n🏫 Sinf: "+result.student.class_name+"\n🆔 ID: "+result.student.student_id,studentMenu);
+      } else {await tgSession(db,chatId,{step:"waiting_student_id"});await tgSend(env,chatId,"🆔 6 xonali Student ID raqamingizni yuboring:");}
+      return new Response("OK");
+    }
+    if(/^\/jadval(?:@\w+)?$/i.test(textValue)||textValue==="📅 Jadval"){
+      if(staff){
+        const classes=await all(db,"SELECT DISTINCT class_name FROM schedule_entries WHERE school_id=? ORDER BY class_name",staff.school_id);
+        const list=classes.map(x=>x.class_name);
+        if(!list.length){for(let n=1;n<=11;n++)for(const l of ["A","B","G","V"])list.push(n+"-"+l);}
+        const rows=[];for(let i=0;i<list.length;i+=4)rows.push(list.slice(i,i+4).map(c=>({text:c,callback_data:"staff:schedule:"+encodeURIComponent(c)})));
+        await telegramApi(env,"sendMessage",{chat_id:chatId,text:"📅 Qaysi sinf jadvalini ko‘rmoqchisiz?",reply_markup:{inline_keyboard:rows}});
+      } else if(student) await tgSendSchedule(env,db,chatId,student.school_id,student.class_name,studentMenu);
+      else await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456");
+      return new Response("OK");
+    }
+    if(/^\/fanlar(?:@\w+)?$/i.test(textValue)||textValue==="📚 Fanlar"){
+      if(student||staff) await tgSubjects(env,db,chatId,(student||staff).school_id,student?studentMenu:staffMenu);
+      else await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456");
+      return new Response("OK");
+    }
+    if(/^\/(?:elon|e'lon|kitoblar)(?:@\w+)?$/i.test(textValue)||["📢 E’lonlar","📖 Kitobxona","📢 Yangiliklar"].includes(textValue)){
+      const schoolId=(student||staff)?.school_id;
+      if(!schoolId) await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456");
+      else await tgContent(env,db,chatId,schoolId,(textValue==="/kitoblar"||textValue==="📖 Kitobxona")?"books":"announcements",student?studentMenu:staffMenu);
+      return new Response("OK");
+    }
+    if(/^\/profil(?:@\w+)?$/i.test(textValue)||textValue==="👤 Profil"||textValue==="👤 Profilim"){
+      if(student) await tgSend(env,chatId,"👤 PROFIL\n\nIsm: "+student.first_name+"\nFamiliya: "+student.last_name+"\nSinf: "+student.class_name+"\nStudent ID: "+student.student_id,studentMenu);
+      else if(staff) await tgSend(env,chatId,"👨‍💼 "+staff.full_name+"\nRol: "+tgRoleName(staff.role)+"\nLogin: "+staff.username,staffMenu);
+      else await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456");
+      return new Response("OK");
+    }
+    if(/^\/tanlov(?:@\w+)?$/i.test(textValue)||textValue==="📚 Kitobxonlik tanlovi"){
+      if(!student){await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456",studentMenu);}
+      else {await tgSession(db,chatId,{step:"competition_video"});await tgSend(env,chatId,"📚 KITOBXONLIK TANLOVI\n\n🎥 Kitob o‘qiyotganingiz aks etgan videoni shu yerga yuboring.");}
+      return new Response("OK");
+    }
+    if(/^\/tanlovadmin(?:@\w+)?$/i.test(textValue)||textValue==="📚 Kitobxonlik tanlovi — tekshirish"){
+      if(!staff) await tgSend(env,chatId,"Avval /staff orqali kiring.");
+      else {
+        const rows=await all(db,"SELECT * FROM book_competition WHERE school_id=? ORDER BY created_at DESC LIMIT 15",staff.school_id);
+        if(!rows.length) await tgSend(env,chatId,"📚 Hozircha video topshirilmagan.");
+        else await tgSend(env,chatId,"📚 KITOBXONLIK TANLOVI — USTOZ\n\n"+rows.map((x,i)=>(i+1)+". "+x.student_name+" ("+x.class_name+")\nStudent ID: "+x.student_id+"\nTopshiriq ID: "+x.id+"\nBall: "+(x.scored?x.total_score+"/100":"Baholanmagan")).join("\n\n")+"\n\nBall berish: /ball TOPSHIRIQ_ID BALL izoh");
+      }
+      return new Response("OK");
+    }
+    m=textValue.match(/^\/ball(?:@\w+)?\s+([a-f0-9-]{20,40})\s+(\d{1,3})(?:\s+([\s\S]+))?$/i);
+    if(m){
+      if(!staff||!["teacher","director","admin"].includes(staff.role)) await tgSend(env,chatId,"❌ Bu amal uchun ruxsat yo‘q.");
+      else {
+        const score=Number(m[2]), item=await one(db,"SELECT * FROM book_competition WHERE id=? AND school_id=?",m[1],staff.school_id);
+        if(score>100||!item) await tgSend(env,chatId,"❌ Ball 0–100 oralig‘ida bo‘lishi va topshiriq ID to‘g‘ri bo‘lishi kerak.");
+        else {
+          await run(db,"UPDATE book_competition SET total_score=?,teacher_comment=?,scored=1,updated_at=? WHERE id=?",score,str(m[3],500),now(),item.id);
+          try{await tgSend(env,item.telegram_chat_id,"📚 Tanlov natijasi!\n\n⭐ Ball: "+score+"/100\n💬 Ustoz: "+(str(m[3],500)||"Izoh yo‘q."),studentMenu);}catch(e){console.error("competition score notification failed",e);}
+          await tgSend(env,chatId,"✅ Ball va izoh saqlandi.");
+        }
+      }
+      return new Response("OK");
+    }
+    if(/^\/ballarim(?:@\w+)?$/i.test(textValue)){
+      if(!student) await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456",studentMenu);
+      else {
+        const x=await one(db,"SELECT * FROM book_competition WHERE school_id=? AND student_id=? ORDER BY created_at DESC LIMIT 1",student.school_id,student.student_id);
+        if(!x) await tgSend(env,chatId,"⭐ Hozircha tanlovga topshirgan videongiz yo‘q.",studentMenu);
+        else {
+          const rank=await one(db,"SELECT COUNT(*) n FROM book_competition WHERE school_id=? AND scored=1 AND total_score>?",student.school_id,x.total_score);
+          await tgSend(env,chatId,"⭐ BALLARIM\n\nBall: "+(x.scored?x.total_score:0)+"/100\n🏆 O‘rin: "+(x.scored?(rank.n+1)+"-o‘rin":"Hali belgilanmagan")+"\n💬 Ustoz izohi: "+(x.teacher_comment||"Hali izoh yo‘q."),studentMenu);
+        }
+      }
+      return new Response("OK");
+    }
+    if(/^\/reyting(?:@\w+)?$/i.test(textValue)){
+      if(!student) await tgSend(env,chatId,"Avval Student ID ni ulang: /id 123456",studentMenu);
+      else {
+        const rows=await all(db,"SELECT student_name,total_score FROM book_competition WHERE school_id=? AND scored=1 ORDER BY total_score DESC LIMIT 10",student.school_id);
+        await tgSend(env,chatId,"🏆 MUSOBAQA BALLARI\n\n"+(rows.length?rows.map((x,i)=>(i+1)+". "+x.student_name+" — "+x.total_score+" ball").join("\n"):"Hozircha natijalar yo‘q."),studentMenu);
+      }
+      return new Response("OK");
+    }
+    if(session.step==="staff_username"&&textValue){
+      await tgSession(db,chatId,{step:"staff_password",username:textValue.toLowerCase()});
+      await tgSend(env,chatId,"🔐 Parolni yuboring:");return new Response("OK");
+    }
+    if(session.step==="staff_password"&&textValue){
+      const username=session.username, password=textValue;
+      if(env.ADMIN_USERNAME&&env.ADMIN_PASSWORD&&username===String(env.ADMIN_USERNAME).toLowerCase()&&password===env.ADMIN_PASSWORD){
+        await tgSession(db,chatId,{role:"big-admin"});
+        await tgSend(env,chatId,"✅ Katta Admin tasdiqlandi!\n\n/admin — Katta Admin paneli");
+        return new Response("OK");
+      }
+      const user=await one(db,"SELECT * FROM staff WHERE username=? COLLATE NOCASE",username);
+      let ok=false;
+      if(user&&!user.is_blocked&&String(user.password_hash||"").startsWith("pbkdf2$")){
+        const parts=user.password_hash.split("$");if(parts.length===3)ok=await passwordVerify(password,parts[1],parts[2]);
+      }
+      if(!ok){await tgSession(db,chatId,{step:"staff_username"});await tgSend(env,chatId,"❌ Login yoki parol noto‘g‘ri. /staff orqali qayta urinib ko‘ring.\nLoginni yuboring:");}
+      else {
+        await run(db,"DELETE FROM telegram_links WHERE chat_id=?",String(chatId));
+        await run(db,"INSERT INTO telegram_links(id,chat_id,school_id,link_type,linked_id,created_at) VALUES(?,?,?,?,?,?)",uid(),String(chatId),user.school_id,"staff",user.id,now());
+        await tgSession(db,chatId,null);
+        await tgSend(env,chatId,"✅ Ishchi kabineti ulandi!\n\n👨‍💼 "+user.full_name+"\n🎖 Rol: "+tgRoleName(user.role)+"\n\n/staffme — profil\n/stafflogout — chiqish",staffMenu);
+      }
+      return new Response("OK");
+    }
+    if(session.step==="waiting_student_id"&&/^\d{6}$/.test(textValue)){
+      const result=await tgConnectStudent(db,chatId,textValue);
+      await tgSession(db,chatId,null);
+      if(result.error) await tgSend(env,chatId,result.error,studentMenu);
+      else await tgSend(env,chatId,"✅ Hisob ulandi!\n\n👤 "+result.student.first_name+" "+result.student.last_name+"\n🏫 Sinf: "+result.student.class_name+"\n🆔 ID: "+result.student.student_id,studentMenu);
+      return new Response("OK");
+    }
+    if(session.step==="competition_surname"&&textValue){
+      await tgSession(db,chatId,{...session,step:"competition_firstname",surname:textValue});await tgSend(env,chatId,"👤 Ismingizni yozing:");return new Response("OK");
+    }
+    if(session.step==="competition_firstname"&&textValue){
+      await tgSession(db,chatId,{...session,step:"competition_class",firstName:textValue});await tgSend(env,chatId,"🏫 Sinfingizni yozing:");return new Response("OK");
+    }
+    if(session.step==="competition_class"&&textValue){
+      await tgSession(db,chatId,{...session,step:"competition_booknumber",className:textValue});await tgSend(env,chatId,"📚 Nechanchi kitobni o‘qidingiz? Faqat raqam kiriting:");return new Response("OK");
+    }
+    if(session.step==="competition_booknumber"&&textValue){
+      if(!/^\d+$/.test(textValue)||Number(textValue)<1){await tgSend(env,chatId,"❌ Kitob raqamini raqamda kiriting.");return new Response("OK");}
+      await tgSession(db,chatId,{...session,step:"competition_bookname",bookNumber:Number(textValue)});await tgSend(env,chatId,"📖 Kitob nomini yozing:");return new Response("OK");
+    }
+    if(session.step==="competition_bookname"&&textValue){
+      await tgSession(db,chatId,{...session,step:"competition_pages",bookName:textValue});await tgSend(env,chatId,"📄 Nechta sahifa o‘qidingiz? Faqat raqam kiriting:");return new Response("OK");
+    }
+    if(session.step==="competition_pages"&&textValue){
+      if(!/^\d+$/.test(textValue)||Number(textValue)<1){await tgSend(env,chatId,"❌ Sahifalar sonini raqamda kiriting.");return new Response("OK");}
+      const linked=await tgStudent(db,await tgLink(db,chatId));
+      if(!linked){await tgSession(db,chatId,null);await tgSend(env,chatId,"❌ O‘quvchi akkaunti topilmadi. /id 123456 orqali qayta ulaning.",studentMenu);return new Response("OK");}
+      const item={id:uid(),school_id:linked.school_id,student_id:linked.student_id,student_name:session.firstName+" "+session.surname,class_name:session.className,telegram_chat_id:String(chatId),video_file_id:session.videoFileId,book_number:Number(session.bookNumber),book_name:session.bookName,pages:Number(textValue),total_score:0,teacher_comment:"",scored:0,created_at:now(),updated_at:now()};
+      await run(db,"INSERT INTO book_competition(id,school_id,student_id,student_name,class_name,telegram_chat_id,video_file_id,book_number,book_name,pages,total_score,teacher_comment,scored,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",item.id,item.school_id,item.student_id,item.student_name,item.class_name,item.telegram_chat_id,item.video_file_id,item.book_number,item.book_name,item.pages,0,"",0,item.created_at,item.updated_at);
+      await tgCompetitionNotifyStaff(env,db,item.school_id,item);
+      await tgSession(db,chatId,null);
+      await tgSend(env,chatId,"✅ Анкета қабул қилинди!\n\n📚 Китоб: "+item.book_name+"\n🔢 Китоб рақами: "+item.book_number+"\n📄 Саҳифалар: "+item.pages+"\n👤 "+item.student_name+"\n🏫 Синф: "+item.class_name+"\n\nUstoz tekshirib, natijani belgilaydi.",studentMenu);
+      return new Response("OK");
+    }
+    if(session.step==="broadcast"&&session.role==="big-admin"&&textValue){
+      if(textValue==="/admin"){await tgSession(db,chatId,{role:"big-admin"});await tgSend(env,chatId,"🛡 KATTA ADMIN PANELI",adminInline);return new Response("OK");}
+      const recipients=await all(db,"SELECT DISTINCT chat_id FROM telegram_links");
+      let sent=0,failed=0;
+      for(const row of recipients){try{await tgSend(env,row.chat_id,textValue);sent++;}catch{failed++;}}
+      await tgSession(db,chatId,{role:"big-admin"});
+      await tgSend(env,chatId,"✅ Xabar yuborish yakunlandi.\n\nYuborildi: "+sent+"\nYuborilmadi: "+failed,adminInline);
+      return new Response("OK");
+    }
+    if(textValue==="📚 O‘quvchi"){await tgSend(env,chatId,"📚 O‘quvchi bo‘limi\n\nStudent ID orqali akkauntingizni ulang: /id 123456",studentMenu);return new Response("OK");}
+    if(textValue==="👩‍🏫 O‘qituvchi"){await tgSend(env,chatId,"👩‍🏫 O‘qituvchi kabinetiga kirish: /staff",studentMenu);return new Response("OK");}
+    if(textValue==="🆘 Yordam"||textValue==="📢 Yangiliklar"){await tgSend(env,chatId,"SCHOOL.AI platformasidagi e’lonlarni ko‘rish uchun avval akkauntingizni ulang: /id 123456",studentMenu);return new Response("OK");}
+    if(textValue){await tgSend(env,chatId,"Xabaringiz qabul qilindi. 😊\n\nMenyudagi tugmalardan foydalaning yoki /help buyrug‘ini yuboring.",staff?staffMenu:studentMenu);}
+    return new Response("OK");
+  } catch(e) {
+    console.error("Telegram update failed",e);
+    return new Response("OK");
   }
-  const payload={chat_id:chatId,text:reply};
-  if(keyboard) payload.reply_markup={keyboard,resize_keyboard:true};
-  await telegramApi(env,"sendMessage",payload);
-  return new Response("OK");
 }
 
 async function handle(req,env){
@@ -200,11 +498,17 @@ async function handle(req,env){
           const studentPk=uid(), time=now();
           await db.batch([
             db.prepare("INSERT INTO students(id,school_id,student_id,first_name,last_name,class_name,photo_data,is_blocked,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(studentPk,a.school_id,sid,a.first_name,a.last_name,a.class_name,a.photo_data,0,time),
-            db.prepare("UPDATE applications SET status='approved',student_id=?,reviewed_at=? WHERE id=?").bind(sid,time,a.id)
+            db.prepare("UPDATE applications SET status='approved',student_id=?,reviewed_at=? WHERE id=?").bind(sid,time,a.id),
+            db.prepare("UPDATE telegram_links SET link_type='student',linked_id=? WHERE link_type='application' AND linked_id=?").bind(sid,a.id)
           ]);
+          const linked=await one(db,"SELECT chat_id FROM telegram_links WHERE link_type='student' AND linked_id=?",sid);
+          if(linked&&env.TELEGRAM_BOT_TOKEN){try{await tgSend(env,linked.chat_id,"🎉 Tabriklaymiz, "+a.first_name+"!\n\nSiz SCHOOL.AI tizimida ro‘yxatdan muvaffaqiyatli o‘tdingiz. ✅\n\n🆔 Student ID: "+sid+"\n🏫 Sinf: "+a.class_name,tgReplyKeyboard(studentKeyboard));}catch(e){console.error("Student approval notification failed",e);}}
           return json({ok:true,student:{studentId:sid,firstName:a.first_name,lastName:a.last_name,className:a.class_name}});
         }
-        const b=await body(req); await run(db,"UPDATE applications SET status='rejected',rejection_reason=?,reviewed_at=? WHERE id=?",str(b.reason||"Ariza rad etildi.",500),now(),a.id);
+        const b=await body(req), reason=str(b.reason||"Ariza rad etildi.",500);
+        await run(db,"UPDATE applications SET status='rejected',rejection_reason=?,reviewed_at=? WHERE id=?",reason,now(),a.id);
+        const linked=await one(db,"SELECT chat_id FROM telegram_links WHERE link_type='application' AND linked_id=?",a.id);
+        if(linked&&env.TELEGRAM_BOT_TOKEN){try{await tgSend(env,linked.chat_id,"❌ Arizangiz rad etildi.\nSabab: "+reason+"\n\nQayta ro‘yxatdan o‘tish uchun maktab administratoriga murojaat qiling.");}catch(e){console.error("Student rejection notification failed",e);}}
         return json({ok:true});
       }
       m=path.match(/^\/api\/admin\/applications\/([^/]+)$/);
