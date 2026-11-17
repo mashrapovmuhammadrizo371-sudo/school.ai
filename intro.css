@@ -1,0 +1,33 @@
+/* SCHOOL.AI cinematic intro */
+.school-intro{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 44%,#17243a 0%,#0b1321 43%,#05080f 100%);color:#f7f3e9;isolation:isolate}
+.school-intro::before,.school-intro::after{content:"";position:absolute;inset:-35%;pointer-events:none}
+.school-intro::before{background:radial-gradient(ellipse at 30% 40%,#c9a96120,transparent 34%),radial-gradient(ellipse at 75% 65%,#28609a25,transparent 38%);animation:introAtmosphere 7s ease-in-out infinite alternate}
+.school-intro::after{background-image:radial-gradient(#fff9 .7px,transparent .9px),radial-gradient(#d9bd77aa .8px,transparent 1px);background-size:83px 83px,137px 137px;background-position:0 0,40px 55px;opacity:.24;animation:introStars 24s linear infinite}
+.school-intro__center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px;animation:introReveal 1.1s cubic-bezier(.2,.75,.25,1) both}
+.school-intro__emblem{position:relative;width:88px;height:88px;margin-bottom:25px;display:grid;place-items:center}
+.school-intro__ring{position:absolute;inset:0;border:1px solid #d9bd7780;border-radius:26px;transform:rotate(45deg);box-shadow:0 0 38px #c9a96120,inset 0 0 24px #c9a96110;animation:introRing 2.8s ease-in-out infinite}
+.school-intro__ring::before,.school-intro__ring::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#e7cc83;box-shadow:0 0 15px #e7cc83}
+.school-intro__ring::before{top:-4px;left:38px}.school-intro__ring::after{right:-4px;bottom:38px}
+.school-intro__monogram{font-size:34px;font-weight:900;letter-spacing:-3px;color:#e5ca83;text-shadow:0 0 25px #d9bd7766}
+.school-intro__wordmark{font-size:clamp(39px,10vw,66px);font-weight:850;letter-spacing:.08em;color:#e2c77f;text-shadow:0 0 32px #d9bd7730;opacity:0;animation:introWordmark .9s .35s ease forwards}
+.school-intro__tagline{margin-top:13px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#b9c4d5;opacity:0;animation:introTagline .8s .85s ease forwards}
+.school-intro__rule{width:180px;height:2px;margin-top:31px;overflow:hidden;border-radius:9px;background:#ffffff18;opacity:0;animation:introTagline .5s 1s ease forwards}
+.school-intro__rule::after{content:"";display:block;width:45%;height:100%;background:linear-gradient(90deg,transparent,#e2c77f,transparent);animation:introProgress 1.35s .9s ease-in-out forwards}
+.school-intro__skip{position:absolute;z-index:2;right:20px;top:calc(18px + env(safe-area-inset-top));padding:9px 13px;border:1px solid #ffffff30;border-radius:999px;background:#101a2a99;color:#d8dfeb;font-size:12px;letter-spacing:.04em;opacity:0;animation:introTagline .4s 1.1s ease forwards;cursor:pointer}
+.school-intro__skip:focus-visible{outline:2px solid #e2c77f;outline-offset:3px}
+.school-intro.is-leaving{animation:introExit .65s ease forwards;pointer-events:none}
+.school-intro.is-quick .school-intro__center{animation-duration:.55s}
+.school-intro.is-quick .school-intro__wordmark{animation-delay:.05s;animation-duration:.45s}
+.school-intro.is-quick .school-intro__tagline{animation-delay:.2s;animation-duration:.4s}
+.school-intro.is-quick .school-intro__rule{animation-delay:.25s}
+.school-intro.is-quick .school-intro__rule::after{animation-duration:.5s;animation-delay:.2s}
+.school-intro.is-quick .school-intro__skip{animation-delay:.35s}
+@keyframes introReveal{from{opacity:0;transform:translateY(18px) scale(.96);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes introWordmark{from{opacity:0;letter-spacing:.24em;filter:blur(8px)}to{opacity:1;letter-spacing:.08em;filter:blur(0)}}
+@keyframes introTagline{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes introRing{50%{transform:rotate(45deg) scale(1.06);box-shadow:0 0 48px #c9a96155,inset 0 0 28px #c9a96120}}
+@keyframes introAtmosphere{to{transform:translate3d(2%,-1%,0) scale(1.04)}}
+@keyframes introStars{to{background-position:160px 130px,-60px 90px}}
+@keyframes introProgress{from{transform:translateX(-110%)}to{transform:translateX(230%)}}
+@keyframes introExit{to{opacity:0;transform:scale(1.025);filter:blur(8px)}}
+@media(prefers-reduced-motion:reduce){.school-intro::before,.school-intro::after,.school-intro__ring,.school-intro__rule::after{animation:none}.school-intro__center,.school-intro__wordmark,.school-intro__tagline,.school-intro__rule,.school-intro__skip{animation-duration:.01ms;animation-delay:0s}}
