@@ -126,10 +126,10 @@ async function handle(req,env){
   const db=env.DB, url=new URL(req.url), path=url.pathname, method=req.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
   if(path==="/telegram/webhook" && method==="POST") return telegramUpdate(req,env);
-  if(path.startsWith("/api/telegram/setup/") && method==="GET") {
-    const expected=await telegramSecret(env);
-    if(path!=="/api/telegram/setup/"+expected || !env.TELEGRAM_BOT_TOKEN) return fail("Not found.",404);
+  if(path==="/api/telegram/setup" && method==="GET") {
+    if(!env.TELEGRAM_BOT_TOKEN) return fail("Telegram token missing.",503);
     try {
+      const expected=await telegramSecret(env);
       const me=await telegramApi(env,"getMe",{});
       const webhookUrl=url.origin+"/telegram/webhook";
       await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message"],drop_pending_updates:false});
