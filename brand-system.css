@@ -1,0 +1,113 @@
+/* SCHOOL.AI — ENGLISH MASTER visual system
+   Shared design tokens and safe visual overrides. Functional classes and DOM logic stay unchanged. */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+:root{
+  color-scheme:dark;
+  --em-navy-950:#060B20;--em-navy-900:#0A1230;--em-navy-800:#0E1B4A;
+  --em-royal-500:#3D6BFF;--em-royal-300:#8FAEFF;
+  --em-gold-400:#E4C46F;--em-gold-500:#D2AC4A;
+  --em-ink:#F4F7FF;--em-muted:#AAB6DD;
+  --em-border:rgba(143,174,255,.16);
+  --em-glass:rgba(14,27,74,.62);
+  --em-display:'Sora','DM Sans',system-ui,sans-serif;
+  --em-body:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--em-body)!important;color:var(--em-ink)!important;
+  background:
+    radial-gradient(900px 560px at 12% -8%,rgba(61,107,255,.22),transparent 62%),
+    radial-gradient(700px 480px at 100% 92%,rgba(210,172,74,.09),transparent 66%),
+    linear-gradient(180deg,var(--em-navy-800),var(--em-navy-900) 48%,var(--em-navy-950))!important;
+}
+button,input,select,textarea{font-family:var(--em-body)}
+::selection{background:rgba(61,107,255,.38);color:#fff}
+:focus-visible{outline:2px solid var(--em-gold-400)!important;outline-offset:3px}
+.page{width:min(100%,760px)!important;padding:clamp(22px,4vw,42px) 18px!important;animation:emPageIn .55s cubic-bezier(.2,.75,.25,1) both}
+.card,.student-id,.student-module,.notice{
+  color:var(--em-ink)!important;border:1px solid var(--em-border)!important;
+  background:linear-gradient(145deg,rgba(18,35,83,.82),rgba(8,18,48,.88))!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.045)!important;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.card{border-radius:23px!important;padding:clamp(20px,3vw,28px)!important}
+.logo,.admin-brand strong,.admin-title h1,.admin-panel-head h3,.admin-stat b,.welcome-brand{
+  font-family:var(--em-display)!important;letter-spacing:-.035em
+}
+.logo,.admin-stat b{color:var(--em-gold-400)!important}
+.muted,.label,.admin-title p,.admin-meta,.admin-stat span{color:var(--em-muted)!important}
+.input,.admin-content .input,textarea.input,select.input{
+  color:var(--em-ink)!important;background:rgba(4,12,35,.76)!important;
+  border:1px solid rgba(143,174,255,.22)!important;border-radius:13px!important;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.input:focus,.admin-content .input:focus{
+  border-color:var(--em-royal-300)!important;
+  box-shadow:0 0 0 4px rgba(61,107,255,.16)!important;background:rgba(7,18,52,.95)!important
+}
+.btn,.welcome-enter,.admin-actions .btn,.admin-content .btn{
+  border:1px solid rgba(228,196,111,.72)!important;border-radius:13px!important;
+  color:#08112c!important;background:linear-gradient(120deg,var(--em-gold-500),var(--em-gold-400))!important;
+  box-shadow:0 10px 28px rgba(210,172,74,.16)!important;
+  transition:transform .22s ease,box-shadow .22s ease,filter .22s ease!important;
+}
+.btn:hover,.welcome-enter:hover,.admin-actions .btn:hover,.admin-content .btn:hover{
+  transform:translateY(-2px)!important;box-shadow:0 15px 34px rgba(61,107,255,.2)!important;filter:brightness(1.04)
+}
+.btn:active,.welcome-enter:active{transform:translateY(0) scale(.985)!important}
+.btn.secondary,.admin-actions .btn.secondary,.admin-content .btn.secondary,.admin-logout{
+  color:var(--em-ink)!important;background:rgba(20,37,83,.72)!important;
+  border-color:var(--em-border)!important;box-shadow:none!important
+}
+.btn.danger,.admin-content .btn.admin-danger{background:linear-gradient(120deg,#8e3547,#b94c5d)!important;color:#fff!important;border-color:#d16b79!important}
+.top{gap:14px}
+.stat,.admin-stat,.admin-panel,.admin-module{
+  border:1px solid var(--em-border)!important;border-radius:18px!important;
+  background:linear-gradient(145deg,rgba(17,34,80,.84),rgba(8,18,48,.9))!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.04)!important
+}
+.student-module{color:var(--em-ink)!important;transition:transform .22s,border-color .22s,box-shadow .22s!important}
+.student-module:hover,.admin-module:hover{transform:translateY(-4px)!important;border-color:rgba(228,196,111,.55)!important;box-shadow:0 20px 42px rgba(0,0,0,.3)!important}
+.student-module small{color:var(--em-muted)!important}
+.admin-shell{font-family:var(--em-body)!important;color:var(--em-ink)!important;background:
+  radial-gradient(850px 500px at 75% -10%,rgba(61,107,255,.2),transparent 62%),
+  linear-gradient(180deg,var(--em-navy-800),var(--em-navy-950))!important}
+.admin-side{background:rgba(5,12,35,.88)!important;border-color:var(--em-border)!important;backdrop-filter:blur(22px)!important}
+.admin-brand span,.admin-kicker,.admin-badge{color:var(--em-gold-400)!important}
+.admin-header{background:rgba(7,15,43,.82)!important;border-color:var(--em-border)!important;backdrop-filter:blur(22px)!important}
+.admin-nav button{border-radius:12px!important;transition:background .2s,border-color .2s,transform .2s!important}
+.admin-nav button:hover{background:rgba(61,107,255,.12)!important;border-color:var(--em-border)!important}
+.admin-nav button.active{background:linear-gradient(100deg,rgba(61,107,255,.22),rgba(14,27,74,.6))!important;border-color:rgba(143,174,255,.28)!important;box-shadow:inset 3px 0 var(--em-gold-400),0 10px 25px rgba(0,0,0,.2)!important}
+.admin-panel-head{background:rgba(20,37,83,.45)!important;border-color:var(--em-border)!important}
+.admin-table th{background:rgba(6,15,43,.8)!important;color:var(--em-muted)!important}
+.admin-table td{color:var(--em-ink)!important;border-color:rgba(143,174,255,.1)!important}
+.admin-table tbody tr:hover td{background:rgba(61,107,255,.09)!important}
+.admin-item{border-color:rgba(143,174,255,.12)!important}
+.admin-badge{background:rgba(210,172,74,.1)!important;border-color:rgba(228,196,111,.28)!important}
+.admin-modal-card{background:linear-gradient(145deg,#102052,#080f2b)!important;border-color:var(--em-border)!important}
+.welcome-screen{background:
+  radial-gradient(ellipse at 50% 28%,rgba(61,107,255,.25),transparent 55%),
+  radial-gradient(ellipse at 85% 90%,rgba(210,172,74,.12),transparent 55%),
+  linear-gradient(180deg,var(--em-navy-800),var(--em-navy-950))!important}
+.welcome-brand{color:var(--em-gold-400)!important;text-shadow:0 0 32px rgba(228,196,111,.22)!important}
+.welcome-logo-mark{border-color:var(--em-gold-400)!important;box-shadow:0 0 32px rgba(228,196,111,.25)!important}
+.welcome-logo-mark span,.welcome-logo-mark i,.welcome-logo-mark b{background:var(--em-gold-400)!important}
+.welcome-badge{border-color:rgba(228,196,111,.4)!important;color:var(--em-gold-400)!important}
+.welcome-content p{color:var(--em-muted)!important}
+.notice{color:var(--em-ink)!important}
+.success{color:#75d6ae!important}.error{color:#ff8795!important}
+.school-intro{font-family:var(--em-display)!important}
+@keyframes emPageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference){
+  .card,.admin-stat,.admin-panel,.student-module{animation:emSoftIn .5s ease both}
+  .admin-stat:nth-child(2){animation-delay:.05s}.admin-stat:nth-child(3){animation-delay:.1s}.admin-stat:nth-child(4){animation-delay:.15s}
+}
+@keyframes emSoftIn{from{opacity:.72;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:800px){
+  .admin-side{background:rgba(5,12,35,.97)!important}
+  .admin-header{background:rgba(7,15,43,.94)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
