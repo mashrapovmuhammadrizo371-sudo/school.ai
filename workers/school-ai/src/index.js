@@ -93,6 +93,17 @@ async function telegramSecret(env) {
   const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(env.TELEGRAM_BOT_TOKEN||""));
   return b64u(digest);
 }
+let telegramWebhookCheckedAt=0;
+async function ensureTelegramWebhook(req,env) {
+  if(!env.TELEGRAM_BOT_TOKEN || new URL(req.url).pathname==="/telegram/webhook" || Date.now()-telegramWebhookCheckedAt<300000) return;
+  try {
+    const origin=new URL(req.url).origin, webhookUrl=origin+"/telegram/webhook";
+    const expected=await telegramSecret(env);
+    const info=await telegramApi(env,"getWebhookInfo",{});
+    if(info.url!==webhookUrl) await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message"],drop_pending_updates:false});
+    telegramWebhookCheckedAt=Date.now();
+  } catch(e) { console.error("Telegram webhook ensure failed",e); }
+}
 async function telegramUpdate(req,env) {
   const secret=await telegramSecret(env);
   if(!env.TELEGRAM_BOT_TOKEN || req.headers.get("X-Telegram-Bot-Api-Secret-Token")!==secret) return new Response("Forbidden",{status:403});
@@ -125,18 +136,9 @@ async function telegramUpdate(req,env) {
 async function handle(req,env){
   const db=env.DB, url=new URL(req.url), path=url.pathname, method=req.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:CORS});
+  await ensureTelegramWebhook(req,env);
   if(path==="/telegram/webhook" && method==="POST") return telegramUpdate(req,env);
-  if(path==="/api/telegram/setup" && method==="GET") {
-    if(!env.TELEGRAM_BOT_TOKEN) return fail("Telegram token missing.",503);
-    try {
-      const expected=await telegramSecret(env);
-      const me=await telegramApi(env,"getMe",{});
-      const webhookUrl=url.origin+"/telegram/webhook";
-      await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message"],drop_pending_updates:false});
-      const info=await telegramApi(env,"getWebhookInfo",{});
-      return json({ok:true,bot:"@"+me.username,webhook:info.url,pendingUpdates:info.pending_update_count||0,lastError:info.last_error_message||null});
-    } catch(e) { console.error("Telegram setup error",e); return fail("Telegram webhook setup failed.",502); }
-  }
+
   if(!db) return fail("Database binding DB sozlanmagan.",503);
   if(path==="/"||path==="/health"||path==="/api/health"){
     try { await seed(db); const r=await one(db,"SELECT 1 AS ok"); return json({ok:r?.ok===1,service:"SCHOOL.AI API",database:"connected",stage:"cloudflare-d1-api"}); }
