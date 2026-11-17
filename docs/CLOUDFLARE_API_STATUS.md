@@ -49,3 +49,13 @@ The existing Render service remains the rollback backend. The frontend has **not
 - New staff passwords use PBKDF2 through Web Crypto. Old MongoDB scrypt password hashes are not imported or compatible; staff accounts must be recreated or reset after migration.
 - The API requires a configured JWT secret. Protected endpoints intentionally fail closed without it.
 - This first API deployment does not yet implement rate limiting, audit history, file storage migration, or full role-specific staff permissions.
+
+## Verification notes — 2026-11-17
+
+- Confirmed the Cloudflare account contains the `school-ai` Worker and the `school-ai-db` D1 database.
+- Confirmed the Worker has a D1 binding named `DB` pointing to `school-ai-db`.
+- Confirmed the D1 schema is present and the database contains one STEM School row; student, staff, and application tables are empty.
+- Added the `ADMIN_USERNAME` Worker Secret using the default backend username, `admin`. Existing `JWT_SECRET` and `ADMIN_PASSWORD` bindings are present, but their values have not been read or verified.
+- Fixed escaped authorization-header and six-digit student-ID regular expressions in the migration branch. This source fix still needs a successful Worker code upload before it can be considered deployed.
+- The frontend still points to Render. Do not switch it until API response-shape compatibility and authenticated end-to-end tests pass.
+- A binding named `ADMIN_SESSION_SECRET` was found configured as a plain-text variable. Convert/rotate it as a Worker Secret in the Cloudflare Dashboard before production use; do not copy its value into GitHub or chat.
