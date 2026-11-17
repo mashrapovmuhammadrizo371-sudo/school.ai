@@ -30,7 +30,7 @@ async function issueToken(payload, secret) {
   return input+"."+b64u(sig);
 }
 async function readToken(request, env) {
-  const raw=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  const raw=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   if(!raw || !env.JWT_SECRET) return null;
   try {
     const [h,p,s]=raw.split("."), input=h+"."+p;
