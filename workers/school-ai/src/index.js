@@ -100,7 +100,7 @@ async function ensureTelegramWebhook(req,env) {
     const webhookUrl=new URL(req.url).origin+"/telegram/webhook";
     const expected=await telegramSecret(env);
     const info=await telegramApi(env,"getWebhookInfo",{});
-    if(info.url!==webhookUrl) await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message","callback_query"],drop_pending_updates:false});
+    if(info.url!==webhookUrl || !Array.isArray(info.allowed_updates) || !info.allowed_updates.includes("callback_query")) await telegramApi(env,"setWebhook",{url:webhookUrl,secret_token:expected,allowed_updates:["message","callback_query"],drop_pending_updates:false});
     telegramWebhookCheckedAt=Date.now();
   } catch(e) { console.error("Telegram webhook ensure failed",e); }
 }
@@ -249,6 +249,7 @@ async function telegramUpdate(req,env) {
       await tgSend(env,chatId,"🆘 YORDAM\n\n"+help,staff?staffMenu:studentMenu);return new Response("OK");
     }
     if(/^\/staff(?:@\w+)?$/i.test(textValue)){
+      if(staff){await tgSend(env,chatId,"👨‍💼 Ishchi kabineti allaqachon ulangan.\n\n👤 "+staff.full_name+"\n🎖 Rol: "+tgRoleName(staff.role),staffMenu);return new Response("OK");}
       await tgSession(db,chatId,{step:"staff_username"});
       await tgSend(env,chatId,"👨‍💼 Ishchi kabineti\n\nLoginni yuboring:");return new Response("OK");
     }
